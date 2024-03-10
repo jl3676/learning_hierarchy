@@ -621,18 +621,18 @@ def find_correct_action(s_1, s_2, transition_train1_step1, transition_train1_ste
 		if block % 2 == 1:
 			correct_action = transition_train2_step2[s_1,s_2]
 		elif block == 6:
-			if experiment[:3] == 'CA1':
+			if experiment[:2] == 'V1':
 				correct_action = transition_ca1_step2[s_1,s_2]
-			elif experiment[:3] == 'CA2':
+			elif experiment[:2] == 'V2':
 				correct_action = transition_ca2_step2[s_1,s_2]
-			elif experiment[:3] == 'CA3':
+			elif experiment[:2] == 'V3':
 				correct_action = transition_ca3_step2[s_1,s_2]
 		elif block == 10:
-			if experiment[-3:] == 'CA1':
+			if experiment[-2:] == 'V1':
 				correct_action = transition_ca1_step2[s_1,s_2]
-			elif experiment[-3:] == 'CA2':
+			elif experiment[-2:] == 'V2':
 				correct_action = transition_ca2_step2[s_1,s_2]
-			elif experiment[-3:] == 'CA3':
+			elif experiment[-2:] == 'V3':
 				correct_action = transition_ca3_step2[s_1,s_2]
 		else:
 			correct_action = transition_train1_step2[s_1,s_2]
