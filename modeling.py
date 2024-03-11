@@ -11,8 +11,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	[alpha_2, beta_2, alpha_S2, epsilon, prior] = params
 	eps = 0.002
 	if not meta_learning:
-		eps = 0 
-		prior = 0
+		eps = 0.0 
+		prior = 0.0
 
 	llh = 0
 	num_block = 12
@@ -164,8 +164,8 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 		- num_trial_finished: the sample sizes of the above means
 	'''
 	if not meta_learning:
-		eps = 0 
-		prior = 0
+		eps = 0.0
+		prior = 0.0
 
 	num_block = 12
 
