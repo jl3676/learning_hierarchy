@@ -122,6 +122,8 @@ def extract_stage2_info(data,experiment,same_same=True,same_diff=True,diff_same=
             choice_type = get_choice_type_stage2_V2(block,sf,ss,temp_a,all_actions)
           elif experiment[:2] == 'V3':
             choice_type = get_choice_type_stage2_V3(block,sf,ss,temp_a,all_actions)
+          elif experiment == 'All':
+            choice_type = get_choice_type_stage2_V1(block,sf,ss,temp_a,all_actions) 
           result = np.array([choice_identity, temp_RT, choice_type, temp_counter1, temp_counter2, choice_identity_2, trial])
 
         if index[sf-1,ss-1] == 8:
@@ -1014,7 +1016,7 @@ def slice_data(data, meta_data, condition, exp, cluster):
     keys = data.keys()
     sliced_data = {}
     inds = (meta_data['Experiment'].isin(exp)) & (meta_data['Cluster'] == cluster)
-    if condition != 'all':
+    if condition != 'All':
         inds = inds & (meta_data['Condition'] == condition)
     for key in keys:
         sliced_data[key] = data[key][inds]
