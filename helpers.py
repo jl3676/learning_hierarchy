@@ -1030,3 +1030,297 @@ def concatenate_data(this_data, all_data):
       all_data[key] = np.concatenate((all_data[key], this_data[key]), axis=0)
       
   return all_data
+
+
+def aggregate_type_stage2_b8(stage2_info,trials_to_probe,start_trial=0,block=8,F1S1_F2S2=True,all_choices=True):
+  '''
+  Calculates the proportions of all 4 types of choices in the second stage of
+  block 8 for all types of trials. 
+    1 = Correct
+    2 = Compression over stage 1
+    3 = Compression over stage 2
+    4 = Other
+
+  Args:
+    - data: the preprocessed data dictionary
+    - stage2_info: the preprocessed stage2 data
+    - trials_to_probe: the number of trials to include from the beginning of the block
+    - start_trial: the trial at which to start
+
+  Return:
+    - aggregate_type: nsubject x 4 array containing choice type counts per subject
+  '''
+  # calculate data
+  nsubjects = stage2_info.shape[0]
+  aggregate_type = np.zeros((nsubjects,4))
+  if all_choices:
+    choice_types = [(0,0),(0,1),(1,0),(1,1)]
+  else:
+    if F1S1_F2S2:
+      choice_types = [(0,0),(1,1)]
+    else:
+      choice_types = [(0,1),(1,0)]
+
+  counter = 0
+  for i in range(nsubjects):
+      for sf,ss in choice_types: # only consider F1S1 & F2S2
+          for t in range(start_trial,start_trial+trials_to_probe):
+              try:
+                  if stage2_info[i,block-1,sf,ss,t] is None or \
+                  len(stage2_info[i,block-1,sf,ss,t]) == 0 or \
+                  len(stage2_info[i,block-1,sf,ss,t].ravel()) == 0: # skip if no data
+                      continue
+                  choice_identity = stage2_info[i,block-1,sf,ss,t][0]
+                  choice_type = 5
+                  if sf == 0 and ss == 0:
+                    if choice_identity == 1:
+                      choice_type = 4
+                    elif choice_identity == 2:
+                      choice_type = 2
+                    elif choice_identity == 3:
+                      choice_type = 3
+                    elif choice_identity == 4:
+                      choice_type = 1
+                  elif sf == 0 and ss == 1:
+                    if choice_identity == 1:
+                      choice_type = 2
+                    elif choice_identity == 2:
+                      choice_type = 4
+                    elif choice_identity == 3:
+                      choice_type = 1
+                    elif choice_identity == 4:
+                      choice_type = 3
+                  elif sf == 1 and ss == 0:
+                    if choice_identity == 1:
+                      choice_type = 3
+                    elif choice_identity == 2:
+                      choice_type = 1
+                    elif choice_identity == 3:
+                      choice_type = 4
+                    elif choice_identity == 4:
+                      choice_type = 2
+                  elif sf == 1 and ss == 1:
+                    if choice_identity == 1:
+                      choice_type = 1
+                    elif choice_identity == 2:
+                      choice_type = 3
+                    elif choice_identity == 3:
+                      choice_type = 2
+                    elif choice_identity == 4:
+                      choice_type = 4
+
+                  if choice_type < 5:
+                      aggregate_type[counter,int(choice_type-1)] += 1
+              except IndexError:
+                  continue
+      counter += 1
+      
+  # calculate frequencies
+  with np.errstate(divide='ignore', invalid='ignore'):
+    aggregate_type = (aggregate_type.T / np.sum(aggregate_type,axis=1)).T
+
+  return aggregate_type
+
+
+def aggregate_type_stage2_b9(stage2_info,trials_to_probe,start_trial=0,block=9,F1S1_F2S2=None,V2=False,V3=False):
+  '''
+  Calculates the proportions of all 4 types of choices in the second stage of
+  block 9 for all types of trials.
+
+  Args:
+    - data: the preprocessed data dictionary
+    - stage2_info: the preprocessed stage2 data
+    - trials_to_probe: the number of trials to include from the beginning of the block
+    - start_trial: the trial at which to start
+
+  Return:
+    - aggregate_type: nsubject x 4 array containing choice type counts per subject
+  '''
+  # calculate data
+  nsubjects = stage2_info.shape[0]
+  aggregate_type = np.zeros((nsubjects,4))
+  if F1S1_F2S2 is None:
+    choice_types = [(0,0),(0,1),(1,0),(1,1)]
+  elif F1S1_F2S2:
+    if V3 and block==6 or block==10:
+      choice_types = [(0,0),(1,0)]
+    else:
+      choice_types = [(0,0),(1,1)]
+  else:
+    if V3 and block == 6 or block == 10:
+      choice_types = [(0,1),(1,1)]
+    else:
+      choice_types = [(0,1),(1,0)]
+
+  counter = 0
+  for i in range(nsubjects):
+      for sf,ss in choice_types: # only consider F1S1 & F2S2
+          for t in range(start_trial,start_trial+trials_to_probe):
+              try:
+                  if stage2_info[i,block-1,sf,ss,t] is None or \
+                  len(stage2_info[i,block-1,sf,ss,t]) == 0 or \
+                  len(stage2_info[i,block-1,sf,ss,t].ravel()) == 0: # skip if no data
+                      continue
+                  choice_identity = stage2_info[i,block-1,sf,ss,t][0]
+                  choice_type = 6
+
+                  if (block == 7 or block == 11) and not V3 and not V2: # V1
+                    if sf == 0 and ss == 0:
+                      if choice_identity == 1:
+                        choice_type = 4
+                      elif choice_identity == 2:
+                        choice_type = 3
+                      elif choice_identity == 3:
+                        choice_type = 2
+                      elif choice_identity == 4:
+                        choice_type = 1
+                    elif sf == 0 and ss == 1:
+                      if choice_identity == 1:
+                        choice_type = 2
+                      elif choice_identity == 2:
+                        choice_type = 1
+                      elif choice_identity == 3:
+                        choice_type = 4
+                      elif choice_identity == 4:
+                        choice_type = 3
+                    elif sf == 1 and ss == 0:
+                      if choice_identity == 1:
+                        choice_type = 3
+                      elif choice_identity == 2:
+                        choice_type = 4
+                      elif choice_identity == 3:
+                        choice_type = 1
+                      elif choice_identity == 4:
+                        choice_type = 2
+                    elif sf == 1 and ss == 1:
+                      if choice_identity == 1:
+                        choice_type = 1
+                      elif choice_identity == 2:
+                        choice_type = 2
+                      elif choice_identity == 3:
+                        choice_type = 3
+                      elif choice_identity == 4:
+                        choice_type = 4
+                  elif (block == 7 or block == 11) and V2: 
+                    if sf == 0 and ss == 0:
+                      if choice_identity == 1:
+                        choice_type = 2
+                      elif choice_identity == 2:
+                        choice_type = 1
+                      elif choice_identity == 3:
+                        choice_type = 4
+                      elif choice_identity == 4:
+                        choice_type = 3
+                    elif sf == 0 and ss == 1:
+                      if choice_identity == 1:
+                        choice_type = 3
+                      elif choice_identity == 2:
+                        choice_type = 4
+                      elif choice_identity == 3:
+                        choice_type = 2
+                      elif choice_identity == 4:
+                        choice_type = 1
+                    elif sf == 1 and ss == 0:
+                      if choice_identity == 1:
+                        choice_type = 1
+                      elif choice_identity == 2:
+                        choice_type = 2
+                      elif choice_identity == 3:
+                        choice_type = 3
+                      elif choice_identity == 4:
+                        choice_type = 4
+                    elif sf == 1 and ss == 1:
+                      if choice_identity == 1:
+                        choice_type = 3
+                      elif choice_identity == 2:
+                        choice_type = 4
+                      elif choice_identity == 3:
+                        choice_type = 1
+                      elif choice_identity == 4:
+                        choice_type = 2
+                  elif (block == 7 or block == 11) and V3: 
+                    if sf == 0 and ss == 0:
+                      if choice_identity == 1:
+                        choice_type = 4
+                      elif choice_identity == 2:
+                        choice_type = 1
+                      elif choice_identity == 3:
+                        choice_type = 3
+                      elif choice_identity == 4:
+                        choice_type = 2
+                    elif sf == 0 and ss == 1:
+                      if choice_identity == 1:
+                        choice_type = 2
+                      elif choice_identity == 2:
+                        choice_type = 3
+                      elif choice_identity == 3:
+                        choice_type = 1
+                      elif choice_identity == 4:
+                        choice_type = 4
+                    elif sf == 1 and ss == 0:
+                      if choice_identity == 1:
+                        choice_type = 3
+                      elif choice_identity == 2:
+                        choice_type = 2
+                      elif choice_identity == 3:
+                        choice_type = 4
+                      elif choice_identity == 4:
+                        choice_type = 1
+                    elif sf == 1 and ss == 1:
+                      if choice_identity == 1:
+                        choice_type = 1
+                      elif choice_identity == 2:
+                        choice_type = 4
+                      elif choice_identity == 3:
+                        choice_type = 2
+                      elif choice_identity == 4:
+                        choice_type = 3
+                  else:
+                    if sf == 0 and ss == 0:
+                      if choice_identity == 1:
+                        choice_type = 1
+                      elif choice_identity == 2:
+                        choice_type = 3
+                      elif choice_identity == 3:
+                        choice_type = 2
+                      elif choice_identity == 4:
+                        choice_type = 4
+                    elif sf == 0 and ss == 1:
+                      if choice_identity == 1:
+                        choice_type = 3
+                      elif choice_identity == 2:
+                        choice_type = 1
+                      elif choice_identity == 3:
+                        choice_type = 4
+                      elif choice_identity == 4:
+                        choice_type = 2
+                    elif sf == 1 and ss == 0:
+                      if choice_identity == 1:
+                        choice_type = 2
+                      elif choice_identity == 2:
+                        choice_type = 4
+                      elif choice_identity == 3:
+                        choice_type = 1
+                      elif choice_identity == 4:
+                        choice_type = 3
+                    elif sf == 1 and ss == 1:
+                      if choice_identity == 1:
+                        choice_type = 4
+                      elif choice_identity == 2:
+                        choice_type = 2
+                      elif choice_identity == 3:
+                        choice_type = 3
+                      elif choice_identity == 4:
+                        choice_type = 1
+
+                  if choice_type < 5:
+                      aggregate_type[counter,int(choice_type-1)] += 1
+              except IndexError:
+                  continue
+      counter += 1
+
+  # calculate frequencies
+  with np.errstate(divide='ignore', invalid='ignore'):
+    aggregate_type = (aggregate_type.T / np.sum(aggregate_type,axis=1)).T
+
+  return aggregate_type

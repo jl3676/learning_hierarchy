@@ -4,12 +4,15 @@ from scipy.optimize import differential_evolution
 import progressbar
 import matplotlib.pyplot as plt
 
-def option_model_nllh(params, D, structure):
+def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	Computes the negative log likelihood of the data D given the option model.
 	'''
 	[alpha_2, beta_2, alpha_S2, epsilon, prior] = params
 	eps = 0.002
+	if not meta_learning:
+		eps = 0 
+		prior = 0
 
 	llh = 0
 	num_block = 12
@@ -140,7 +143,7 @@ def option_model_nllh(params, D, structure):
 	return -llh
 
 
-def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, experiment, structure):
+def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, experiment, structure, meta_learning=True, debug=False):
 	'''
 	Fits the option model to the data of the OT-CA1-CA1 task.
 
@@ -160,10 +163,9 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 		- se_counter1, se_counter2: the sem corresponding to the above mean
 		- num_trial_finished: the sample sizes of the above means
 	'''
-	# beta_2 = 10
-	# alpha_S2 = np.exp(alpha_S2)
-	# epsilon = 1e-6
-	# eps_hierarchical = 1e-6
+	if not meta_learning:
+		eps = 0 
+		prior = 0
 
 	num_block = 12
 
@@ -710,22 +712,22 @@ def join_actions(a_1, a_2):
 	return a_both
 
 
-def optimize(fname, bounds, D, structure):
-    result = differential_evolution(func=fname, bounds=bounds, args=(D, structure))
+def optimize(fname, bounds, D, structure, meta_learning):
+    result = differential_evolution(func=fname, bounds=bounds, args=(D, structure, meta_learning))
     x = result.x
-    bestllh = -fname(x, D, structure)
+    bestllh = -fname(x, D, structure, meta_learning)
     bestparameters = list(x)
     
     return(bestparameters, bestllh)
 
 
 def parallel_worker(args):
-    fit_model_name, data, structure, i, param_bounds = args
-    best_params, best_llh = optimize(globals()[fit_model_name+'_nllh'], param_bounds, data, structure)
+    fit_model_name, data, structure, i, param_bounds, meta_learning = args
+    best_params, best_llh = optimize(globals()[fit_model_name+'_nllh'], param_bounds, data, structure, meta_learning)
     return i, best_params, best_llh
 
 
 def parallel_simulator(args):
-    this_model, i, niters_sim, alpha_1, alpha_2, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, exp, structure = args
-    this_data = globals()[this_model](niters_sim, alpha_1, alpha_2, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, exp, structure)
+    this_model, i, niters_sim, alpha_1, alpha_2, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, exp, structure, meta_learning = args
+    this_data = globals()[this_model](niters_sim, alpha_1, alpha_2, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, exp, structure, meta_learning)
     return i, this_data
