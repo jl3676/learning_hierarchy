@@ -7,7 +7,7 @@ import helpers
 from scipy import stats 
 
 
-def plot_validation_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster, start_trial=0, trials_to_probe=10, m1='Top-down', m2='Bottom-up', nblocks=12, first_press_accuracy=True):
+def plot_validation_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster, start_trial=0, trials_to_probe=10, m1='Top-down', m2='Bottom-up', nblocks=12, first_press_accuracy=False):
     num_subjects = data['tr'].shape[0]
     
     _, n_presses_stage_2 = helpers.calc_mean(data, start_trial=start_trial, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
