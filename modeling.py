@@ -29,7 +29,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	TS_2s[0,:,:] = np.ones((2,4)) / 4
 	nC_2 = 2 * num_block
 	PTS_2 = np.ones((nTS_2,nC_2))
-	p_policies = np.array([1-eps-prior, prior, eps]) if meta_learning else np.array([0, 0, 1])
+	p_policies = np.array([1-eps-prior, prior, eps]) if meta_learning else np.array([0.0, 0.0, 1.0])
 	encounter_matrix_2 = np.zeros(nC_2)
 
 	for t in range(D.shape[0]):	
@@ -225,7 +225,7 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 		PTS_2 = np.ones((nTS_2,nC_2))
 		eps = 0.002
 		# compression over stage 1, compression over stage 2, full hierarchical
-		p_policies = np.array([1-eps-prior, prior, eps]) if meta_learning else np.array([0, 0, 1])
+		p_policies = np.array([1-eps-prior, prior, eps]) if meta_learning else np.array([0.0, 0.0, 1.0])
 		encounter_matrix = np.zeros(nC)
 		encounter_matrix_2 = np.zeros(nC_2)
 
