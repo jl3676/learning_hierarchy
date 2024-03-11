@@ -29,7 +29,10 @@ def plot_validation_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster
     plt.plot(blocks,n_presses_stage_2_sim_m1_mean[:nblocks],'--',color='lightcoral',alpha=0.75,label=f'{m1} model')
     plt.plot(blocks,n_presses_stage_2_sim_m2_mean[:nblocks],'--',color='cornflowerblue',alpha=0.75,label=f'{m2} model')
     plt.xlim([0,nblocks+1])
-    plt.ylim([1,2.7])
+    if first_press_accuracy:
+        plt.ylim([0,1])
+    else:
+        plt.ylim([1,2.7])
     plt.ylabel('Number of key presses')
     plt.xlabel('Block')
     plt.title(f'{condition}, Cluster {cluster}, Trials 1-10 (n={num_subjects})')
