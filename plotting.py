@@ -25,7 +25,7 @@ def plot_validation_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster
         plt.fill_between([6.5,6.5,7.5],[1,3,3],color='gray',alpha=0.15,edgecolor=None)
         plt.fill_between([10.5,10.5,11.5],[1,3,3],color='gray',alpha=0.15,edgecolor=None)
     plt.plot(blocks,np.ones(nblocks)*2.5,'--',color='gray',linewidth=2,alpha=0.6,label='Chance')
-    plt.errorbar(blocks,n_presses_stage_2_mean[:nblocks],n_presses_stage_2_sem[:nblocks],fmt='-',capsize=4,color='green',alpha=0.75,label='Human')
+    plt.errorbar(blocks,n_presses_stage_2_mean[:nblocks],n_presses_stage_2_sem[:nblocks],fmt='-',capsize=4,color='k',alpha=0.75,label='Human')
     plt.plot(blocks,n_presses_stage_2_sim_m1_mean[:nblocks],'--',color='lightcoral',alpha=0.75,label=f'{m1} model')
     plt.plot(blocks,n_presses_stage_2_sim_m2_mean[:nblocks],'--',color='cornflowerblue',alpha=0.75,label=f'{m2} model')
     plt.xlim([0,nblocks+1])
@@ -40,7 +40,7 @@ def plot_validation_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster
 def plot_validation_error_types(data, sim_data_m1, sim_data_m2, condition, cluster, m1='Top-down', m2='Bottom-up', nblocks=12):
     trials_to_probe = 1
     error_types = ['Correct', 'Compression over stage 1 error', 'Compression over stage 2 error', 'Other error']
-    colors = ['green', 'lightcoral', 'cornflowerblue']
+    colors = ['k', 'lightcoral', 'cornflowerblue']
     num_subject = data['tr'].shape[0]
 
     stage2_info = helpers.extract_stage2_info(data, condition)
@@ -151,9 +151,9 @@ def plot_validation_PTS(data_sim, m, ntrials=1):
 
     plt.subplot(gs[0,0])
     mean_policies = np.mean(p_policies.reshape(p_policies.shape[0],-1,p_policies.shape[-1]),axis=0)
-    plt.plot(mean_policies[:,0], label='Hierarchical')
-    plt.plot(mean_policies[:,1], label='Compressed over stage 1')
-    plt.plot(mean_policies[:,2], label='Compressed over stage 2')
+    plt.plot(mean_policies[:,0], color='k', label='Hierarchical')
+    plt.plot(mean_policies[:,1], color='cornflowerblue', label='Compressed over stage 1')
+    plt.plot(mean_policies[:,2], color='lightcoral', label='Compressed over stage 2')
     plt.xticks(np.arange(12)*32+16, np.arange(1,13), rotation=0)
     plt.xlabel('Block')
     plt.ylabel('p(policy)')
