@@ -151,9 +151,9 @@ def plot_validation_PTS(data_sim, m, ntrials=1):
 
     plt.subplot(gs[0,0])
     mean_policies = np.mean(p_policies.reshape(p_policies.shape[0],-1,p_policies.shape[-1]),axis=0)
-    plt.plot(mean_policies[:,0], color='k', label='Hierarchical')
-    plt.plot(mean_policies[:,1], color='cornflowerblue', label='Compressed over stage 1')
-    plt.plot(mean_policies[:,2], color='lightcoral', label='Compressed over stage 2')
+    plt.plot(mean_policies[:,0], color='cornflowerblue', label='Compressed over stage 1')
+    plt.plot(mean_policies[:,1], color='lightcoral', label='Compressed over stage 2')
+    plt.plot(mean_policies[:,2], color='k', label='Hierarchical')
     plt.xticks(np.arange(12)*32+16, np.arange(1,13), rotation=0)
     plt.xlabel('Block')
     plt.ylabel('p(policy)')
