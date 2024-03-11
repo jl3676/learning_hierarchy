@@ -37,11 +37,10 @@ def plot_validation_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster
     plt.show()
 
 
-def plot_validation_error_types(data, sim_data_m1, sim_data_m2, condition, cluster, m1='Top-down', m2='Bottom-up'):
+def plot_validation_error_types(data, sim_data_m1, sim_data_m2, condition, cluster, m1='Top-down', m2='Bottom-up', nblocks=12):
     trials_to_probe = 1
     error_types = ['Correct', 'Compression over stage 1 error', 'Compression over stage 2 error', 'Other error']
     colors = ['green', 'lightcoral', 'cornflowerblue']
-    nblocks = 12
     num_subject = data['tr'].shape[0]
 
     stage2_info = helpers.extract_stage2_info(data, condition)
