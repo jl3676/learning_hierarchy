@@ -1013,7 +1013,9 @@ def get_model_fit_data(data,num_block):
 def slice_data(data, meta_data, condition, exp, cluster):
     keys = data.keys()
     sliced_data = {}
-    inds = (meta_data['Condition'] == condition) & (meta_data['Experiment'].isin(exp)) & (meta_data['Cluster'] == cluster)
+    inds = (meta_data['Experiment'].isin(exp)) & (meta_data['Cluster'] == cluster)
+    if condition != 'all':
+        inds = inds & (meta_data['Condition'] == condition)
     for key in keys:
         sliced_data[key] = data[key][inds]
     return sliced_data
