@@ -109,9 +109,10 @@ def plot_validation_error_types(data, sim_data_m1, sim_data_m2, condition, clust
         plt.ylabel('Proportion')
         plt.xlabel('Block')
         plt.xticks(np.arange(0, nticks, 8)+4, np.arange(1, 1+nblocks))
-        plt.title(f'{error_types[ind_to_plot]}, Cluster {cluster}, stage 2')
+        plt.title(f'{error_types[ind_to_plot]}')
         plt.legend()
 
+    plt.suptitle(f'Choice types, Cluster {cluster}, stage 2')
     plt.tight_layout()
     plt.show()
 
