@@ -175,3 +175,31 @@ def plot_validation_PTS(data_sim, m, ntrials=1):
     plt.suptitle(f'{m}')
     plt.tight_layout()
     plt.show()
+
+def plot_transfer_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster, start_trial=0, trials_to_probe=10, m1='Top-down', m2='Bottom-up', first_press_accuracy=False):
+    num_subjects = data['tr'].shape[0]
+
+    _, n_presses_stage_2 = helpers.calc_mean(data, start_trial=start_trial, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
+    n_presses_stage_2_mean = np.nanmean(n_presses_stage_2,axis=0)
+    n_presses_stage_2_sem = stats.sem(n_presses_stage_2,axis=0,nan_policy='omit')
+    transfer_human = n_presses_stage_2_mean[6] - n_presses_stage_2_mean[10]
+    transfer_human_sem = np.sqrt(n_presses_stage_2_sem[6]**2 + n_presses_stage_2_sem[10]**2)
+
+    _, n_presses_stage_2_sim_m1 = helpers.calc_mean(sim_data_m1, start_trial=0, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
+    n_presses_stage_2_sim_m1_mean = np.mean(n_presses_stage_2_sim_m1,axis=0)
+    transfer_m1 = n_presses_stage_2_sim_m1_mean[6] - n_presses_stage_2_sim_m1_mean[10]
+
+    _, n_presses_stage_2_sim_m2 = helpers.calc_mean(sim_data_m2, start_trial=0, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
+    n_presses_stage_2_sim_m2_mean = np.mean(n_presses_stage_2_sim_m2,axis=0)
+    transfer_m2 = n_presses_stage_2_sim_m2_mean[6] - n_presses_stage_2_sim_m2_mean[10]
+
+    plt.figure(figsize=(6,3))
+
+    plt.bar([1,2,3],[transfer_human,transfer_m1,transfer_m2],color=['k','lightcoral','cornflowerblue'],alpha=0.75)
+    plt.errorbar([1],[transfer_human], [transfer_human_sem],fmt='-',capsize=4,color='k',alpha=0.75)
+    plt.xticks([1,2,3],['Human',m1,m2])
+    plt.xlim([0,4])
+    plt.ylim(-0.1,0.5)
+    plt.ylabel('Number of key presses')
+    plt.title(f'Amount of transfer between test blocks, {condition}, Cluster {cluster} (n={num_subjects})')
+    plt.show()
