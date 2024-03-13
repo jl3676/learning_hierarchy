@@ -126,7 +126,7 @@ def plot_validation_error_types(data, sim_data_m1, sim_data_m2, condition, clust
         plt.savefig(f'plots/validation_error_types_{condition}_cluster{cluster}.svg', format='svg', dpi=1200)
 
 
-def plot_validation_PTS(data_sim, m, ntrials=1):
+def plot_validation_PTS(data_sim, m, ntrials=1, save_vector=False):
     p_policies = data_sim['p_policies_history']
     last_trials = data_sim['TS_2_history'][:,:,-ntrials:]
     max_value = int(np.nanmax(last_trials)) + 1
@@ -181,6 +181,10 @@ def plot_validation_PTS(data_sim, m, ntrials=1):
     plt.suptitle(f'{m}')
     plt.tight_layout()
     plt.show()
+
+    if save_vector:
+        plt.savefig(f'plots/validation_PTS_{m}.svg', format='svg', dpi=1200)
+        
 
 def plot_transfer_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster, start_trial=0, trials_to_probe=10, m1='Top-down', m2='Bottom-up', first_press_accuracy=False):
     num_subjects = data['tr'].shape[0]
