@@ -37,10 +37,11 @@ def plot_validation_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster
     plt.xlabel('Block')
     plt.title(f'{condition}, Cluster {cluster}, Trials 1-10 (n={num_subjects})')
     plt.legend()
-    plt.show()
 
     if save_vector:
         plt.savefig(f'plots/validation_n_presses_{condition}_cluster{cluster}.svg', format='svg', dpi=1200)
+    else:
+        plt.show()
 
 
 def plot_validation_error_types(data, sim_data_m1, sim_data_m2, condition, cluster, m1='Top-down', m2='Bottom-up', nblocks=12, save_vector=False):
@@ -120,10 +121,11 @@ def plot_validation_error_types(data, sim_data_m1, sim_data_m2, condition, clust
 
     plt.suptitle(f'Choice types, Cluster {cluster}, stage 2')
     plt.tight_layout()
-    plt.show()
 
     if save_vector:
         plt.savefig(f'plots/validation_error_types_{condition}_cluster{cluster}.svg', format='svg', dpi=1200)
+    else:
+        plt.show()
 
 
 def plot_validation_PTS(data_sim, m, ntrials=1, save_vector=False):
@@ -180,11 +182,12 @@ def plot_validation_PTS(data_sim, m, ntrials=1, save_vector=False):
     plt.ylabel('TS_2')
     plt.suptitle(f'{m}')
     plt.tight_layout()
-    plt.show()
 
     if save_vector:
         plt.savefig(f'plots/validation_PTS_{m}.svg', format='svg', dpi=1200)
-        
+    else:
+        plt.show()
+
 
 def plot_transfer_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster, start_trial=0, trials_to_probe=10, m1='Top-down', m2='Bottom-up', first_press_accuracy=False):
     num_subjects = data['tr'].shape[0]
