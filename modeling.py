@@ -229,7 +229,7 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 		nC_2 = 2 * num_block
 		PTS = np.ones((nTS,nC_2))
 		PTS_2 = np.ones((nTS_2,nC_2))
-		eps = 0.002
+		eps = 0.002 if meta_learning else 0.0
 		# compression over stage 1, compression over stage 2, full hierarchical
 		p_policies = np.array([1-eps-prior, prior, eps]) if meta_learning else np.array([0.0, 0.0, 1.0])
 		encounter_matrix = np.zeros(nC)
@@ -467,14 +467,8 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 					r_12_12[sub,block,trial] = r_temp
 				else: # record action, RT and reward only for Blocks 3-8
 					a_all[block-2,trial] = join_actions(a_1_temp, a_2_temp)
-					# Come up with artificial RT of 0
-					RT_temp = np.empty((2, counter_1 + max(0,counter_2-1)))
-					RT_temp[:] = np.nan 
-					RT_temp[0,:counter_1] = 0 
-					RT_temp[1,counter_1-1:] = 0 
-					RT_all[block-2,trial] = RT_temp # record artificial RT for this trial
 					# Come up with reward
-					r_temp = np.empty_like(RT_temp)
+					r_temp = np.empty((2, counter_1 + max(0,counter_2-1)))
 					r_temp[:] = np.nan 
 					if counter_1 > 1:
 						# pad some 0 in reward for incorrect presses in the first stage
