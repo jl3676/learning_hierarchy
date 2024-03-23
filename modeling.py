@@ -429,7 +429,14 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 
 						# Use the result observed to infer the current TS again
 						TS_2 = np.argmax(PTS_2[:,c_2])
-						TS_2s[TS_2,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2,state,a_2-1]) 
+						TS_2_alt = np.argmax(PTS_2[:,c_2_alt])
+						TS_2s[TS_2,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2,state,a_2-1]) * p_policies[2]
+						if structure == 'bottom_up':
+							TS_2s[TS_2,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2,state,a_2-1]) * (p_policies[0] + p_policies[1] / 2)
+							TS_2s[TS_2_alt,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2_alt,state,a_2-1]) * p_policies[1] / 2
+						elif structure == 'top_down':
+							TS_2s[TS_2,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2,state,a_2-1]) * (p_policies[0] / 2 + p_policies[1])
+							TS_2s[TS_2_alt,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2_alt,state,a_2-1]) * p_policies[0] / 2
 
 						p_policies[0] *= pchoice_2_compress_1[a_2-1]
 						p_policies[1] *= pchoice_2_compress_2[a_2-1]
