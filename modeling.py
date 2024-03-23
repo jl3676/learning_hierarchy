@@ -9,10 +9,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	Computes the negative log likelihood of the data D given the option model.
 	'''
 	[alpha_2, beta_2, alpha_S2, epsilon, prior] = params
-	eps = 0.002
-	if not meta_learning:
-		eps = 0.0 
-		prior = 0.0
+	eps = 0.002 if meta_learning else 0.0
 
 	llh = 0
 	num_block = 12
@@ -169,10 +166,6 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 		- se_counter1, se_counter2: the sem corresponding to the above mean
 		- num_trial_finished: the sample sizes of the above means
 	'''
-	if not meta_learning:
-		eps = 0.0
-		prior = 0.0
-
 	num_block = 12
 
 	num_trial_12 = 60
@@ -216,7 +209,6 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 		counter_1_all = np.zeros_like(s_1_all)
 		counter_2_all = np.zeros_like(s_1_all)
 		a_all = np.empty((num_block-2,num_trial_else),dtype='object')
-		RT_all = np.empty_like(a_all,dtype='object')
 		r_all = np.empty_like(a_all,dtype='object')
 
 		nTS = 1 # initialize the number of task-set in the first stage
