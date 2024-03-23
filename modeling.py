@@ -137,7 +137,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * (PTS_2[:,c_2]/2 + PTS_2[:,c_2_alt]/2) * p_policies[0]
 				TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2] * p_policies[1]
 				
-			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[i,state,a_2-1]) * PTS_2[:,c_2] * p_policies[2]
+			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2] * p_policies[2]
 
 			p_policies[0] *= pchoice_2_compress_1[a_2-1]
 			p_policies[1] *= pchoice_2_compress_2[a_2-1]
