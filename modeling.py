@@ -9,7 +9,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	Computes the negative log likelihood of the data D given the option model.
 	'''
 	[alpha_2, beta_2, alpha_S2, epsilon, prior] = params
-	eps = 0.002 if meta_learning else 0.0
+	eps = 0.001 if meta_learning else 0.0
 
 	llh = 0
 	num_block = 12
@@ -214,7 +214,7 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 		nC_2 = 2 * num_block
 		PTS = np.ones((nTS,nC_2))
 		PTS_2 = np.ones((nTS_2,nC_2))
-		eps = 0.002 if meta_learning else 0.0
+		eps = 0.001 if meta_learning else 0.0
 		# compression over stage 1, compression over stage 2, full hierarchical
 		p_policies = np.array([1-eps-prior, prior, eps]) if meta_learning else np.array([0.0, 0.0, 1.0])
 		encounter_matrix = np.zeros(nC)
