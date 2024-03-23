@@ -126,15 +126,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 
 			reg += 1e-6
 			PTS_2[:,c_2] = reg / np.sum(reg)
-
-			# if structure == 'bottom_up':
-			# 	TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2] * p_policies[0]
-			# 	TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * (PTS_2[:,c_2]/2 + PTS_2[:,c_2_alt]/2) * p_policies[1]
-			# elif structure == 'top_down':
-			# 	TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * (PTS_2[:,c_2]/2 + PTS_2[:,c_2_alt]/2) * p_policies[0]
-			# 	TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2] * p_policies[1]
 				
-			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2] # * p_policies[2]
+			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 
 			p_policies[0] *= pchoice_2_compress_1[a_2-1]
 			p_policies[1] *= pchoice_2_compress_2[a_2-1]
@@ -372,11 +365,11 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 
 						# Compute flat policy
 						if structure == 'bottom_up':
-							Q_compress_1 = np.mean(TS_2s * PTS_2[:,c_2].reshape(-1, 1, 1), axis=(0,1))
+							Q_compress_1 = np.mean(TS_2s[TS_2], axis=0)
 							Q_compress_2 = (TS_2s[TS_2,state,:] + TS_2s[TS_2_alt,state,:]) / 2
 						elif structure == 'top_down':
 							Q_compress_1 = (TS_2s[TS_2,state,:] + TS_2s[TS_2_alt,state,:]) / 2
-							Q_compress_2 = np.mean(TS_2s * PTS_2[:,c_2].reshape(-1, 1, 1), axis=(0,1))
+							Q_compress_2 = np.mean(TS_2s[TS_2], axis=0)
 						Q_full = TS_2s[TS_2,state,:].copy()
 						
 						if len(actions_tried) > 0:
@@ -391,8 +384,7 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 						p_policies_softmax = softmax(beta_2 * p_policies)
 						pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
 						            + p_policies_softmax[1] * pchoice_2_compress_2 \
-							        + p_policies_softmax[2] * pchoice_2_full
-									
+							        + p_policies_softmax[2] * pchoice_2_full	
 
 						if trial < num_trial_else: p_policies_history[sub, block, trial] = p_policies
 
@@ -421,14 +413,8 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 
 						# Use the result observed to infer the current TS again
 						TS_2 = np.argmax(PTS_2[:,c_2])
-						# TS_2_alt = np.argmax(PTS_2[:,c_2_alt])
-						TS_2s[TS_2,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2,state,a_2-1]) # * p_policies[2]
-						# if structure == 'bottom_up':
-						# 	TS_2s[TS_2,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2,state,a_2-1]) * (p_policies[0] + p_policies[1] / 2)
-						# 	TS_2s[TS_2_alt,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2_alt,state,a_2-1]) * p_policies[1] / 2
-						# elif structure == 'top_down':
-						# 	TS_2s[TS_2,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2,state,a_2-1]) * (p_policies[0] / 2 + p_policies[1])
-						# 	TS_2s[TS_2_alt,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2_alt,state,a_2-1]) * p_policies[0] / 2
+						TS_2_alt = np.argmax(PTS_2[:,c_2_alt])
+						TS_2s[TS_2,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2,state,a_2-1]) 
 
 						p_policies[0] *= pchoice_2_compress_1[a_2-1]
 						p_policies[1] *= pchoice_2_compress_2[a_2-1]
