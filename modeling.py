@@ -8,7 +8,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	Computes the negative log likelihood of the data D given the option model.
 	'''
-	[alpha_2, beta_2, alpha_S2, epsilon, prior] = params
+	[alpha_2, alpha_cf, beta_2, alpha_S2, epsilon, prior] = params
 	eps = 0.002 if meta_learning else 0.0
 
 	llh = 0
@@ -127,7 +127,11 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			reg += 1e-6
 			PTS_2[:,c_2] = reg / np.sum(reg)
 				
-			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
+			RPE = r_2 - TS_2s[:,state,a_2-1]
+			TS_2s[:,state,a_2-1] += alpha_2 * RPE * PTS_2[:,c_2]
+			TS_2s[:,1-state,a_2-1] -= alpha_cf * RPE * PTS_2[:,c_2]
+			TS_2s[:,state,a_2-1] -= alpha_cf * RPE * PTS_2[:,c_2_alt]
+			TS_2s[:,1-state,a_2-1] -= alpha_cf * RPE * PTS_2[:,c_2_alt]
 
 			p_policies[0] *= pchoice_2_compress_1[a_2-1]
 			p_policies[1] *= pchoice_2_compress_2[a_2-1]
@@ -139,7 +143,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	return -llh
 
 
-def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, experiment, structure, meta_learning=True, debug=False):
+def option_model(num_subject, alpha_1, alpha_2, alpha_cf, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, experiment, structure, meta_learning=True, debug=False):
 	'''
 	Fits the option model to the data of the OT-CA1-CA1 task.
 
@@ -414,7 +418,10 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 						# Use the result observed to infer the current TS again
 						TS_2 = np.argmax(PTS_2[:,c_2])
 						TS_2_alt = np.argmax(PTS_2[:,c_2_alt])
-						TS_2s[TS_2,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2,state,a_2-1]) 
+						RPE = correct_2 - TS_2s[TS_2,state,a_2-1]
+						TS_2s[TS_2,state,a_2-1] += alpha_2 * RPE
+						TS_2s[TS_2,1-state,a_2-1] -= alpha_cf * RPE
+						TS_2s[TS_2_alt,:,a_2-1] -= alpha_cf * RPE
 
 						p_policies[0] *= pchoice_2_compress_1[a_2-1]
 						p_policies[1] *= pchoice_2_compress_2[a_2-1]
@@ -713,6 +720,6 @@ def parallel_worker(args):
 
 
 def parallel_simulator(args):
-    this_model, i, niters_sim, alpha_1, alpha_2, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, exp, structure, meta_learning = args
-    this_data = globals()[this_model](niters_sim, alpha_1, alpha_2, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, exp, structure, meta_learning)
+    this_model, i, niters_sim, alpha_1, alpha_2, alpha_cf, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, exp, structure, meta_learning = args
+    this_data = globals()[this_model](niters_sim, alpha_1, alpha_2, alpha_cf, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, exp, structure, meta_learning)
     return i, this_data
