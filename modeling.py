@@ -128,7 +128,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			PTS_2[:,c_2] = reg / np.sum(reg)
 				
 			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
-			# TS_2s[:,1-state,a_2-1] += alpha_cf * alpha_2 * (1 - r_2 - TS_2s[:,1-state,a_2-1]) * PTS_2[:,c_2]
+			TS_2s[:,1-state,a_2-1] += alpha_2 * (1 - r_2 - TS_2s[:,1-state,a_2-1]) * PTS_2[:,c_2]
 			# TS_2s[:,0,a_2-1] += alpha_cf * (1 - r_2 - TS_2s[:,0,a_2-1]) * PTS_2[:,c_2_alt]
 			# TS_2s[:,1,a_2-1] += alpha_cf * (1 - r_2 - TS_2s[:,1,a_2-1]) * PTS_2[:,c_2_alt]
 
@@ -418,7 +418,7 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 						TS_2 = np.argmax(PTS_2[:,c_2])
 						TS_2_alt = np.argmax(PTS_2[:,c_2_alt])
 						TS_2s[TS_2,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2,state,a_2-1])
-						# TS_2s[TS_2,1-state,a_2-1] += alpha_cf * alpha_2 * (1 - correct_2 - TS_2s[TS_2,1-state,a_2-1])
+						TS_2s[TS_2,1-state,a_2-1] += alpha_2 * (1 - correct_2 - TS_2s[TS_2,1-state,a_2-1])
 						# TS_2s[TS_2_alt,:,a_2-1] += alpha_cf * (1 - correct_2 - TS_2s[TS_2_alt,:,a_2-1])
 
 						p_policies[0] *= pchoice_2_compress_1[a_2-1]
@@ -646,8 +646,6 @@ def new_SS_update_option(PTS, c, alpha):
 	'''
 	specs = PTS.shape
 	PTS[:,c] = np.sum(PTS[:,:(c//2)*2], axis=1)
-	if np.sum(PTS[:,c]) > 0:
-		PTS[:,c] /= np.sum(PTS[:,c])
 	new_PTS = np.zeros((specs[0]+1,specs[1]))
 	new_PTS[:-1,:] = PTS 
 	new_PTS[-1,c] = alpha # create new task set
