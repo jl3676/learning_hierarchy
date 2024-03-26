@@ -648,6 +648,8 @@ def new_SS_update_option(PTS, c, alpha):
 	'''
 	specs = PTS.shape
 	PTS[:,c] = np.sum(PTS[:,:(c//2)*2], axis=1)
+	if np.sum(PTS[:,c]) > 0:
+		PTS[:,c] /= np.sum(PTS[:,c])
 	new_PTS = np.zeros((specs[0]+1,specs[1]))
 	new_PTS[:-1,:] = PTS 
 	new_PTS[-1,c] = alpha # create new task set
