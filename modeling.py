@@ -8,8 +8,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	Computes the negative log likelihood of the data D given the option model.
 	'''
-	[alpha_2, alpha_cf, beta_2, alpha_S2, epsilon, prior] = params
+	[alpha_2, alpha_cf, beta_2, concentration_2, epsilon, prior] = params
 	# eps_meta = 10**eps_meta if meta_learning else 0.0
+	concentration_2 = 10**concentration_2
 	eps_meta = 0.01 if meta_learning else 0.0
 
 	llh = 0
@@ -65,7 +66,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			for this_c_2 in sorted([c_2, c_2_alt]):
 				if encounter_matrix_2[this_c_2] == 0:
 					if this_c_2 > 0:
-						PTS_2 = new_SS_update_option(PTS_2, this_c_2, alpha_S2)
+						PTS_2 = new_SS_update_option(PTS_2, this_c_2, concentration_2)
 						TS_2s = np.vstack((TS_2s, [np.ones((2,4)) / 4])) # initialize Q-values for new TS creation
 						nTS_2 += 1
 					# And finally mark this context as encountered
@@ -82,7 +83,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			if block > 0:
 				bias = biases[TS_2_alt].copy()
 				b = np.max(PTS_2[:,c_2_alt])
-				if np.sum(bias) > 0 and np.max(PTS_2[:,c_2]) < 0.5:
+				if np.sum(bias) > 0 and np.max(PTS_2[:,c_2]) < 0.7:
 					bias /= np.sum(bias)
 					PTS_2[:,c_2] = PTS_2[:,c_2] * (1 - b) + bias * b
 
@@ -171,6 +172,7 @@ def option_model(num_subject, alpha_1, alpha_2, alpha_cf, beta_1, beta_2, concen
 
 	# eps_meta = 10**eps_meta if meta_learning else 0.0
 	eps_meta = 0.01 if meta_learning else 0.0
+	concentration_2 = 10**concentration_2
 	nC = num_block
 	nC_2 = 2 * num_block
 
