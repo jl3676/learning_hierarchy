@@ -10,7 +10,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	[alpha_2, alpha_cf, beta_2, alpha_S2, epsilon, prior] = params
 	# eps_meta = 10**eps_meta if meta_learning else 0.0
-	eps_meta = 0.001 if meta_learning else 0.0
+	eps_meta = 0.01 if meta_learning else 0.0
 
 	llh = 0
 	num_block = 12
