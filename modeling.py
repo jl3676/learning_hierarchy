@@ -170,7 +170,7 @@ def option_model(num_subject, alpha_1, alpha_2, alpha_cf, beta_1, beta_2, concen
 	num_trial_else = 32
 
 	# eps_meta = 10**eps_meta if meta_learning else 0.0
-	eps_meta = 0.005 if meta_learning else 0.0
+	eps_meta = 0.01 if meta_learning else 0.0
 	nC = num_block
 	nC_2 = 2 * num_block
 
