@@ -9,7 +9,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	Computes the negative log likelihood of the data D given the option model.
 	'''
 	[alpha_2, alpha_cf, beta_2, alpha_S2, epsilon, prior] = params
-	eps = 0.002 if meta_learning else 0.0
+	eps = 0.001 if meta_learning else 0.0
 
 	llh = 0
 	num_block = 12
@@ -164,9 +164,12 @@ def option_model(num_subject, alpha_1, alpha_2, alpha_cf, beta_1, beta_2, concen
 		- num_trial_finished: the sample sizes of the above means
 	'''
 	num_block = 12
-
 	num_trial_12 = 60
 	num_trial_else = 32
+
+	eps = 0.001 if meta_learning else 0.0
+	nC = num_block
+	nC_2 = 2 * num_block
 
 	population_counter1 = np.zeros((num_subject,num_block-2,num_trial_else))
 	population_counter2 = np.zeros_like(population_counter1)
@@ -214,11 +217,9 @@ def option_model(num_subject, alpha_1, alpha_2, alpha_cf, beta_1, beta_2, concen
 		TS_2s = np.empty((nTS,2,4)) 
 		TSs[0,:,:] = np.ones((2,4)) / 4 # the first built-in TS is just random
 		TS_2s[0,:,:] = np.ones((2,4)) / 4
-		nC = num_block
-		nC_2 = 2 * num_block
 		PTS = np.ones((nTS,nC_2))
 		PTS_2 = np.ones((nTS_2,nC_2))
-		eps = 0.002 if meta_learning else 0.0
+		
 		# compression over stage 1, compression over stage 2, full hierarchical
 		p_policies = np.array([1-eps-prior, prior, eps]) if meta_learning else np.array([0.0, 0.0, 1.0])
 		encounter_matrix = np.zeros(nC)
