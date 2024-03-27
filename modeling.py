@@ -9,6 +9,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	Computes the negative log likelihood of the data D given the option model.
 	'''
 	[alpha_2, alpha_cf, beta_2, alpha_S2, epsilon, prior, eps] = params
+	eps = 10**eps
 	# eps = 0.001 if meta_learning else 0.0
 
 	llh = 0
@@ -167,6 +168,7 @@ def option_model(num_subject, alpha_1, alpha_2, alpha_cf, beta_1, beta_2, concen
 	num_trial_12 = 60
 	num_trial_else = 32
 
+	eps = 10**eps
 	# eps = 0.001 if meta_learning else 0.0
 	nC = num_block
 	nC_2 = 2 * num_block
