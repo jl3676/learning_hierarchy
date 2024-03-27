@@ -432,7 +432,7 @@ def option_model(num_subject, alpha_1, alpha_2, alpha_cf, beta_1, beta_2, concen
 						p_policies[2] *= pchoice_2_full[a_2-1]
 						p_policies /= np.sum(p_policies)
 						if np.min(p_policies) < eps_meta:
-							print(block, trial, p_policies, pchoice_2_compress_1[a_2-1], pchoice_2_compress_2[a_2-1], pchoice_2_full[a_2-1])
+							# print(block, trial, p_policies, pchoice_2_compress_1[a_2-1], pchoice_2_compress_2[a_2-1], pchoice_2_full[a_2-1])
 							p_policies += eps_meta
 						p_policies /= np.sum(p_policies)
 
