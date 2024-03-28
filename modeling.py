@@ -10,6 +10,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	[alpha_2, beta_2, concentration_2, epsilon, prior] = params
 	# eps_meta = 10**eps_meta if meta_learning else 0.0
+	alpha_cf = 0.6
 	concentration_2 = 10**concentration_2
 	eps_meta = 0.01 if meta_learning else 0.0
 
@@ -130,10 +131,14 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			PTS_2[:,c_2] = reg / np.sum(reg)
 				
 			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
-			# if r_2:
-			# 	TS_2s[:,1-state,a_2-1] -= alpha_cf * alpha_2 * TS_2s[:,1-state,a_2-1] * PTS_2[:,c_2]
-			# 	TS_2s[:,0,a_2-1] -= alpha_cf * alpha_2 * TS_2s[:,0,a_2-1] * PTS_2[:,c_2_alt]
-			# 	TS_2s[:,1,a_2-1] -= alpha_cf * alpha_2 * TS_2s[:,1,a_2-1] * PTS_2[:,c_2_alt]
+			if r_2:
+				TS_2s[:,1-state,a_2-1] -= alpha_cf * alpha_2 * TS_2s[:,1-state,a_2-1] * PTS_2[:,c_2]
+				TS_2s[:,0,a_2-1] -= alpha_cf * alpha_2 * TS_2s[:,0,a_2-1] * PTS_2[:,c_2_alt]
+				TS_2s[:,1,a_2-1] -= alpha_cf * alpha_2 * TS_2s[:,1,a_2-1] * PTS_2[:,c_2_alt]
+			else:
+				TS_2s[:,1-state,a_2-1] += alpha_cf * alpha_2 * (1/3 - TS_2s[:,1-state,a_2-1]) * PTS_2[:,c_2]
+				TS_2s[:,0,a_2-1] += alpha_cf * alpha_2 * (1/3 - TS_2s[:,0,a_2-1]) * PTS_2[:,c_2_alt]
+				TS_2s[:,1,a_2-1] += alpha_cf * alpha_2 * (1/3 - TS_2s[:,1,a_2-1]) * PTS_2[:,c_2_alt]
 
 			p_policies[0] *= pchoice_2_compress_1[a_2-1]
 			p_policies[1] *= pchoice_2_compress_2[a_2-1]
@@ -173,6 +178,7 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 	# eps_meta = 10**eps_meta if meta_learning else 0.0
 	eps_meta = 0.01 if meta_learning else 0.0
 	concentration_2 = 10**concentration_2
+	alpha_cf = 0.6
 	nC = num_block
 	nC_2 = 2 * num_block
 
@@ -425,16 +431,18 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 						TS_2 = np.argmax(PTS_2[:,c_2])
 						TS_2_alt = np.argmax(PTS_2[:,c_2_alt])
 						TS_2s[TS_2,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2,state,a_2-1])
-						# if correct_2:
-						# 	TS_2s[TS_2,1-state,a_2-1] -= alpha_cf * alpha_2 * TS_2s[TS_2,1-state,a_2-1]
-						# 	TS_2s[TS_2_alt,:,a_2-1] -= alpha_cf * alpha_2 * TS_2s[TS_2_alt,:,a_2-1]
+						if correct_2:
+							TS_2s[TS_2,1-state,a_2-1] -= alpha_cf * alpha_2 * TS_2s[TS_2,1-state,a_2-1]
+							TS_2s[TS_2_alt,:,a_2-1] -= alpha_cf * alpha_2 * TS_2s[TS_2_alt,:,a_2-1]
+						else:
+							TS_2s[TS_2,1-state,a_2-1] += alpha_cf * alpha_2 * (1/3 - TS_2s[TS_2,1-state,a_2-1])
+							TS_2s[TS_2_alt,:,a_2-1] += alpha_cf * alpha_2 * (1/3 - TS_2s[TS_2_alt,:,a_2-1])
 
 						p_policies[0] *= pchoice_2_compress_1[a_2-1]
 						p_policies[1] *= pchoice_2_compress_2[a_2-1]
 						p_policies[2] *= pchoice_2_full[a_2-1]
 						p_policies /= np.sum(p_policies)
 						if np.min(p_policies) < eps_meta:
-							# print(block, trial, p_policies, pchoice_2_compress_1[a_2-1], pchoice_2_compress_2[a_2-1], pchoice_2_full[a_2-1])
 							p_policies += eps_meta
 						p_policies /= np.sum(p_policies)
 
