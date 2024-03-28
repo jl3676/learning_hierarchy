@@ -8,9 +8,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	Computes the negative log likelihood of the data D given the option model.
 	'''
-	[alpha_2, beta_2, concentration_2, epsilon, prior] = params
+	[alpha_2, alpha_cf, beta_2, concentration_2, epsilon, prior] = params
 	# eps_meta = 10**eps_meta if meta_learning else 0.0
-	alpha_cf = 0.6
 	concentration_2 = 10**concentration_2
 	eps_meta = 0.01 if meta_learning else 0.0
 
@@ -151,7 +150,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	return -llh
 
 
-def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, experiment, structure, meta_learning=True, debug=False):
+def option_model(num_subject, alpha_1, alpha_2, alpha_cf, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, experiment, structure, meta_learning=True, debug=False):
 	'''
 	Fits the option model to the data of the OT-CA1-CA1 task.
 
@@ -738,6 +737,6 @@ def parallel_worker(args):
 
 
 def parallel_simulator(args):
-    this_model, i, niters_sim, alpha_1, alpha_2, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, exp, structure, meta_learning = args
-    this_data = globals()[this_model](niters_sim, alpha_1, alpha_2, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, exp, structure, meta_learning)
+    this_model, i, niters_sim, alpha_1, alpha_2, alpha_cf, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, exp, structure, meta_learning = args
+    this_data = globals()[this_model](niters_sim, alpha_1, alpha_2, alpha_cf, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, exp, structure, meta_learning)
     return i, this_data
