@@ -8,7 +8,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	Computes the negative log likelihood of the data D given the option model.
 	'''
-	[alpha_2, alpha_cf, beta_2, concentration_2, epsilon, prior] = params
+	[alpha_2, beta_2, concentration_2, epsilon, prior] = params
 	# eps_meta = 10**eps_meta if meta_learning else 0.0
 	concentration_2 = 10**concentration_2
 	eps_meta = 0.01 if meta_learning else 0.0
@@ -55,10 +55,10 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			r_2 = int(D[t, 4])
 
 			# (v) Second stage starts
-			if structure == 'bottom_up':
+			if structure == 'backward':
 				cue = s_2
 				state = s_1
-			elif structure == 'top_down':
+			elif structure == 'forward':
 				cue = s_1
 				state = s_2
 			c_2 = block * 2 + cue # The context of the second stage
@@ -88,10 +88,10 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 					PTS_2[:,c_2] = PTS_2[:,c_2] * (1 - b) + bias * b
 
 			lt_2 = 0
-			if structure == 'bottom_up':
+			if structure == 'backward':
 				Q_compress_1 = np.mean(TS_2s * PTS_2[:,c_2].reshape(-1, 1, 1), axis=(0,1))
 				Q_compress_2 = np.mean(TS_2s * (PTS_2[:,c_2]/2 + PTS_2[:,c_2_alt]/2).reshape(-1, 1, 1), axis=0)[state]
-			elif structure == 'top_down':
+			elif structure == 'forward':
 				Q_compress_1 = np.mean(TS_2s * (PTS_2[:,c_2]/2 + PTS_2[:,c_2_alt]/2).reshape(-1, 1, 1), axis=0)[state]
 				Q_compress_2 = np.mean(TS_2s * PTS_2[:,c_2].reshape(-1, 1, 1), axis=(0,1))
 			Q_full = np.mean(TS_2s * PTS_2[:,c_2].reshape(-1, 1, 1), axis=0)[state]
@@ -130,10 +130,10 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			PTS_2[:,c_2] = reg / np.sum(reg)
 				
 			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
-			if r_2:
-				TS_2s[:,1-state,a_2-1] -= alpha_cf * alpha_2 * TS_2s[:,1-state,a_2-1] * PTS_2[:,c_2]
-				TS_2s[:,0,a_2-1] -= alpha_cf * alpha_2 * TS_2s[:,0,a_2-1] * PTS_2[:,c_2_alt]
-				TS_2s[:,1,a_2-1] -= alpha_cf * alpha_2 * TS_2s[:,1,a_2-1] * PTS_2[:,c_2_alt]
+			# if r_2:
+			# 	TS_2s[:,1-state,a_2-1] -= alpha_cf * alpha_2 * TS_2s[:,1-state,a_2-1] * PTS_2[:,c_2]
+			# 	TS_2s[:,0,a_2-1] -= alpha_cf * alpha_2 * TS_2s[:,0,a_2-1] * PTS_2[:,c_2_alt]
+			# 	TS_2s[:,1,a_2-1] -= alpha_cf * alpha_2 * TS_2s[:,1,a_2-1] * PTS_2[:,c_2_alt]
 
 			p_policies[0] *= pchoice_2_compress_1[a_2-1]
 			p_policies[1] *= pchoice_2_compress_2[a_2-1]
@@ -146,7 +146,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	return -llh
 
 
-def option_model(num_subject, alpha_1, alpha_2, alpha_cf, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, experiment, structure, meta_learning=True, debug=False):
+def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, experiment, structure, meta_learning=True, debug=False):
 	'''
 	Fits the option model to the data of the OT-CA1-CA1 task.
 
@@ -336,10 +336,10 @@ def option_model(num_subject, alpha_1, alpha_2, alpha_cf, beta_1, beta_2, concen
 
 				# (v) Second stage starts
 				actions_tried = set()
-				if structure == 'bottom_up':
+				if structure == 'backward':
 					cue = s_2 
 					state = s_1
-				elif structure == 'top_down':
+				elif structure == 'forward':
 					cue = s_1
 					state = s_2
 				c_2 = block * 2 + cue # The context of the second stage
@@ -374,10 +374,10 @@ def option_model(num_subject, alpha_1, alpha_2, alpha_cf, beta_1, beta_2, concen
 						if trial < num_trial_else: TS_2_history[sub,c_2,trial] = TS_2 
 
 						# Compute flat policy
-						if structure == 'bottom_up':
+						if structure == 'backward':
 							Q_compress_1 = np.mean(TS_2s[TS_2], axis=0)
 							Q_compress_2 = (TS_2s[TS_2,state,:] + TS_2s[TS_2_alt,state,:]) / 2
-						elif structure == 'top_down':
+						elif structure == 'forward':
 							Q_compress_1 = (TS_2s[TS_2,state,:] + TS_2s[TS_2_alt,state,:]) / 2
 							Q_compress_2 = np.mean(TS_2s[TS_2], axis=0)
 						Q_full = TS_2s[TS_2,state,:].copy()
@@ -425,9 +425,9 @@ def option_model(num_subject, alpha_1, alpha_2, alpha_cf, beta_1, beta_2, concen
 						TS_2 = np.argmax(PTS_2[:,c_2])
 						TS_2_alt = np.argmax(PTS_2[:,c_2_alt])
 						TS_2s[TS_2,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2,state,a_2-1])
-						if correct_2:
-							TS_2s[TS_2,1-state,a_2-1] -= alpha_cf * alpha_2 * TS_2s[TS_2,1-state,a_2-1]
-							TS_2s[TS_2_alt,:,a_2-1] -= alpha_cf * alpha_2 * TS_2s[TS_2_alt,:,a_2-1]
+						# if correct_2:
+						# 	TS_2s[TS_2,1-state,a_2-1] -= alpha_cf * alpha_2 * TS_2s[TS_2,1-state,a_2-1]
+						# 	TS_2s[TS_2_alt,:,a_2-1] -= alpha_cf * alpha_2 * TS_2s[TS_2_alt,:,a_2-1]
 
 						p_policies[0] *= pchoice_2_compress_1[a_2-1]
 						p_policies[1] *= pchoice_2_compress_2[a_2-1]
@@ -730,6 +730,6 @@ def parallel_worker(args):
 
 
 def parallel_simulator(args):
-    this_model, i, niters_sim, alpha_1, alpha_2, alpha_cf, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, exp, structure, meta_learning = args
-    this_data = globals()[this_model](niters_sim, alpha_1, alpha_2, alpha_cf, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, exp, structure, meta_learning)
+    this_model, i, niters_sim, alpha_1, alpha_2, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, exp, structure, meta_learning = args
+    this_data = globals()[this_model](niters_sim, alpha_1, alpha_2, beta_1, beta_2, concentration_1, concentration_2, epsilon, prior, exp, structure, meta_learning)
     return i, this_data
