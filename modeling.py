@@ -83,7 +83,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			if block > 0:
 				bias = biases[TS_2_alt].copy()
 				b = np.max(PTS_2[:,c_2_alt])
-				if np.sum(bias) > 0 and np.max(PTS_2[:,c_2]) < 0.5:
+				if np.sum(bias) > 0 and np.max(PTS_2[:,c_2]) < 0.7:
 					bias /= np.sum(bias)
 					PTS_2[:,c_2] = PTS_2[:,c_2] * (1 - b) + bias * b
 
@@ -368,7 +368,7 @@ def option_model(num_subject, alpha_1, alpha_2, alpha_cf, beta_1, beta_2, concen
 						if block > 0:
 							bias = biases[TS_2_alt].copy()
 							b = np.max(PTS_2[:,c_2_alt])
-							if np.sum(bias) > 0 and np.max(PTS_2[:,c_2]) < 0.5:
+							if np.sum(bias) > 0 and np.max(PTS_2[:,c_2]) < 0.7:
 								bias /= np.sum(bias)
 								PTS_2[:,c_2] = PTS_2[:,c_2] * (1 - b) + bias * b
 						TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0]
