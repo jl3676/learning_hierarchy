@@ -163,7 +163,7 @@ def plot_validation_PTS(data_sim, m, ntrials=1, save_vector=False):
 
     plt.subplot(gs[0,0])
     mean_policies = np.nanmean(p_policies.reshape(p_policies.shape[0],-1,p_policies.shape[-1]),axis=0)
-    mean_policies = mean_policies[~np.isnan(mean_policies[:,0]),:]
+    mean_policies = mean_policies[mean_policies[:,0]>0,:]
     plt.plot(mean_policies[:,0], color='cornflowerblue', label='Compressed over stage 1')
     plt.plot(mean_policies[:,1], color='lightcoral', label='Compressed over stage 2')
     plt.plot(mean_policies[:,2], color='k', label='Hierarchical')
