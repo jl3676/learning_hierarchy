@@ -130,7 +130,8 @@ def plot_validation_error_types(data, sim_data_m1, sim_data_m2, condition, clust
 
 def plot_validation_PTS(data_sim, m, ntrials=1, save_vector=False):
     p_policies = data_sim['p_policies_history']
-    last_trials = data_sim['TS_2_history'][:,:,-ntrials:]
+    last_trials = data_sim['TS_2_history'][:,:,32-ntrials:32]
+    last_trials[:,:2,:] = data_sim['TS_2_history'][:,:2,-ntrials:]
     max_value = int(np.nanmax(last_trials)) + 1
 
     probabilities_per_subject = []
@@ -161,11 +162,11 @@ def plot_validation_PTS(data_sim, m, ntrials=1, save_vector=False):
     gs = gridspec.GridSpec(3, 1, height_ratios=[1, 2, 2])
 
     plt.subplot(gs[0,0])
-    mean_policies = np.mean(p_policies.reshape(p_policies.shape[0],-1,p_policies.shape[-1]),axis=0)
+    mean_policies = np.nanmean(p_policies.reshape(p_policies.shape[0],-1,p_policies.shape[-1]),axis=0)
     plt.plot(mean_policies[:,0], color='cornflowerblue', label='Compressed over stage 1')
     plt.plot(mean_policies[:,1], color='lightcoral', label='Compressed over stage 2')
     plt.plot(mean_policies[:,2], color='k', label='Hierarchical')
-    plt.xticks(np.arange(12)*32+16, np.arange(1,13), rotation=0)
+    plt.xticks([30, 90]+list(np.arange(10)*32+16+120), np.arange(1,13), rotation=0)
     plt.xlabel('Block')
     plt.ylabel('p(policy)')
     plt.legend()

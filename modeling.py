@@ -189,7 +189,7 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 	population_counter1_12 = np.zeros((num_subject,2,num_trial_12))
 	population_counter2_12 = np.zeros((num_subject,2,num_trial_12))
 	p_policies_history = np.zeros((num_subject,num_block,num_trial_else,3))
-	TS_2_history = np.full((num_subject,num_block*2,num_trial_else), np.nan)
+	TS_2_history = np.full((num_subject,num_block*2,num_trial_12), np.nan)
 
 	# run the model
 	for sub in range(num_subject):
@@ -371,7 +371,7 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 								PTS_2[:,c_2] = PTS_2[:,c_2] * (1 - b) + bias * b
 						TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0]
 						TS_2_alt = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2_alt])[0]
-						if trial < num_trial_else: TS_2_history[sub,c_2,trial] = TS_2 
+						TS_2_history[sub,c_2,trial] = TS_2 
 
 						# Compute flat policy
 						if structure == 'backward':
@@ -396,7 +396,7 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 						            + p_policies_softmax[1] * pchoice_2_compress_2 \
 							        + p_policies_softmax[2] * pchoice_2_full	
 
-						if trial < num_trial_else: p_policies_history[sub, block, trial] = p_policies
+						p_policies_history[sub, block, trial] = p_policies
 
 						a_2 = np.random.choice(np.arange(1,5), 1, p=pchoice_2)[0]
 						actions_tried.add(a_2-1)
@@ -425,16 +425,12 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 						TS_2 = np.argmax(PTS_2[:,c_2])
 						TS_2_alt = np.argmax(PTS_2[:,c_2_alt])
 						TS_2s[TS_2,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2,state,a_2-1])
-						# if correct_2:
-						# 	TS_2s[TS_2,1-state,a_2-1] -= alpha_cf * alpha_2 * TS_2s[TS_2,1-state,a_2-1]
-						# 	TS_2s[TS_2_alt,:,a_2-1] -= alpha_cf * alpha_2 * TS_2s[TS_2_alt,:,a_2-1]
 
 						p_policies[0] *= pchoice_2_compress_1[a_2-1]
 						p_policies[1] *= pchoice_2_compress_2[a_2-1]
 						p_policies[2] *= pchoice_2_full[a_2-1]
 						p_policies /= np.sum(p_policies)
 						if np.min(p_policies) < eps_meta:
-							# print(block, trial, p_policies, pchoice_2_compress_1[a_2-1], pchoice_2_compress_2[a_2-1], pchoice_2_full[a_2-1])
 							p_policies += eps_meta
 						p_policies /= np.sum(p_policies)
 
