@@ -188,7 +188,7 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 	tr = np.zeros((num_subject,8))
 	population_counter1_12 = np.zeros((num_subject,2,num_trial_12))
 	population_counter2_12 = np.zeros((num_subject,2,num_trial_12))
-	p_policies_history = np.zeros((num_subject,num_block,num_trial_else,3))
+	p_policies_history = np.zeros((num_subject,num_block,num_trial_12,3))
 	TS_2_history = np.full((num_subject,num_block*2,num_trial_12), np.nan)
 
 	# run the model
