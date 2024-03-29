@@ -132,9 +132,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 
 			# counterfactual learning
-			TS_2s[:,1-state,a_2-1] += alpha_cf * alpha_2 * ((1 - r_2) / 3 - TS_2s[:,1-state,a_2-1]) * PTS_2[:,c_2]
-			TS_2s[:,0,a_2-1] += alpha_cf * alpha_2 * ((1 - r_2) / 3 - TS_2s[:,0,a_2-1]) * PTS_2[:,c_2_alt]
-			TS_2s[:,1,a_2-1] += alpha_cf * alpha_2 * ((1 - r_2) / 3 - TS_2s[:,1,a_2-1]) * PTS_2[:,c_2_alt]
+			TS_2s[:,1-state,a_2-1] += alpha_cf * alpha_2 * ((1 - r_2) / 3 - TS_2s[:,1-state,a_2-1]) * PTS_2[:,c_2] / (3 ** (1 - r_2))
+			TS_2s[:,0,a_2-1] += alpha_cf * alpha_2 * ((1 - r_2) - TS_2s[:,0,a_2-1]) * PTS_2[:,c_2_alt] / (3 ** (1 - r_2))
+			TS_2s[:,1,a_2-1] += alpha_cf * alpha_2 * ((1 - r_2) - TS_2s[:,1,a_2-1]) * PTS_2[:,c_2_alt] / (3 ** (1 - r_2))
 
 			p_policies[0] *= pchoice_2_compress_1[a_2-1]
 			p_policies[1] *= pchoice_2_compress_2[a_2-1]
@@ -429,8 +429,8 @@ def option_model(num_subject, alpha_1, alpha_2, alpha_cf, beta_1, beta_2, concen
 						TS_2s[TS_2,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2,state,a_2-1])
 
 						# counterfactual learning
-						TS_2s[TS_2,1-state,a_2-1] += alpha_cf * alpha_2 * ((1 - correct_2) / 3 - TS_2s[TS_2,1-state,a_2-1])
-						TS_2s[TS_2_alt,:,a_2-1] += alpha_cf * alpha_2 * ((1 - correct_2) / 3 - TS_2s[TS_2_alt,:,a_2-1])
+						TS_2s[TS_2,1-state,a_2-1] += alpha_cf * alpha_2 * ((1 - correct_2) - TS_2s[TS_2,1-state,a_2-1]) / (3 ** (1 - correct_2))
+						TS_2s[TS_2_alt,:,a_2-1] += alpha_cf * alpha_2 * ((1 - correct_2) - TS_2s[TS_2_alt,:,a_2-1]) / (3 ** (1 - correct_2))
 
 						p_policies[0] *= pchoice_2_compress_1[a_2-1]
 						p_policies[1] *= pchoice_2_compress_2[a_2-1]
