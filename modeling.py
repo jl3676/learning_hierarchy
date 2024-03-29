@@ -132,7 +132,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 
 			# counterfactual learning
-			TS_2s[:,1-state,a_2-1] += alpha_cf * alpha_2 * ((1 - r_2) - TS_2s[:,1-state,a_2-1]) * PTS_2[:,c_2] / (3 ** (1 - r_2))
+			TS_2s[:,1-state,a_2-1] += alpha_cf * alpha_2 * ((1 - r_2) / 3 - TS_2s[:,1-state,a_2-1]) * PTS_2[:,c_2] / (3 ** (1 - r_2))
 			TS_2s[:,0,a_2-1] += alpha_cf * alpha_2 * ((1 - r_2) - TS_2s[:,0,a_2-1]) * PTS_2[:,c_2_alt] / (3 ** (1 - r_2))
 			TS_2s[:,1,a_2-1] += alpha_cf * alpha_2 * ((1 - r_2) - TS_2s[:,1,a_2-1]) * PTS_2[:,c_2_alt] / (3 ** (1 - r_2))
 
