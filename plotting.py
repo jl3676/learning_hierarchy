@@ -180,12 +180,14 @@ def plot_validation_PTS(data_sim, m, ntrials=1, save_vector=False, pallette=None
     if pallette is None:
         c = 180
         cmap = sns.diverging_palette(c, c+180, s=100, as_cmap=True)
-    elif pallette == 'V1':
-        cmap = sns.light_palette("#5da845", as_cmap=True)
-    elif pallette == 'V2':
-        cmap = sns.light_palette("#2f93c4", as_cmap=True)
-    elif pallette == 'V3':
-        cmap = sns.light_palette("#f58223", as_cmap=True)
+    else:
+        cmap = sns.color_palette('Greys', as_cmap=True)
+    # elif pallette == 'V1':
+    #     cmap = sns.light_palette("#5da845", as_cmap=True)
+    # elif pallette == 'V2':
+    #     cmap = sns.light_palette("#2f93c4", as_cmap=True)
+    # elif pallette == 'V3':
+    #     cmap = sns.light_palette("#f58223", as_cmap=True)
     sns.heatmap(average_probabilities,vmin=vmin,vmax=vmax,cmap=cmap,square=True)
     plt.xticks(np.arange(12)*2+1, np.arange(1,13), rotation=0)
     plt.yticks(np.arange(12)*2+0.5, np.arange(12)*2+1)
