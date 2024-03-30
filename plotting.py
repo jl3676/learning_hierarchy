@@ -128,7 +128,7 @@ def plot_validation_error_types(data, sim_data_m1, sim_data_m2, condition, clust
         plt.show()
 
 
-def plot_validation_PTS(data_sim, m, ntrials=1, save_vector=False):
+def plot_validation_PTS(data_sim, m, ntrials=1, save_vector=False, pallette=None):
     p_policies = data_sim['p_policies_history']
     last_trials = data_sim['TS_2_history'][:,:,32-ntrials:32]
     last_trials[:,:2,:] = data_sim['TS_2_history'][:,:2,-ntrials:]
@@ -176,10 +176,16 @@ def plot_validation_PTS(data_sim, m, ntrials=1, save_vector=False):
     vmin = 0
     # vmax = np.max(average_probabilities) 
     vmax = 1
-    c = 180
-    # cmap = sns.diverging_palette(c, c+180, s=100, as_cmap=True)
-    # cmap = sns.color_palette("Greys", as_cmap=True)
-    cmap = sns.light_palette("seagreen", as_cmap=True)
+    
+    if pallette is None:
+        c = 180
+        cmap = sns.diverging_palette(c, c+180, s=100, as_cmap=True)
+    elif pallette == 'V1':
+        cmap = sns.light_palette("#5da845", as_cmap=True)
+    elif pallette == 'V2':
+        cmap = sns.light_palette("#2f93c4", as_cmap=True)
+    elif pallette == 'V3':
+        cmap = sns.light_palette("#f58223", as_cmap=True)
     sns.heatmap(average_probabilities,vmin=vmin,vmax=vmax,cmap=cmap,square=True)
     plt.xticks(np.arange(12)*2+1, np.arange(1,13), rotation=0)
     plt.yticks(np.arange(12)*2+0.5, np.arange(12)*2+1)
