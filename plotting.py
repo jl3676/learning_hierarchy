@@ -128,7 +128,7 @@ def plot_validation_error_types(data, sim_data_m1, sim_data_m2, condition, clust
         plt.show()
 
 
-def plot_validation_PTS(data_sim, m, ntrials=1, save_vector=False, pallette=None):
+def plot_validation_PTS(data_sim, m, cond, ntrials=1, save_vector=False, pallette=None):
     p_policies = data_sim['p_policies_history']
     last_trials = data_sim['TS_2_history'][:,:,32-ntrials:32]
     last_trials[:,:2,:] = data_sim['TS_2_history'][:,:2,-ntrials:]
@@ -197,7 +197,7 @@ def plot_validation_PTS(data_sim, m, ntrials=1, save_vector=False, pallette=None
     plt.tight_layout()
 
     if save_vector:
-        plt.savefig(f'plots/validation_PTS_{m}.svg', format='svg', dpi=1200)
+        plt.savefig(f'plots/validation_PTS_{m}_{cond}.svg', format='svg', dpi=1200)
     else:
         plt.show()
 
