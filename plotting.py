@@ -174,7 +174,8 @@ def plot_validation_PTS(data_sim, m, ntrials=1, save_vector=False):
 
     plt.subplot(gs[1:,0])
     vmin = 0
-    vmax = np.max(average_probabilities)
+    # vmax = np.max(average_probabilities) 
+    vmax = 1
     c = 180
     # cmap = sns.diverging_palette(c, c+180, s=100, as_cmap=True)
     cmap = sns.color_palette("Greys", as_cmap=True)
