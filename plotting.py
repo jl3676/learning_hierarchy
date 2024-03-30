@@ -176,7 +176,8 @@ def plot_validation_PTS(data_sim, m, ntrials=1, save_vector=False):
     vmin = 0
     vmax = np.max(average_probabilities)
     c = 180
-    cmap = sns.diverging_palette(c, c+180, s=100, as_cmap=True)
+    # cmap = sns.diverging_palette(c, c+180, s=100, as_cmap=True)
+    cmap = sns.color_palette("Greys", as_cmap=True)
     sns.heatmap(average_probabilities,vmin=vmin,vmax=vmax,cmap=cmap,square=True)
     plt.xticks(np.arange(12)*2+1, np.arange(1,13), rotation=0)
     plt.yticks(np.arange(12)*2+0.5, np.arange(12)*2+1)
@@ -218,3 +219,63 @@ def plot_transfer_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster, 
     plt.ylabel('Number of key presses')
     plt.title(f'Amount of transfer between test blocks, {condition}, Cluster {cluster} (n={num_subjects})')
     plt.show()
+
+def plot_transfer_learning_curves(data, meta_data, cond1, cond2, cond3, exp, cluster, start_trial=0, trials_to_probe=10, first_press_accuracy=False, save_vector=False):
+    data_1 = helpers.slice_data(data, meta_data, cond1, exp=exp, cluster=cluster)
+    num_subjects_1 = data_1['tr'].shape[0]
+    data_2 = helpers.slice_data(data, meta_data, cond2, exp=exp, cluster=cluster)
+    num_subjects_2 = data_2['tr'].shape[0]
+    if cond3 != '':
+        data_3 = helpers.slice_data(data, meta_data, cond3, exp=exp, cluster=cluster)
+        num_subjects_3 = data_3['tr'].shape[0]
+
+    _, n_presses_stage_2_1 = helpers.calc_mean(data_1, start_trial=start_trial, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
+    n_presses_stage_2_1 -= np.nanmean(n_presses_stage_2_1[:,4:6], axis=1).reshape(-1,1)
+    n_presses_stage_2_1_mean = np.nanmean(n_presses_stage_2_1,axis=0)
+    n_presses_stage_2_1_sem = stats.sem(n_presses_stage_2_1,axis=0,nan_policy='omit')
+
+    alternative = 'greater' if not first_press_accuracy else 'less'
+    print(f'One-sided paired t-test between Blocks 7 and 11 for {cond1}:')
+    print(stats.ttest_rel(n_presses_stage_2_1[:,6], n_presses_stage_2_1[:,10], alternative=alternative, nan_policy='omit'))
+    print()
+
+    _, n_presses_stage_2_2 = helpers.calc_mean(data_2, start_trial=start_trial, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
+    n_presses_stage_2_2 -= np.nanmean(n_presses_stage_2_2[:,4:6], axis=1).reshape(-1,1)
+    n_presses_stage_2_2_mean = np.nanmean(n_presses_stage_2_2,axis=0)
+    n_presses_stage_2_2_sem = stats.sem(n_presses_stage_2_2,axis=0,nan_policy='omit')
+
+    print(f'One-sided paired t-test between Blocks 7 and 11 for {cond2}:')
+    print(stats.ttest_rel(n_presses_stage_2_2[:,6], n_presses_stage_2_2[:,10], alternative=alternative, nan_policy='omit'))
+    print()
+
+    print(f'One-sided t-test between {cond1} and {cond2} on Block 11:')
+    print(stats.ttest_ind(n_presses_stage_2_1[:,10], n_presses_stage_2_2[:,10], alternative=alternative, nan_policy='omit'))
+    print()
+
+    if cond3 != '':
+        _, n_presses_stage_2_3 = helpers.calc_mean(data_3, start_trial=start_trial, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
+        n_presses_stage_2_3 -= np.nanmean(n_presses_stage_2_3[:,4:6], axis=1).reshape(-1,1)
+        n_presses_stage_2_3_mean = np.nanmean(n_presses_stage_2_3,axis=0)
+        n_presses_stage_2_3_sem = stats.sem(n_presses_stage_2_3,axis=0,nan_policy='omit')
+        print(f'One-sided paired t-test between Blocks 7 and 11 for {cond3}:')
+        print(stats.ttest_rel(n_presses_stage_2_3[:,6], n_presses_stage_2_3[:,10], alternative=alternative, nan_policy='omit'))
+        print()
+        print(f'One-sided t-test between {cond2} and {cond3} on Block 11:')
+        print(stats.ttest_ind(n_presses_stage_2_3[:,10], n_presses_stage_2_2[:,10], alternative=alternative, nan_policy='omit'))
+        
+    blocks = range(7,13)
+    plt.errorbar(blocks,n_presses_stage_2_1_mean[6:],n_presses_stage_2_1_sem[6:],fmt='-',capsize=2,alpha=0.75,label=cond1+f' (n={num_subjects_1})')
+    plt.errorbar(blocks,n_presses_stage_2_2_mean[6:],n_presses_stage_2_2_sem[6:],fmt='-',capsize=2,alpha=0.75,label=cond2+f' (n={num_subjects_2})')
+    if cond3 != '':
+        plt.errorbar(blocks,n_presses_stage_2_3_mean[6:],n_presses_stage_2_3_sem[6:],fmt='-',capsize=2,alpha=0.75,label=cond3+f' (n={num_subjects_3})')
+    plt.xlim([blocks[0]-0.5,blocks[-1]+0.5])
+    plt.ylim([-0.3, 0.5])
+    plt.ylabel(r'$\Delta$ number of key presses')
+    plt.xlabel('Block')
+    plt.title(f'Transfer performance, Cluster {cluster}, Trials {start_trial+1}-{start_trial+trials_to_probe}')
+    plt.legend()
+
+    if save_vector:
+        plt.savefig(f'plots/transfer_learning_curves_{cond1}_{cond2}_{cond3}_cluster{cluster}.svg', format='svg', dpi=1200)
+    else:
+        plt.show()
