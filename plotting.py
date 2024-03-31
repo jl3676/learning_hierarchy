@@ -31,7 +31,7 @@ def plot_validation_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster
         plt.fill_between([6.5,6.5,7.5],[1,3,3],color='gray',alpha=0.15,edgecolor=None)
         plt.fill_between([10.5,10.5,11.5],[1,3,3],color='gray',alpha=0.15,edgecolor=None)
     plt.plot(blocks,np.ones(nblocks)*2.5,'--',color='gray',linewidth=2,alpha=0.6,label='Chance')
-    plt.errorbar(blocks,n_presses_stage_2_mean[:nblocks],n_presses_stage_2_sem[:nblocks],fmt='-',capsize=4,color='k',alpha=0.75,label='Human')
+    plt.errorbar(blocks,n_presses_stage_2_mean[:nblocks],n_presses_stage_2_sem[:nblocks],fmt='-',capsize=2,color='k',alpha=0.75,label='Human')
     plt.plot(blocks,n_presses_stage_2_sim_m1_mean[:nblocks],'--',color='lightcoral',alpha=0.75,label=f'{m1} model')
     plt.plot(blocks,n_presses_stage_2_sim_m2_mean[:nblocks],'--',color='cornflowerblue',alpha=0.75,label=f'{m2} model')
     plt.xlim([0,nblocks+1])
