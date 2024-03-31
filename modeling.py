@@ -167,7 +167,7 @@ def option_model(num_subject, alpha_1, alpha_2, beta_1, beta_2, concentration_1,
 		- num_trial_finished: the sample sizes of the above means
 	'''
 	num_block = 12
-	num_trial_12 = 60
+	num_trial_12 = 32
 	num_trial_else = 32
 
 	# eps_meta = 10**eps_meta if meta_learning else 0.0
