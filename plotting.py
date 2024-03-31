@@ -38,12 +38,13 @@ def plot_validation_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster
     if normalize:
         plt.ylim([-0.5,0.7])
         plt.ylabel(r'$\Delta$ number of key presses')
-    if first_press_accuracy:
-        plt.ylim([0,1])
-        plt.ylabel('First press accuracy')
-    else:
-        plt.ylim([1,2.7])
-        plt.ylabel('Number of key presses')
+    else
+        if first_press_accuracy:
+            plt.ylim([0,1])
+            plt.ylabel('First press accuracy')
+        else:
+            plt.ylim([1,2.7])
+            plt.ylabel('Number of key presses')
     plt.xlabel('Block')
     plt.title(f'{condition}, Cluster {cluster}, Trials 1-10 (n={num_subjects})')
     plt.legend()
