@@ -38,7 +38,7 @@ def plot_validation_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster
     if normalize:
         plt.ylim([-0.5,0.7])
         plt.ylabel(r'$\Delta$ number of key presses')
-    else
+    else:
         if first_press_accuracy:
             plt.ylim([0,1])
             plt.ylabel('First press accuracy')
