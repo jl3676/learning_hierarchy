@@ -14,6 +14,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	prior = 0.25
 	# eps_meta = 10**eps_meta if meta_learning else 0.0
 	concentration_2 = 10**concentration_2
+	concentraiton_2 = 0.2
 	eps_meta = 0.01 if meta_learning else 0.0
 
 	llh = 0
@@ -170,7 +171,7 @@ def option_model(num_subject, alpha_2, concentration_2, epsilon, prior, experime
 	num_trial_else = 32
 	alpha_1 = 1
 	beta_1 = beta_2 = 10
-	concentration_1 = 0.2
+	concentration_1 = concentration_2 = 0.2
 	prior = 0.25
 
 	# eps_meta = 10**eps_meta if meta_learning else 0.0
