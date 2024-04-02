@@ -164,7 +164,7 @@ def option_model(num_subject, alpha_2, concentration_2, epsilon, prior, experime
 		- se_counter1, se_counter2: the sem corresponding to the above mean
 		- num_trial_finished: the sample sizes of the above means
 	'''
-	num_block = 12
+	num_block = 6 if experiment == 'All' else 12
 	num_trial_12 = 60
 	num_trial_else = 32
 	alpha_1 = 1
