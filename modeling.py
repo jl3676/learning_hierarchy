@@ -168,9 +168,11 @@ def option_model(num_subject, concentration_2, epsilon, prior, experiment, struc
 	num_trial_12 = 60
 	num_trial_else = 32
 
-	alpha_1 = alpha_2 = 1 
-	beta_1 = beta_2 = 10
+	alpha_1 = 1 
+	beta_1 = 10
 	concentration_1 = 0.2
+
+	beta_2 = 10
 
 	# eps_meta = 10**eps_meta if meta_learning else 0.0
 	eps_meta = 0.01 if meta_learning else 0.0
