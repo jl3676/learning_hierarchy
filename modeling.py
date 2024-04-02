@@ -167,7 +167,7 @@ def option_model(num_subject, alpha_2, concentration_2, epsilon, prior, experime
 	num_block = 12
 	num_trial_12 = 60
 	num_trial_else = 32
-	alpha_1 = alpha_2 = 0.99
+	alpha_1 = alpha_2 = 0.9
 	beta_1 = beta_2 = 10
 	concentration_1 = 0.2
 
