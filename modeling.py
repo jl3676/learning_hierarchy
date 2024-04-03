@@ -146,9 +146,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			Q_full = TS_2s[:, state]
 			pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
 			lt_2 = np.sum(pchoice_2_full[:, a_2-1] * PTS_2[:, c_2])
-
-			# important to update policy before PTS_2
-			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
+			# TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 
 			if fit_all_actions or len(actions_tried) == 0:
 				llh += np.log(lt_2 * (1 - epsilon) + epsilon / 4)
@@ -163,7 +161,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			# TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0] # np.argmax(PTS_2[:,c_2])
 			# TS_2 = np.argmax(PTS_2[:,c_2])
 			# TS_2s[TS_2,state,a_2-1] += alpha_2 * (r_2 - TS_2s[TS_2,state,a_2-1])
-			# TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
+			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 
 			if meta_learning:
 				p_policies[0] *= pchoice_2_compress_1[a_2-1]
@@ -426,7 +424,7 @@ def option_model(num_subject, alpha_2, concentration_2, experiment, structure, m
 					# Use the result observed to infer the current TS again
 					# TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0] # 
 					TS_2 = np.argmax(PTS_2[:,c_2])
-					TS_2s[TS_2,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2,state,a_2-1])
+					TS_2s[:,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 
 					if meta_learning:
 						p_policies[0] *= pchoice_2_compress_1[a_2-1]
