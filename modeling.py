@@ -127,12 +127,12 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				Q_full = TS_2s[TS_2,state,:].copy()
 				if len(actions_tried) > 0:
 					Q_full[list(actions_tried)] = -10
-				lt_2 += (softmax(beta_2 * Q_full)[a_2-1] * (1-epsilon) + epsilon/4) * PTS_2[TS_2,c_2]
+				lt_2 += softmax(beta_2 * Q_full)[a_2-1] * PTS_2[TS_2,c_2]
 
 				reg[TS_2] = PTS_2[TS_2,c_2] * RPE
 
 			PTS_2[:,c_2_alt] /= np.sum(PTS_2[:,c_2_alt])
-			llh += np.log(lt_2)
+			llh += np.log(lt_2 * (1-epsilon) + epsilon/4)
 
 			reg += 1e-6
 			PTS_2[:,c_2] = reg / np.sum(reg)
