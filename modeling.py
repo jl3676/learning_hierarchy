@@ -20,9 +20,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	TS_2s = np.ones((nTS_2,2,4)) / 4
 	nC_2 = 2 * num_block
 	PTS_2 = np.zeros((nTS_2,nC_2)) 
-	# PTS_2[0] = 1
-	PTS_2[0,0::2] = 1
-	PTS_2[1,1::2] = 1
+	PTS_2[0] = 1
+	# PTS_2[0,0::2] = 1
+	# PTS_2[1,1::2] = 1
 
 	for t in range(D.shape[0]):	
 		stage = int(D[t,1])
