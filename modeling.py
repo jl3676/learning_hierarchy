@@ -17,7 +17,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	s_2 = a_2 = -1
 	block = -1
 
-	nTS_2 = q # initialize the number of task-set in the second stage
+	nTS_2 = 1 # initialize the number of task-set in the second stage
 	TS_2s = np.ones((nTS_2,2,4)) / 4
 	nC_2 = 2 * num_block
 	PTS_2 = np.zeros((nTS_2,nC_2)) 
