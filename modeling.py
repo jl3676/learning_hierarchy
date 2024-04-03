@@ -189,6 +189,9 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					PTS_2[:,c_2] += 1e-6
 					PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
+					if PTS_2[0,0] < 0.99:
+						print(block, trial, PTS_2)
+
 					TS_2s[:,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 
 				# Record variables per trial
