@@ -176,6 +176,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 				elif structure == 'forward':
 					cue = s_1
 					state = s_2
+				print(cue)
 				c_2 = block * 2 + cue # The context of the second stage
 				c_2_alt = block * 2 + (1 - cue)
 				while correct_2 == 0 and counter_2 < 10:
@@ -185,7 +186,6 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 							TS_2s = np.vstack((TS_2s, [np.ones((2,4)) / 4])) # initialize Q-values for new TS creation
 							nTS_2 += 1
 							encounter_matrix_2[this_c_2] = 1
-							print('here')
 
 					Q_full = TS_2s[:, state]
 					pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
