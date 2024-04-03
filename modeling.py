@@ -21,9 +21,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	TS_2s = np.ones((nTS_2,2,4)) / 4
 	nC_2 = 2 * num_block
 	PTS_2 = np.zeros((nTS_2,nC_2)) 
-	# PTS_2[0] = 1
-	PTS_2[0,0::2] = 1
-	PTS_2[1,1::2] = 1
+	PTS_2[0] = 1
+	# PTS_2[0,0::2] = 1
+	# PTS_2[1,1::2] = 1
 	encounter_matrix_2 = np.zeros(nC_2)
 	encounter_matrix_2[:nTS_2] = 1
 
@@ -130,9 +130,9 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		nTS_2 = 2 # initialize the number of task-set in the second stage
 		TS_2s = np.ones((nTS_2,2,4)) / 4
 		PTS_2 = np.zeros((nTS_2,nC_2)) 
-		# PTS_2[0] = 1
-		PTS_2[0,0::2] = 1
-		PTS_2[1,1::2] = 1
+		PTS_2[0] = 1
+		# PTS_2[0,0::2] = 1
+		# PTS_2[1,1::2] = 1
 		encounter_matrix_2 = np.zeros(nC_2)
 		encounter_matrix_2[:nTS_2] = 1
 
@@ -194,7 +194,6 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 
 					Q_full = TS_2s[:, state]
 					pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
-					print(pchoice_2_full)
 					pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0)
 
 					a_2 = np.random.choice(np.arange(1,5), 1, p=pchoice_2)[0]
