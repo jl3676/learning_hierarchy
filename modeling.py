@@ -43,9 +43,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				state = s_1
 			c_2 = block * 2 + cue # The context of the second stage
 
-			Q_full = TS_2s[:, state]
-			pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
-			pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0)
+			# Q_full = TS_2s[:, state]
+			# pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
+			# pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0)
 			pchoice_2 = softmax(beta_2 * TS_2s[cue, state])
 			llh += np.log(pchoice_2[a_2-1])
 
@@ -161,9 +161,9 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					state = s_1
 				c_2 = block * 2 + cue # The context of the second stage
 				while correct_2 == 0 and counter_2 < 10:
-					Q_full = TS_2s[:, state]
-					pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
-					pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0)
+					# Q_full = TS_2s[:, state]
+					# pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
+					# pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0)
 					pchoice_2 = softmax(beta_2 * TS_2s[cue, state])
 
 					a_2 = np.random.choice(np.arange(1,5), 1, p=pchoice_2)[0]
