@@ -129,8 +129,6 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		PTS_2 = np.zeros((nTS_2,nC_2)) 
 		PTS_2[0,0::2] = 1
 		PTS_2[1,1::2] = 1
-		
-		# compression over stage 1, compression over stage 2, full hierarchical
 		encounter_matrix_2 = np.zeros(nC_2)
 		encounter_matrix_2[:2] = 1
 
@@ -187,6 +185,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 							TS_2s = np.vstack((TS_2s, [np.ones((2,4)) / 4])) # initialize Q-values for new TS creation
 							nTS_2 += 1
 							encounter_matrix_2[this_c_2] = 1
+							print('here')
 
 					Q_full = TS_2s[:, state]
 					pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
