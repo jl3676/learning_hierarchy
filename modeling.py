@@ -8,9 +8,10 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	Computes the negative log likelihood of the data D given the option model.
 	'''
-	[alpha_2, concentration_2, epsilon, prior] = params
+	[alpha_2, concentration_2] = params
 	# alpha_2 = 1
 	beta_2 = 10
+	prior = 0.25
 	# eps_meta = 10**eps_meta if meta_learning else 0.0
 	concentration_2 = 10**concentration_2
 	eps_meta = 0.01 if meta_learning else 0.0
@@ -146,7 +147,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	return -llh
 
 
-def option_model(num_subject, alpha_2, concentration_2, epsilon, prior, experiment, structure, meta_learning=True):
+def option_model(num_subject, alpha_2, concentration_2, experiment, structure, meta_learning=True):
 	'''
 	Fits the option model to the data of the OT-CA1-CA1 task.
 
@@ -172,6 +173,7 @@ def option_model(num_subject, alpha_2, concentration_2, epsilon, prior, experime
 	alpha_1 = 1
 	beta_1 = beta_2 = 10
 	concentration_1 = 0.2
+	prior = 0.25
 
 	# eps_meta = 10**eps_meta if meta_learning else 0.0
 	eps_meta = 0.01 if meta_learning else 0.0
@@ -391,13 +393,14 @@ def option_model(num_subject, alpha_2, concentration_2, epsilon, prior, experime
 						# 	Q_compress_2[list(actions_tried)] = -1e20
 
 						# Calculate probabilistic policy using the Q function in the first stage
-						pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1) * (1-epsilon) + epsilon / 4
-						pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2) * (1-epsilon) + epsilon / 4
-						pchoice_2_full = softmax(beta_2 * Q_full) * (1-epsilon) + epsilon / 4
-						p_policies_softmax = softmax(beta_2 * p_policies)
-						pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
-						            + p_policies_softmax[1] * pchoice_2_compress_2 \
-							        + p_policies_softmax[2] * pchoice_2_full	
+						# pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1) * (1-epsilon) + epsilon / 4
+						# pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2) * (1-epsilon) + epsilon / 4
+						# pchoice_2_full = softmax(beta_2 * Q_full) * (1-epsilon) + epsilon / 4
+						# p_policies_softmax = softmax(beta_2 * p_policies)
+						# pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
+						#             + p_policies_softmax[1] * pchoice_2_compress_2 \
+						# 	        + p_policies_softmax[2] * pchoice_2_full	
+						pchoice_2 = pchoice_2_full
 
 						p_policies_history[sub, block, trial] = p_policies
 
