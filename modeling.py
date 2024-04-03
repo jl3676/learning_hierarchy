@@ -137,7 +137,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 				# (i) present stimulus
 				s_1 = int(stimulus_1[trial])
 				s_2 = int(stimulus_2[trial])
-				s_2 = 0
+				# s_2 = 0
 
 				# (ii) initialize trial-specific variables
 				correct_2 = 0 # keep track of whether correct or not in the second stage
