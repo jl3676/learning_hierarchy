@@ -194,7 +194,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 
 					Q_full = TS_2s[:, state]
 					pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
-					print(PTS_2[:,c_2])
+					print(pchoice_2_full)
 					pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0)
 
 					a_2 = np.random.choice(np.arange(1,5), 1, p=pchoice_2)[0]
