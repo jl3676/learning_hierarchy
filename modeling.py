@@ -48,6 +48,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				cue = s_1
 				state = s_2
 			c_2 = block * 2 + cue # The context of the second stage
+			if c_2 > 0:
+				continue
 			c_2_alt = block * 2 + (1 - cue)
 			for this_c_2 in sorted([c_2, c_2_alt]):
 				if encounter_matrix_2[this_c_2] == 0:
