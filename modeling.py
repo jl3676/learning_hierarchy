@@ -190,6 +190,7 @@ def option_model(num_subject, alpha_2, concentration_2, experiment, structure, m
 	alpha_1 = 1
 	beta_1 = beta_2 = 10
 	concentration_1 = 0.2
+	epsilon = 0.0
 	prior = 0.25
 
 	# eps_meta = 10**eps_meta if meta_learning else 0.0
