@@ -18,13 +18,11 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 
 	nTS_2 = 2 # initialize the number of task-set in the second stage
 	TS_2s = np.ones((nTS_2,2,4)) / 4
-	nC_2 = num_block
+	nC_2 = 2 * num_block
 	PTS_2 = np.zeros((nTS_2,nC_2)) 
 	# PTS_2[0] = 1
 	PTS_2[0,0::2] = 1
 	PTS_2[1,1::2] = 1
-	encounter_matrix_2 = np.zeros(nC_2)
-	encounter_matrix_2[:nTS_2] = 1
 
 	for t in range(D.shape[0]):	
 		stage = int(D[t,1])
@@ -43,9 +41,6 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			if structure == 'backward':
 				cue = s_2
 				state = s_1
-			elif structure == 'forward':
-				cue = s_1
-				state = s_2
 			c_2 = block * 2 + cue # The context of the second stage
 
 			Q_full = TS_2s[:, state]
@@ -74,7 +69,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 	num_trial_else = 32
 	beta_2 = 5
 
-	nC_2 = num_block
+	nC_2 = 2 * num_block
 
 	population_counter1 = np.zeros((num_subject,num_block-2,num_trial_else))
 	population_counter2 = np.zeros_like(population_counter1)
@@ -122,8 +117,6 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		# PTS_2[0] = 1
 		PTS_2[0,0::2] = 1
 		PTS_2[1,1::2] = 1
-		encounter_matrix_2 = np.zeros(nC_2)
-		encounter_matrix_2[:nTS_2] = 1
 
 		# 3. start looping over all blocks
 		for block in range(num_block):
@@ -164,9 +157,6 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 				if structure == 'backward':
 					cue = s_2 
 					state = s_1
-				elif structure == 'forward':
-					cue = s_1
-					state = s_2
 				c_2 = block * 2 + cue # The context of the second stage
 				while correct_2 == 0 and counter_2 < 10:
 					Q_full = TS_2s[:, state]
