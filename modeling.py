@@ -124,10 +124,23 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 					RPE = 1-TS_2s[TS_2,state,a_2-1]
 				else:
 					RPE = TS_2s[TS_2,state,a_2-1]
+				if structure == 'backward':
+					Q_compress_1 = np.mean(TS_2s[TS_2], axis=(0))
+					Q_compress_2 = (TS_2s[TS_2, state] + np.mean(TS_2s * (PTS_2[:,c_2_alt]).reshape(-1, 1, 1), axis=0)[state]) / 2
+				# elif structure == 'forward':
+				# 	Q_compress_1 = np.mean(TS_2s * (PTS_2[:,c_2]/2 + PTS_2[:,c_2_alt]/2).reshape(-1, 1, 1), axis=0)[state]
+				# 	Q_compress_2 = np.mean(TS_2s * PTS_2[:,c_2].reshape(-1, 1, 1), axis=(0,1))
 				Q_full = TS_2s[TS_2,state,:].copy()
-				if len(actions_tried) > 0:
-					Q_full[list(actions_tried)] = 0
-				lt_2 += softmax(beta_2 * Q_full)[a_2-1] * PTS_2[TS_2,c_2]
+				# if len(actions_tried) > 0:
+				# 	Q_full[list(actions_tried)] = 0
+				pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1)
+				pchoice_2_full = softmax(beta_2 * Q_full)
+				pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2)
+				p_policies_softmax = softmax(beta_2 * p_policies)
+				pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
+							+ p_policies_softmax[1] * pchoice_2_compress_2 \
+				            + p_policies_softmax[2] * pchoice_2_full
+				lt_2 += pchoice_2[a_2-1] * PTS_2[TS_2,c_2]
 
 				reg[TS_2] = PTS_2[TS_2,c_2] * RPE
 
@@ -139,13 +152,13 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				
 			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 
-			# p_policies[0] *= pchoice_2_compress_1[a_2-1]
-			# p_policies[1] *= pchoice_2_compress_2[a_2-1]
-			# p_policies[2] *= pchoice_2_full[a_2-1]
-			# p_policies /= np.sum(p_policies)
-			# if np.min(p_policies) < eps_meta:
-			# 	p_policies += eps_meta
-			# p_policies /= np.sum(p_policies)
+			p_policies[0] *= pchoice_2_compress_1[a_2-1]
+			p_policies[1] *= pchoice_2_compress_2[a_2-1]
+			p_policies[2] *= pchoice_2_full[a_2-1]
+			p_policies /= np.sum(p_policies)
+			if np.min(p_policies) < eps_meta:
+				p_policies += eps_meta
+			p_policies /= np.sum(p_policies)
 
 	return -llh
 
@@ -390,20 +403,19 @@ def option_model(num_subject, alpha_2, concentration_2, epsilon, experiment, str
 							Q_compress_2 = np.mean(TS_2s[TS_2], axis=0)
 						Q_full = TS_2s[TS_2,state,:].copy()
 						
-						if len(actions_tried) > 0:
-							Q_full[list(actions_tried)] = 0
+						# if len(actions_tried) > 0:
+						# 	Q_full[list(actions_tried)] = 0
 						# 	Q_compress_1[list(actions_tried)] = -1e20
 						# 	Q_compress_2[list(actions_tried)] = -1e20
 
 						# Calculate probabilistic policy using the Q function in the first stage
-						# pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1) * (1-epsilon) + epsilon / 4
-						# pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2) * (1-epsilon) + epsilon / 4
-						# pchoice_2_full = softmax(beta_2 * Q_full) * (1-epsilon) + epsilon / 4
-						# p_policies_softmax = softmax(beta_2 * p_policies)
-						# pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
-						#             + p_policies_softmax[1] * pchoice_2_compress_2 \
-						# 	        + p_policies_softmax[2] * pchoice_2_full	
-						pchoice_2 = softmax(beta_2 * Q_full) * (1-epsilon) + epsilon / 4
+						pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1) * (1-epsilon) + epsilon / 4
+						pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2) * (1-epsilon) + epsilon / 4
+						pchoice_2_full = softmax(beta_2 * Q_full) * (1-epsilon) + epsilon / 4
+						p_policies_softmax = softmax(beta_2 * p_policies)
+						pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
+						            + p_policies_softmax[1] * pchoice_2_compress_2 \
+							        + p_policies_softmax[2] * pchoice_2_full	
 
 						p_policies_history[sub, block, trial] = p_policies
 
@@ -434,13 +446,13 @@ def option_model(num_subject, alpha_2, concentration_2, epsilon, experiment, str
 						TS_2 = np.argmax(PTS_2[:,c_2])
 						TS_2s[TS_2,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2,state,a_2-1])
 
-						# p_policies[0] *= pchoice_2_compress_1[a_2-1]
-						# p_policies[1] *= pchoice_2_compress_2[a_2-1]
-						# p_policies[2] *= pchoice_2_full[a_2-1]
-						# p_policies /= np.sum(p_policies)
-						# if np.min(p_policies) < eps_meta:
-						# 	p_policies += eps_meta
-						# p_policies /= np.sum(p_policies)
+						p_policies[0] *= pchoice_2_compress_1[a_2-1]
+						p_policies[1] *= pchoice_2_compress_2[a_2-1]
+						p_policies[2] *= pchoice_2_full[a_2-1]
+						p_policies /= np.sum(p_policies)
+						if np.min(p_policies) < eps_meta:
+							p_policies += eps_meta
+						p_policies /= np.sum(p_policies)
 
 				# Record variables per trial
 				counter_1_temp[trial] = counter_1
