@@ -400,7 +400,7 @@ def option_model(num_subject, alpha_2, concentration_2, experiment, structure, m
 						# pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
 						#             + p_policies_softmax[1] * pchoice_2_compress_2 \
 						# 	        + p_policies_softmax[2] * pchoice_2_full	
-						pchoice_2 = pchoice_2_full
+						pchoice_2 = softmax(beta_2 * Q_full)
 
 						p_policies_history[sub, block, trial] = p_policies
 
