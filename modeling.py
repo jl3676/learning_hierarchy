@@ -175,7 +175,10 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 				correct_action_1 = find_correct_action(s_1, s_2, transition_train1_step1, transition_train1_step2, transition_train2_step1, transition_train2_step2, transition_ca1_step2, transition_ca2_step2, transition_ca3_step2, block, 1, experiment) 
 				correct_action_2 = find_correct_action(s_1, s_2, transition_train1_step1, transition_train1_step2, transition_train2_step1, transition_train2_step2, transition_ca1_step2, transition_ca2_step2, transition_ca3_step2, block, 2, experiment) 
 
-				# (iv) skip first stage
+				# (iv) first stage starts
+				a_1 = correct_action_1
+				a_1_temp.append(a_1) # append the action taken to the list of actions in the first stage
+				counter_1 += 1
 
 				# (v) Second stage starts
 				actions_tried = set()
