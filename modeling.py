@@ -141,20 +141,25 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 							pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
 										+ p_policies_softmax[1] * pchoice_2_compress_2 \
 										+ p_policies_softmax[2] * pchoice_2_full
-							lt_2 += pchoice_2[a_2-1] * PTS_2[TS_2,c_2] * PTS_2[TS_2_alt,c_2] * (1-epsilon) + epsilon / 4
+							lt_2 += pchoice_2[a_2-1] * PTS_2[TS_2,c_2] * PTS_2[TS_2_alt,c_2] 
 				else:
 					lt_2 += pchoice_2_full[a_2-1] * PTS_2[TS_2,c_2]
 
 			if fit_all_actions or len(actions_tried) == 0:
-				llh += np.log(lt_2)
+				llh += np.log(lt_2 * (1 - epsilon) + epsilon / 4)
 
 			if r_2 == 0:
-				reg = (1 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2] + 1e-6
+				PTS_2[:,c_2] *= (1 - TS_2s[:,state,a_2-1])
 			else:
-				reg = TS_2s[:,state,a_2-1] * PTS_2[:,c_2] + 1e-6
-			PTS_2[:,c_2] = reg / np.sum(reg)
+				PTS_2[:,c_2] *= TS_2s[:,state,a_2-1] 
+			PTS_2[:,c_2] += 1e-6
+			PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
+
+			TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0] # np.argmax(PTS_2[:,c_2])
+			TS_2s[TS_2,state,a_2-1] += alpha_2 * (r_2 - TS_2s[TS_2,state,a_2-1])
+
 				
-			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
+			# TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 
 			if meta_learning:
 				p_policies[0] *= pchoice_2_compress_1[a_2-1]
@@ -296,37 +301,20 @@ def option_model(num_subject, alpha_2, concentration_2, experiment, structure, m
 				correct_action_1 = find_correct_action(s_1, s_2, transition_train1_step1, transition_train1_step2, transition_train2_step1, transition_train2_step2, transition_ca1_step2, transition_ca2_step2, transition_ca3_step2, block, 1, experiment) 
 				correct_action_2 = find_correct_action(s_1, s_2, transition_train1_step1, transition_train1_step2, transition_train2_step1, transition_train2_step2, transition_ca1_step2, transition_ca2_step2, transition_ca3_step2, block, 2, experiment) 
 
-				# (iii) Determine which option's PTS table will be activated (this is cheating...)
-				# We might test different variants here, since we are specifically
-				# probing credit assignment (participants might create new MOs in Block 7)
-
 				# (iv) first stage starts
 				actions_tried = set()
 				while correct_1 == 0 and counter_1 < 10:
-					# First, decide which first stage TS to use. If at the beginning of the
-					# first block, just use the only random TS. Otherwise, if the
-					# context has not been seen before (at the beginning of a
-					# block), use CRP to decide whether choosing an existing TS or
-					# create a new blank one.
 					c = block # The block is the temporal context
 					if block == 0 and trial == 0:
-						# This means this is the first trial of the first block.
-						# Initialize the encounter_matrix to have one at the
-						# context of this particular FS.
 						TS = 0
 						encounter_matrix[c] = 1 
 					else:
-						# This means the initialization has passed. Now we just
-						# need to implement normal Chinese Restaurant Process
 						if encounter_matrix[c] == 0:
-							# we encounter a new block, we need to do something to PTS first
 							PTS = new_SS_update_option(PTS, c, concentration_1)
 							TSs = np.vstack((TSs, [np.ones((2,4)) / 4])) # initialize Q-values for new TS creation
 							nTS += 1
-							# Sample first stage TS from the PTS
 							PTS[:,c] /= np.sum(PTS[:,c])
 							TS = np.random.choice(np.arange(PTS.shape[0]), 1, p=PTS[:,c])[0]
-							# And finally mark this context as encountered
 							encounter_matrix[c] = 1
 						else:
 							# We have seen this context before, just sample
@@ -334,35 +322,22 @@ def option_model(num_subject, alpha_2, concentration_2, experiment, structure, m
 							PTS[:,c] /= np.sum(PTS[:,c])
 							TS = np.random.choice(np.arange(PTS.shape[0]), 1, p=PTS[:,c])[0]
 
-					# Now we have picked a first stageTS, we use the policy of this TS to guide decision making
-					Q_stage_1 = TSs[TS,:,:]
-					# Sample an action based on the policy
-					a_1 = sample_action_by_policy(Q_stage_1, s_1+1, beta_1, actions_tried)
+					a_1 = sample_action_by_policy(TSs[TS,:,:], s_1+1, beta_1, actions_tried)
 					a_1_temp.append(a_1) # append the action taken to the list of actions in the first stage
 					actions_tried.add(a_1-1)
-					# Increment counter_1 (just made a choice in the first stage)
 					counter_1 += 1
-					# Check if the action is correct
-					if a_1 == correct_action_1:
-						correct_1 = 1
+					correct_1 = int(a_1 == correct_action_1)
 					# Use the result to update PTS with Bayes Rule
-					specs = PTS.shape
-					reg = np.zeros(specs[0])
-					for z in range(specs[0]):
-						if correct_1 == 0:
-							reg[z] = PTS[z,c] * (1-TSs[z,s_1,a_1-1])
-						else:
-							reg[z] = PTS[z,c] * TSs[z,s_1,a_1-1]
+					if correct_1 == 0:
+						reg = PTS[:,c] * (1 - TSs[:,s_1,a_1-1]) + 1e-6
+					else:
+						reg = PTS[:,c] * TSs[:,s_1,a_1-1] + 1e-6
 					PTS[:,c] = reg / np.sum(reg)
 
 					# Use the result observed to infer the current TS again
-					TS = np.argmax(PTS[:,c])
-					Q_stage_1 = TSs[TS,:,:]
-					# Calculate RPE
-					RPE_1 = correct_1 - Q_stage_1[s_1,a_1-1]
-					# Q-learning on the inferred TS, not the one used for action selection
-					Q_stage_1[s_1,a_1-1] += alpha_1 * RPE_1
-					TSs[TS,:,:] = Q_stage_1
+					# TS = np.argmax(PTS[:,c])
+					TS = np.random.choice(np.arange(PTS.shape[0]), 1, p=PTS[:,c])[0]
+					TSs[TS,s_1,a_1-1] += alpha_1 * (correct_1 - TSs[TS,s_1,a_1-1])
 
 				# (v) Second stage starts
 				actions_tried = set()
@@ -374,92 +349,89 @@ def option_model(num_subject, alpha_2, concentration_2, experiment, structure, m
 					state = s_2
 				c_2 = block * 2 + cue # The context of the second stage
 				c_2_alt = block * 2 + (1 - cue)
-				if correct_1 == 1: # Otherwise, jump to the next trial to mimic real experimental setting
-					while correct_2 == 0 and counter_2 < 10:
-						for this_c_2 in sorted([c_2, c_2_alt]):
-							if encounter_matrix_2[this_c_2] == 0:
-								if this_c_2 > 0:
-									PTS_2 = new_SS_update_option(PTS_2, this_c_2, concentration_2)
-									TS_2s = np.vstack((TS_2s, [np.ones((2,4)) / 4])) # initialize Q-values for new TS creation
-									nTS_2 += 1
-								# And finally mark this context as encountered
-								encounter_matrix_2[this_c_2] = 1
-						# biases = np.zeros((nTS_2, nTS_2))
-						# for i in range(block):
-						# 	this_TS_1 = np.argmax(PTS_2[:-2,i*2])
-						# 	this_TS_2 = np.argmax(PTS_2[:-2,i*2+1])
-						# 	biases[this_TS_1, this_TS_2] += 1
-						# 	biases[this_TS_2, this_TS_1] += 1
+				while correct_2 == 0 and counter_2 < 10:
+					for this_c_2 in sorted([c_2, c_2_alt]):
+						if encounter_matrix_2[this_c_2] == 0:
+							if this_c_2 > 0:
+								PTS_2 = new_SS_update_option(PTS_2, this_c_2, concentration_2)
+								TS_2s = np.vstack((TS_2s, [np.ones((2,4)) / 4])) # initialize Q-values for new TS creation
+								nTS_2 += 1
+							encounter_matrix_2[this_c_2] = 1
+					# biases = np.zeros((nTS_2, nTS_2))
+					# for i in range(block):
+					# 	this_TS_1 = np.argmax(PTS_2[:-2,i*2])
+					# 	this_TS_2 = np.argmax(PTS_2[:-2,i*2+1])
+					# 	biases[this_TS_1, this_TS_2] += 1
+					# 	biases[this_TS_2, this_TS_1] += 1
 
-						# # Now we have picked the second stage TS, just pick an action based on the policy of this TS
-						# TS_2_alt = np.argmax(PTS_2[:,c_2_alt])
-						# if block > 0:
-						# 	bias = biases[TS_2_alt].copy()
-						# 	b = np.max(PTS_2[:,c_2_alt])
-						# 	if np.sum(bias) > 0 and np.max(PTS_2[:,c_2]) < 0.7:
-						# 		bias /= np.sum(bias)
-						# 		PTS_2[:,c_2] = PTS_2[:,c_2] * (1 - b) + bias * b
-						TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0]
-						TS_2_alt = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2_alt])[0]
-						TS_2_history[sub,c_2,trial] = TS_2 
+					# # Now we have picked the second stage TS, just pick an action based on the policy of this TS
+					# TS_2_alt = np.argmax(PTS_2[:,c_2_alt])
+					# if block > 0:
+					# 	bias = biases[TS_2_alt].copy()
+					# 	b = np.max(PTS_2[:,c_2_alt])
+					# 	if np.sum(bias) > 0 and np.max(PTS_2[:,c_2]) < 0.7:
+					# 		bias /= np.sum(bias)
+					# 		PTS_2[:,c_2] = PTS_2[:,c_2] * (1 - b) + bias * b
+					TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0]
+					TS_2_alt = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2_alt])[0]
+					TS_2_history[sub,c_2,trial] = TS_2 
 
-						# Compute meta policy
-						Q_full = TS_2s[TS_2,state,:].copy()
-						pchoice_2_full = softmax(beta_2 * Q_full)
-						if meta_learning:
-							if structure == 'backward':
-								Q_compress_1 = np.mean(TS_2s[TS_2], axis=0)
-								Q_compress_2 = (TS_2s[TS_2,state,:] + TS_2s[TS_2_alt,state,:]) / 2
-							elif structure == 'forward':
-								Q_compress_1 = (TS_2s[TS_2,state,:] + TS_2s[TS_2_alt,state,:]) / 2
-								Q_compress_2 = np.mean(TS_2s[TS_2], axis=0)
-							pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1) 
-							pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2) 
-							pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
-						            + p_policies_softmax[1] * pchoice_2_compress_2 \
-							        + p_policies_softmax[2] * pchoice_2_full	
-							pchoice_2 = pchoice_2 * (1 - epsilon) + epsilon / 4
-						else:
-							pchoice_2 = pchoice_2_full * (1 - epsilon) + epsilon / 4
-						
-						
-						# if len(actions_tried) > 0:
-						# 	Q_full[list(actions_tried)] = 0
-						# 	Q_compress_1[list(actions_tried)] = -1e20
-						# 	Q_compress_2[list(actions_tried)] = -1e20
+					# Compute meta policy
+					Q_full = TS_2s[TS_2,state,:].copy()
+					pchoice_2_full = softmax(beta_2 * Q_full)
+					if meta_learning:
+						if structure == 'backward':
+							Q_compress_1 = np.mean(TS_2s[TS_2], axis=0)
+							Q_compress_2 = (TS_2s[TS_2,state,:] + TS_2s[TS_2_alt,state,:]) / 2
+						elif structure == 'forward':
+							Q_compress_1 = (TS_2s[TS_2,state,:] + TS_2s[TS_2_alt,state,:]) / 2
+							Q_compress_2 = np.mean(TS_2s[TS_2], axis=0)
+						pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1) 
+						pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2) 
+						pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
+								+ p_policies_softmax[1] * pchoice_2_compress_2 \
+								+ p_policies_softmax[2] * pchoice_2_full	
+						pchoice_2 = pchoice_2 * (1 - epsilon) + epsilon / 4
+					else:
+						pchoice_2 = pchoice_2_full * (1 - epsilon) + epsilon / 4
+					
+					
+					# if len(actions_tried) > 0:
+					# 	Q_full[list(actions_tried)] = 0
+					# 	Q_compress_1[list(actions_tried)] = -1e20
+					# 	Q_compress_2[list(actions_tried)] = -1e20
 
-						p_policies_history[sub, block, trial] = p_policies
+					p_policies_history[sub, block, trial] = p_policies
 
-						a_2 = np.random.choice(np.arange(1,5), 1, p=pchoice_2)[0]
-						actions_tried.add(a_2-1)
-						a_2_temp.append(a_2+4) # append the action taken to the list of actions in the second stage
-						# Increment counter_2 (just made a choice in the second stage)
-						counter_2 += 1
-						# Check if the action is correct
-						if a_2 + 4 == correct_action_2:
-							correct_2 = 1
+					a_2 = np.random.choice(np.arange(1,5), 1, p=pchoice_2)[0]
+					actions_tried.add(a_2-1)
+					a_2_temp.append(a_2+4) # append the action taken to the list of actions in the second stage
+					# Increment counter_2 (just made a choice in the second stage)
+					counter_2 += 1
+					# Check if the action is correct
+					correct_2 = int(a_2 + 4 == correct_action_2)
 
-						# Use the result to update PTS_2 with Bayes Rule
-						if correct_2 == 0:
-							reg = PTS_2[:,c_2] * (1-TS_2s[:,state,a_2-1]) + 1e-6
-						else:
-							reg = PTS_2[:,c_2] * TS_2s[:,state,a_2-1] + 1e-6
-						PTS_2[:,c_2] = reg / np.sum(reg)
+					# Use the result to update PTS_2 with Bayes Rule
+					if correct_2 == 0:
+						PTS_2[:,c_2] *= (1 - TS_2s[:,state,a_2-1])
+					else:
+						PTS_2[:,c_2] *= TS_2s[:,state,a_2-1] 
+					PTS_2[:,c_2] += 1e-6
+					PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
-						# Use the result observed to infer the current TS again
-						# TS_2 = np.argmax(PTS_2[:,c_2])
-						TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0]
-						TS_2s[TS_2,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2,state,a_2-1])
+					# Use the result observed to infer the current TS again
+					TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0] # np.argmax(PTS_2[:,c_2])
+					TS_2s[TS_2,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2,state,a_2-1])
 
-						if meta_learning:
-							p_policies[0] *= pchoice_2_compress_1[a_2-1]
-							p_policies[1] *= pchoice_2_compress_2[a_2-1]
-							p_policies[2] *= pchoice_2_full[a_2-1]
-							p_policies /= np.sum(p_policies)
-							if np.min(p_policies) < eps_meta:
-								p_policies += eps_meta
-							p_policies /= np.sum(p_policies)
-							p_policies_softmax = softmax(beta_2 * p_policies)
+					if meta_learning:
+						p_policies[0] *= pchoice_2_compress_1[a_2-1]
+						p_policies[1] *= pchoice_2_compress_2[a_2-1]
+						p_policies[2] *= pchoice_2_full[a_2-1]
+						p_policies /= np.sum(p_policies)
+						if np.min(p_policies) < eps_meta:
+							p_policies += eps_meta
+						p_policies /= np.sum(p_policies)
+						p_policies_softmax = softmax(beta_2 * p_policies)
 
 				# Record variables per trial
 				counter_1_temp[trial] = counter_1
