@@ -10,7 +10,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	[alpha_2] = params
 	beta_2 = 5
-	concentration_2 = 0.2
+	concentration_2 = 0.0
 
 	llh = 0
 	num_block = 12
@@ -81,7 +81,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 	num_trial_else = 32
 	beta_2 = 5
 	# concentration_2 = 10**concentration_2
-	concentration_2 = 0.2
+	concentration_2 = 0.0
 
 	nC_2 = 2 * num_block
 
