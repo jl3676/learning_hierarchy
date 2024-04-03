@@ -948,7 +948,8 @@ def get_model_fit_data(data,num_block):
   num_trial_12 = 60
   num_trial_else = 32
 
-  D = np.full((num_subject * (2 * num_trial_12 + (num_block - 2) * num_trial_else) * 10, 6), np.nan)
+  ntrials = num_trial_12 * num_block if num_block < 2 else num_trial_12 * 2 + (num_block - 2) * num_trial_else
+  D = np.full((num_subject * ntrials * 10, 6), np.nan)
   k = 0
 
   for sub in range(num_subject):
