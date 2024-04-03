@@ -391,7 +391,7 @@ def option_model(num_subject, alpha_2, concentration_2, epsilon, experiment, str
 						Q_full = TS_2s[TS_2,state,:].copy()
 						
 						if len(actions_tried) > 0:
-							Q_full[list(actions_tried)] = -10
+							Q_full[list(actions_tried)] = 0
 						# 	Q_compress_1[list(actions_tried)] = -1e20
 						# 	Q_compress_2[list(actions_tried)] = -1e20
 
