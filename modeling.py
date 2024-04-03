@@ -148,7 +148,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			lt_2 = np.sum(pchoice_2_full[:, a_2-1] * PTS_2[:, c_2])
 
 			# important to update policy before PTS_2
-			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) # * PTS_2[:,c_2]
+			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 
 			if fit_all_actions or len(actions_tried) == 0:
 				llh += np.log(lt_2 * (1 - epsilon) + epsilon / 4)
