@@ -8,7 +8,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	Computes the negative log likelihood of the data D given the option model.
 	'''
-	[alpha_2, concentration_2] = params
+	[alpha_2, concentration_2, epsilon] = params
 	# alpha_2 = 1
 	beta_2 = 10
 	prior = 0.25
@@ -124,7 +124,10 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 					RPE = 1-TS_2s[TS_2,state,a_2-1]
 				else:
 					RPE = TS_2s[TS_2,state,a_2-1]
-				lt_2 += softmax(beta_2 * TS_2s[TS_2,state,:])[a_2-1] * PTS_2[TS_2,c_2]
+				Q_full = TS_2s[TS_2,state,:]
+				if len(actions_tried) > 0:
+					Q_full[list(actions_tried)] = -1e20
+				lt_2 += (softmax(beta_2 * Q_full)[a_2-1] * (1-epsilon) + epsilon/4) * PTS_2[TS_2,c_2]
 
 				reg[TS_2] = PTS_2[TS_2,c_2] * RPE
 
@@ -147,7 +150,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	return -llh
 
 
-def option_model(num_subject, alpha_2, concentration_2, experiment, structure, meta_learning=True):
+def option_model(num_subject, alpha_2, concentration_2, epsilon, experiment, structure, meta_learning=True):
 	'''
 	Fits the option model to the data of the OT-CA1-CA1 task.
 
@@ -387,8 +390,8 @@ def option_model(num_subject, alpha_2, concentration_2, experiment, structure, m
 							Q_compress_2 = np.mean(TS_2s[TS_2], axis=0)
 						Q_full = TS_2s[TS_2,state,:].copy()
 						
-						# if len(actions_tried) > 0:
-						# 	Q_full[list(actions_tried)] = -1e20
+						if len(actions_tried) > 0:
+							Q_full[list(actions_tried)] = -1e20
 						# 	Q_compress_1[list(actions_tried)] = -1e20
 						# 	Q_compress_2[list(actions_tried)] = -1e20
 
@@ -400,7 +403,7 @@ def option_model(num_subject, alpha_2, concentration_2, experiment, structure, m
 						# pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
 						#             + p_policies_softmax[1] * pchoice_2_compress_2 \
 						# 	        + p_policies_softmax[2] * pchoice_2_full	
-						pchoice_2 = softmax(beta_2 * Q_full)
+						pchoice_2 = softmax(beta_2 * Q_full) * (1-epsilon) + epsilon / 4
 
 						p_policies_history[sub, block, trial] = p_policies
 
@@ -731,6 +734,6 @@ def parallel_worker(args):
 
 
 def parallel_simulator(args):
-    this_model, i, niters_sim, alpha_2, concentration_2, exp, structure, meta_learning = args
-    this_data = globals()[this_model](niters_sim, alpha_2, concentration_2, exp, structure, meta_learning)
+    this_model, i, niters_sim, alpha_2, concentration_2, epsilon, exp, structure, meta_learning = args
+    this_data = globals()[this_model](niters_sim, alpha_2, concentration_2, epsilon, exp, structure, meta_learning)
     return i, this_data
