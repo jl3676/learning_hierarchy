@@ -121,16 +121,16 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			# llh += np.log(lt_2)
 
 			# Use the result to update PTS_2 with Bayes Rule
-			for TS_2 in range(PTS_2.shape[0]):
-				Q_full = TS_2s[TS_2,state].copy()
-				# if len(actions_tried) > 0:
-				# 	Q_full[list(actions_tried)] = 0
-				pchoice_2_full = softmax(beta_2 * Q_full)
+			if meta_learning:
+				for TS_2 in range(PTS_2.shape[0]):
+					Q_full = TS_2s[TS_2,state].copy()
+					# if len(actions_tried) > 0:
+					# 	Q_full[list(actions_tried)] = 0
+					pchoice_2_full = softmax(beta_2 * Q_full)
 
-				if not fit_all_actions and len(actions_tried) > 0:
-					continue
+					if not fit_all_actions and len(actions_tried) > 0:
+						continue
 
-				if meta_learning:
 					if structure == 'backward':
 						Q_compress_1 = np.mean(TS_2s[TS_2], axis=(0))
 						pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1)
@@ -142,11 +142,13 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 										+ p_policies_softmax[1] * pchoice_2_compress_2 \
 										+ p_policies_softmax[2] * pchoice_2_full
 							lt_2 += pchoice_2[a_2-1] * PTS_2[TS_2,c_2] * PTS_2[TS_2_alt,c_2] 
-				else:
-					lt_2 += pchoice_2_full[a_2-1] * PTS_2[TS_2,c_2]
 
-				# important to update policy before PTS_2
-				TS_2s[TS_2,state,a_2-1] += alpha_2 * (r_2 - TS_2s[TS_2,state,a_2-1]) * PTS_2[TS_2,c_2]
+			Q_full = TS_2s[:, state]
+			pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
+			lt_2 = np.sum(pchoice_2_full[:, a_2-1] * PTS_2[:, c_2])
+
+			# important to update policy before PTS_2
+			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 
 			if fit_all_actions or len(actions_tried) == 0:
 				llh += np.log(lt_2 * (1 - epsilon) + epsilon / 4)
