@@ -58,17 +58,17 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 					nTS_2 += 1
 					encounter_matrix_2[this_c_2] = 1
 
-			Q_full = TS_2s[:, state]
+			Q_full = TS_2s[0, state]
 			pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
 			pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0)
 			llh += np.log(pchoice_2[a_2-1])
 
-			# if r_2 == 0:
-			# 	PTS_2[:,c_2] *= (1 - TS_2s[:,state,a_2-1])
-			# else:
-			# 	PTS_2[:,c_2] *= TS_2s[:,state,a_2-1] 
-			# PTS_2[:,c_2] += 1e-6
-			# PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
+			if r_2 == 0:
+				PTS_2[:,c_2] *= (1 - TS_2s[:,state,a_2-1])
+			else:
+				PTS_2[:,c_2] *= TS_2s[:,state,a_2-1] 
+			PTS_2[:,c_2] += 1e-6
+			PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
 			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 
