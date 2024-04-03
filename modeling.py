@@ -17,7 +17,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	s_2 = a_2 = -1
 	block = -1
 
-	nTS_2 = 2 # initialize the number of task-set in the second stage
+	nTS_2 = 1 # initialize the number of task-set in the second stage
 	TS_2s = np.ones((nTS_2,2,4)) / 4
 	nC_2 = 2 * num_block
 	PTS_2 = np.zeros((nTS_2,nC_2)) 
@@ -65,7 +65,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				PTS_2[:,c_2] *= (1 - TS_2s[:,state,a_2-1])
 			else:
 				PTS_2[:,c_2] *= TS_2s[:,state,a_2-1] 
-			# PTS_2[:,c_2] += 1e-6
+			PTS_2[:,c_2] += 1e-6
 			PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
 			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
@@ -125,7 +125,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		a_all = np.empty((num_block-2,num_trial_else),dtype='object')
 		r_all = np.empty_like(a_all,dtype='object')
 
-		nTS_2 = 2 # initialize the number of task-set in the second stage
+		nTS_2 = 1 # initialize the number of task-set in the second stage
 		TS_2s = np.ones((nTS_2,2,4)) / 4
 		PTS_2 = np.zeros((nTS_2,nC_2)) 
 		PTS_2[0] = 1
@@ -203,7 +203,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 						PTS_2[:,c_2] *= (1 - TS_2s[:,state,a_2-1])
 					else:
 						PTS_2[:,c_2] *= TS_2s[:,state,a_2-1] 
-					# PTS_2[:,c_2] += 1e-6
+					PTS_2[:,c_2] += 1e-6
 					PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
 					TS_2s[:,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
