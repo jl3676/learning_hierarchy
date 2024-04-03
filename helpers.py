@@ -954,7 +954,7 @@ def get_model_fit_data(data,num_block):
 
   for sub in range(num_subject):
     # first stage
-    for b in range(2):
+    for b in range(min(num_block,2)):
       b_1 = 1
       for trial in range(num_trial_12):
         s_1 = s_12_12[sub,b,0,trial] - 1
@@ -981,32 +981,33 @@ def get_model_fit_data(data,num_block):
           D[k,:] = [sub, 2, s_2, a_2, r_2, 0]
           k += 1
 
-    for b in range(num_block-2):
-      b_1 = 1
-      for trial in range(num_trial_else):
-        s_1 = s1[sub,b,trial] - 1
-        if np.isnan(counter1[sub,b,trial]):
-          continue
-        c1 = int(counter1[sub,b,trial])
-        for t in range(c1):
-          a_1 = a[sub,b,trial][0,t]
-          r_1 = r[sub,b,trial][0,t]
-          temp = np.array([sub, 1, s_1, a_1, r_1, b_1])
-          if np.sum(np.isnan(temp)) > 0:
+    if num_block > 2:
+      for b in range(num_block-2):
+        b_1 = 1
+        for trial in range(num_trial_else):
+          s_1 = s1[sub,b,trial] - 1
+          if np.isnan(counter1[sub,b,trial]):
             continue
-          D[k,:] = temp
-          b_1 = 0
-          k += 1
+          c1 = int(counter1[sub,b,trial])
+          for t in range(c1):
+            a_1 = a[sub,b,trial][0,t]
+            r_1 = r[sub,b,trial][0,t]
+            temp = np.array([sub, 1, s_1, a_1, r_1, b_1])
+            if np.sum(np.isnan(temp)) > 0:
+              continue
+            D[k,:] = temp
+            b_1 = 0
+            k += 1
 
-        s_2 = (s2[sub,b,trial] - 1)
-        if np.isnan(counter2[sub,b,trial]):
-          continue
-        c2 = int(counter2[sub,b,trial])
-        for t in range(c2):
-          a_2 = a[sub,b,trial][1,c1-1+t]
-          r_2 = r[sub,b,trial][1,c1-1+t]
-          D[k,:] = [sub, 2, s_2, a_2, r_2, 0]
-          k += 1
+          s_2 = (s2[sub,b,trial] - 1)
+          if np.isnan(counter2[sub,b,trial]):
+            continue
+          c2 = int(counter2[sub,b,trial])
+          for t in range(c2):
+            a_2 = a[sub,b,trial][1,c1-1+t]
+            r_2 = r[sub,b,trial][1,c1-1+t]
+            D[k,:] = [sub, 2, s_2, a_2, r_2, 0]
+            k += 1
 
   D = D[~np.isnan(D).any(axis=1),:]
 
