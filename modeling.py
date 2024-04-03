@@ -114,9 +114,9 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		nTS_2 = 2 # initialize the number of task-set in the second stage
 		TS_2s = np.ones((nTS_2,2,4)) / 4
 		PTS_2 = np.zeros((nTS_2,nC_2)) 
-		# PTS_2[0] = 1
-		PTS_2[0,0::2] = 1
-		PTS_2[1,1::2] = 1
+		PTS_2[0] = 1
+		# PTS_2[0,0::2] = 1
+		# PTS_2[1,1::2] = 1
 
 		# 3. start looping over all blocks
 		for block in range(num_block):
@@ -137,6 +137,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 				# (i) present stimulus
 				s_1 = int(stimulus_1[trial])
 				s_2 = int(stimulus_2[trial])
+				s_2 = 0
 
 				# (ii) initialize trial-specific variables
 				correct_2 = 0 # keep track of whether correct or not in the second stage
