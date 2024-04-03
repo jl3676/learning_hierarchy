@@ -379,8 +379,10 @@ def option_model(num_subject, alpha_2, concentration_2, experiment, structure, m
 					TS_2_history[sub,c_2,trial] = TS_2 
 
 					# Compute meta policy
-					Q_full = TS_2s[TS_2,state,:].copy()
-					pchoice_2_full = softmax(beta_2 * Q_full)
+					# Q_full = TS_2s[TS_2,state,:].copy()
+					# pchoice_2_full = softmax(beta_2 * Q_full)
+					Q_full = TS_2s[:, state]
+					pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
 					if meta_learning:
 						if structure == 'backward':
 							Q_compress_1 = np.mean(TS_2s[TS_2], axis=0)
