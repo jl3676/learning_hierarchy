@@ -70,7 +70,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 def option_model(num_subject, params, experiment, structure, meta_learning=True):
 	[alpha_2] = params
 
-	num_block = 6 if experiment == 'All' else 12
+	# num_block = 6 if experiment == 'All' else 12
+	num_block = 1
 	num_trial_12 = 60
 	num_trial_else = 32
 	beta_2 = 5
