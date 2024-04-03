@@ -61,6 +61,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0)
 			llh += np.log(pchoice_2[a_2-1])
 
+			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
+
 			if r_2 == 0:
 				PTS_2[:,c_2] *= (1 - TS_2s[:,state,a_2-1])
 			else:
@@ -68,9 +70,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			PTS_2[:,c_2] += 1e-6
 			PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
-			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
-
-	print(PTS_2[:,:2])
+			
 
 	return -llh
 
