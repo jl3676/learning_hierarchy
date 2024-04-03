@@ -9,6 +9,284 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	Computes the negative log likelihood of the data D given the option model.
 	'''
 	[alpha_2] = params
+	beta_2 = 5
+	epsilon = 0.0
+	concentration_2 = 0.2
+
+	llh = 0
+	num_block = 12
+	s_2 = a_2 = -1
+	last_stage = 2
+	block = -1
+	trial = -1
+
+	nTS_2 = 1 # initialize the number of task-set in the second stage
+	TS_2s[0,:,:] = np.ones((2,4)) / 4
+	nC_2 = 2 * num_block
+	PTS_2 = np.ones((nTS_2,nC_2))
+	encounter_matrix_2 = np.zeros(nC_2)
+
+	for t in range(D.shape[0]):	
+		stage = int(D[t,1])
+        
+		b_1 = int(D[t,5])
+		if b_1 == 1: # new block
+			block += 1
+			block_trial = 0
+
+		# Reset actions_tried when starting a new stage
+		if last_stage != stage:
+			last_stage = stage
+			if stage == 1:
+				trial += 1
+				block_trial += 1
+
+		if stage == 1:
+			s_1 = int(D[t, 2])
+		elif stage == 2:
+			s_2 = int(D[t, 2])
+			a_2 = int(D[t, 3]) - 4
+			r_2 = int(D[t, 4])
+
+			# (v) Second stage starts
+			if structure == 'backward':
+				cue = s_2
+				state = s_1
+			elif structure == 'forward':
+				cue = s_1
+				state = s_2
+			c_2 = block * 2 + cue # The context of the second stage
+			c_2_alt = block * 2 + (1 - cue)
+			for this_c_2 in sorted([c_2, c_2_alt]):
+				if encounter_matrix_2[this_c_2] == 0:
+					if this_c_2 > 0:
+						PTS_2 = new_SS_update_option(PTS_2, this_c_2, concentration_2)
+						TS_2s = np.vstack((TS_2s, [np.ones((2,4)) / 4])) # initialize Q-values for new TS creation
+						nTS_2 += 1
+					encounter_matrix_2[this_c_2] = 1
+
+			lt_2 = 0
+
+			Q_full = TS_2s[:, state]
+			pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
+			lt_2 = np.sum(pchoice_2_full[:, a_2-1] * PTS_2[:, c_2])
+			llh += np.log(lt_2 * (1 - epsilon) + epsilon / 4)
+
+			if r_2 == 0:
+				PTS_2[:,c_2] *= (1 - TS_2s[:,state,a_2-1])
+			else:
+				PTS_2[:,c_2] *= TS_2s[:,state,a_2-1] 
+			PTS_2[:,c_2] += 1e-6
+			PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
+
+			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
+
+	return -llh
+
+
+def option_model(num_subject, params, experiment, structure, meta_learning=True):
+	[alpha_2] = params
+
+	num_block = 6 if experiment == 'All' else 12
+	num_trial_12 = 60
+	num_trial_else = 32
+	beta_2 = 5
+	# concentration_2 = 10**concentration_2
+	concentration_2 = 0.2
+
+	nC_2 = 2 * num_block
+
+	population_counter1 = np.zeros((num_subject,num_block-2,num_trial_else))
+	population_counter2 = np.zeros_like(population_counter1)
+	s_12_12 = np.zeros((num_subject,2,2,num_trial_12))
+	s1 = np.zeros_like(population_counter1)
+	s2 = np.zeros_like(population_counter1)
+	r_12_12 = np.empty((num_subject,2,num_trial_12), dtype='object')
+	r = np.empty_like(population_counter1,dtype='object')
+	a_12_12 = np.empty((num_subject,2,num_trial_12),dtype='object')
+	a = np.empty_like(population_counter1,dtype='object')
+	tr = np.zeros((num_subject,8))
+	population_counter1_12 = np.zeros((num_subject,2,num_trial_12))
+	population_counter2_12 = np.zeros((num_subject,2,num_trial_12))
+	p_policies_history = np.zeros((num_subject,num_block,num_trial_12,3))
+	TS_2_history = np.full((num_subject,num_block*2,num_trial_12), np.nan)
+
+	# run the model
+	for sub in range(num_subject):
+
+		# 1. set transitions
+		transition_step1, transition_step2 = set_contingency()
+
+		transition_train1_step1 = transition_step1[:2]
+		transition_train1_step2 = transition_step2[:2,:]
+		transition_train2_step1 = transition_step1[2:]
+		transition_train2_step2 = transition_step2[2:,:]
+
+		transition_ca1_step2 = np.array([[transition_step2[1][1], transition_step2[0][1]], [transition_step2[1][0], transition_step2[0][0]]])
+		transition_ca2_step2 = np.array([[transition_step2[0][1], transition_step2[1][1]], [transition_step2[0][0], transition_step2[1][0]]])
+		transition_ca3_step2 = np.array([[transition_step2[0][1], transition_step2[1][0]], [transition_step2[1][1], transition_step2[0][0]]])
+
+		tr[sub,:] = [1,2,3,4,8,6,5,7]
+
+		# 2. initialize other subject-specific task variables
+		s_1_all = np.zeros((num_block-2,num_trial_else))
+		s_2_all = np.zeros_like(s_1_all)
+		counter_1_all = np.zeros_like(s_1_all)
+		counter_2_all = np.zeros_like(s_1_all)
+		a_all = np.empty((num_block-2,num_trial_else),dtype='object')
+		r_all = np.empty_like(a_all,dtype='object')
+
+		nTS_2 = 1 # initialize the number of task-set in the second stage
+		TS_2s = np.empty((nTS_2,2,4)) 
+		TS_2s[0,:,:] = np.ones((2,4)) / 4
+		PTS_2 = np.ones((nTS_2,nC_2))
+		
+		# compression over stage 1, compression over stage 2, full hierarchical
+		encounter_matrix_2 = np.zeros(nC_2)
+
+		# 3. start looping over all blocks
+		for block in range(num_block):
+			num_trial = num_trial_12 if block < 2 else num_trial_else
+
+			# initialize stimuli sequence
+			stimulus_1, stimulus_2, _ = prepare_train_stim_sequence(num_trial / 2)
+			if block < 2:
+				counter_1_temp = np.full(60, np.nan)
+				counter_2_temp = np.full(60, np.nan)
+			else:
+				counter_1_temp = np.full(32, np.nan)
+				counter_2_temp = np.full(32, np.nan)
+
+			# 4. start looping over all trials
+			for trial in range(num_trial):	
+
+				# (i) present stimulus
+				s_1 = int(stimulus_1[trial])
+				s_2 = int(stimulus_2[trial])
+
+				# (ii) initialize trial-specific variables
+				correct_1 = 0 # keep track of whether correct or not in the first stage
+				correct_2 = 0 # keep track of whether correct or not in the second stage
+				a_1_temp = [] # action holder at trial level for the first stage
+				a_2_temp = [] # action holder at trial level for the second stage
+				counter_1 = 0 # counter holder at trial level for the first stage
+				counter_2 = 0 # counter holder at trial level for the second stage
+				# correct answer for both stages
+				correct_action_1 = find_correct_action(s_1, s_2, transition_train1_step1, transition_train1_step2, transition_train2_step1, transition_train2_step2, transition_ca1_step2, transition_ca2_step2, transition_ca3_step2, block, 1, experiment) 
+				correct_action_2 = find_correct_action(s_1, s_2, transition_train1_step1, transition_train1_step2, transition_train2_step1, transition_train2_step2, transition_ca1_step2, transition_ca2_step2, transition_ca3_step2, block, 2, experiment) 
+
+				# (iv) skip first stage
+
+				# (v) Second stage starts
+				actions_tried = set()
+				if structure == 'backward':
+					cue = s_2 
+					state = s_1
+				elif structure == 'forward':
+					cue = s_1
+					state = s_2
+				c_2 = block * 2 + cue # The context of the second stage
+				c_2_alt = block * 2 + (1 - cue)
+				while correct_2 == 0 and counter_2 < 10:
+					for this_c_2 in sorted([c_2, c_2_alt]):
+						if encounter_matrix_2[this_c_2] == 0:
+							if this_c_2 > 0:
+								PTS_2 = new_SS_update_option(PTS_2, this_c_2, concentration_2)
+								TS_2s = np.vstack((TS_2s, [np.ones((2,4)) / 4])) # initialize Q-values for new TS creation
+								nTS_2 += 1
+							encounter_matrix_2[this_c_2] = 1
+
+					Q_full = TS_2s[:, state]
+					pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
+					pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0)
+
+					a_2 = np.random.choice(np.arange(1,5), 1, p=pchoice_2)[0]
+					actions_tried.add(a_2-1)
+					a_2_temp.append(a_2+4) # append the action taken to the list of actions in the second stage
+					counter_2 += 1
+					correct_2 = int(a_2 + 4 == correct_action_2)
+
+					# Use the result to update PTS_2 with Bayes Rule
+					if correct_2 == 0:
+						PTS_2[:,c_2] *= (1 - TS_2s[:,state,a_2-1])
+					else:
+						PTS_2[:,c_2] *= TS_2s[:,state,a_2-1] 
+					PTS_2[:,c_2] += 1e-6
+					PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
+
+					TS_2s[:,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
+
+				# Record variables per trial
+				counter_1_temp[trial] = counter_1
+				counter_2_temp[trial] = counter_2
+				a_1_temp = np.array(a_1_temp).ravel()
+				a_2_temp = np.array(a_2_temp).ravel()
+
+				if block < 2:
+					a_12_12[sub,block,trial] = join_actions(a_1_temp, a_2_temp)
+					s_12_12[sub,block,0,trial] = s_1 + 1
+					s_12_12[sub,block,1,trial] = s_2 + 1
+					# make reward structure
+					r_temp = np.full((2, counter_1 + max(0, counter_2-1)), np.nan)
+					if counter_1 > 1:
+						# pad some 0 in reward for incorrect presses in the first stage
+						r_temp[0,:counter_1-1] = 0 
+					r_temp[0,counter_1-1] = 1 
+					if counter_2 > 1:
+						r_temp[1, counter_1-1:(counter_1+counter_2-3)] = 0
+					r_temp[1, -1] = 1
+					r_12_12[sub,block,trial] = r_temp
+				else: # record action, RT and reward only for Blocks 3-8
+					a_all[block-2,trial] = join_actions(a_1_temp, a_2_temp)
+					# Come up with reward
+					r_temp = np.empty((2, counter_1 + max(0,counter_2-1)))
+					r_temp[:] = np.nan 
+					if counter_1 > 1:
+						# pad some 0 in reward for incorrect presses in the first stage
+						r_temp[0,:counter_1-1] = 0 
+					r_temp[0,counter_1-1] = 1 
+					if counter_2 > 1:
+						r_temp[1,counter_1-1:(counter_1+counter_2-3)] = 0 
+					r_temp[1,-1] = 1 
+					r_all[block-2,trial] = r_temp # record reward for this trial
+
+				# skip to the next block if performance is good enough 
+				if block < 2 and trial >= 32 and np.mean(counter_1_temp[trial-10:trial]) < 1.5 and np.mean(counter_2_temp[trial-10:trial]) < 1.5: 
+					trial = 59
+
+			# Recording variables per block
+			if block < 2: # record only counter for Blocks 1 and 2
+				population_counter1_12[sub,block,:] = counter_1_temp
+				population_counter2_12[sub,block,:] = counter_2_temp
+			else: # % record stimulus sequence and counter for Blocks 3-8
+				s_1_all[block-2,:] = stimulus_1
+				s_2_all[block-2,:] = stimulus_2
+				counter_1_all[block-2,:] = counter_1_temp
+				counter_2_all[block-2,:] = counter_2_temp
+
+		s1[sub,:,:] = s_1_all + 1
+		s2[sub,:,:] = s_2_all + 1
+		population_counter1[sub,:,:] = counter_1_all
+		population_counter2[sub,:,:] = counter_2_all 
+		a[sub,:,:] = a_all
+		r[sub,:,:] = r_all
+
+	counter12_12 = np.zeros((num_subject,2,2,num_trial_12))
+	counter12_12[:,:,0,:] = population_counter1_12
+	counter12_12[:,:,1,:] = population_counter2_12
+
+	# Package the output
+	data = {'tr': tr, 'a':a, 'r':r, 's1':s1, 's2':s2, 'counter1':population_counter1, 'counter2':population_counter2, \
+		 'counter12_12':counter12_12, 'a_12_12':a_12_12, 's_12_12':s_12_12, 'r_12_12':r_12_12, \
+			'p_policies_history': p_policies_history, 'TS_2_history': TS_2_history} 	
+	return data
+
+
+def option_model_nllh_backup(params, D, structure, meta_learning=True):
+	'''
+	Computes the negative log likelihood of the data D given the option model.
+	'''
+	[alpha_2] = params
 	# alpha_2 = 1
 	beta_2 = 5
 	prior = 0.25
@@ -179,7 +457,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	return -llh
 
 
-def option_model(num_subject, params, experiment, structure, meta_learning=True):
+def option_model_backup(num_subject, params, experiment, structure, meta_learning=True):
 	'''
 	Fits the option model to the data of the OT-CA1-CA1 task.
 
