@@ -200,7 +200,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		- num_trial_finished: the sample sizes of the above means
 	'''
 	[alpha_2] = params
-	
+
 	num_block = 6 if experiment == 'All' else 12
 	num_trial_12 = 60
 	num_trial_else = 32
@@ -211,7 +211,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 	epsilon = 0.0
 
 	eps_meta = 0.01 
-	concentration_2 = 10**concentration_2
+	# concentration_2 = 10**concentration_2
 	concentration_2 = 0.2
 	nC = num_block
 	nC_2 = 2 * num_block
