@@ -155,7 +155,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			PTS_2[:,c_2] += 1e-6
 			PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
-			TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0] # np.argmax(PTS_2[:,c_2])
+			# TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0] # np.argmax(PTS_2[:,c_2])
+			TS_2 = np.argmax(PTS_2[:,c_2])
 			TS_2s[TS_2,state,a_2-1] += alpha_2 * (r_2 - TS_2s[TS_2,state,a_2-1])
 
 				
@@ -420,7 +421,8 @@ def option_model(num_subject, alpha_2, concentration_2, experiment, structure, m
 					PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
 					# Use the result observed to infer the current TS again
-					TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0] # np.argmax(PTS_2[:,c_2])
+					# TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0] # 
+					TS_2 = np.argmax(PTS_2[:,c_2])
 					TS_2s[TS_2,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2,state,a_2-1])
 
 					if meta_learning:
