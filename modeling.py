@@ -177,7 +177,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					a_2 = np.random.choice(np.arange(1,5), 1, p=pchoice_2)[0]
 					a_2_temp.append(a_2+4) # append the action taken to the list of actions in the second stage
 					counter_2 += 1
-					correct_2 = int(a_2 + 4 == correct_action_2)
+					correct_2 = int((a_2 + 4) == correct_action_2)
 
 					# Use the result to update PTS_2 with Bayes Rule
 					if correct_2 == 0:
@@ -187,7 +187,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					PTS_2[:,c_2] += 1e-6
 					PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
-					TS_2s[:,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2] / 2
+					TS_2s[:,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 
 				# Record variables per trial
 				counter_1_temp[trial] = counter_1
