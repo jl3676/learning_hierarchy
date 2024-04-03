@@ -17,7 +17,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	concentration_2 = 10**concentration_2
 	eps_meta = 0.01
 
-	fit_all_actions = False
+	fit_all_actions = True
 
 	llh = 0
 	num_block = 12
@@ -445,11 +445,9 @@ def option_model(num_subject, alpha_2, concentration_2, experiment, structure, m
 						reg = np.zeros(specs[0])
 						for z in range(specs[0]):
 							if correct_2 == 0:
-								RPE = 1-TS_2s[z,state,a_2-1]
+								reg[z] = PTS_2[z,c_2] * (1-TS_2s[z,state,a_2-1])
 							else:
-								RPE = TS_2s[z,state,a_2-1]
-
-							reg[z] = PTS_2[z,c_2] * RPE
+								reg[z] = PTS_2[z,c_2] * TS_2s[z,state,a_2-1]
 
 						PTS_2[:,c_2] = reg + 1e-6
 						PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
