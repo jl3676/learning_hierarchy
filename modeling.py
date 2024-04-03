@@ -15,6 +15,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	num_block = 12
 	s_2 = a_2 = -1
 	block = -1
+	trial = -1
 
 	nTS_2 = 2 # initialize the number of task-set in the second stage
 	TS_2s = np.ones((nTS_2,2,4)) / 4
@@ -29,9 +30,11 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 
 		if int(D[t,5]) == 1: # new block
 			block += 1
+			trial = -1
 
 		if stage == 1:
 			s_1 = int(D[t, 2])
+			trial += 1
 		elif stage == 2:
 			s_2 = int(D[t, 2])
 			a_2 = int(D[t, 3]) - 4
@@ -47,7 +50,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			# pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
 			# pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0)
 			pchoice_2 = softmax(beta_2 * TS_2s[cue, state])
-			print(pchoice_2)
+			# print(f'B{block}, T{trial}, rec: {pchoice_2}')
 			llh += np.log(pchoice_2[a_2-1])
 
 			# if r_2 == 0:
@@ -166,7 +169,8 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					# pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
 					# pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0)
 					pchoice_2 = softmax(beta_2 * TS_2s[cue, state])
-					print(pchoice_2)
+					# if block < 1:
+					# 	print(f'B{block}, T{trial}, gen: {pchoice_2}')
 
 					a_2 = np.random.choice(np.arange(1,5), 1, p=pchoice_2)[0]
 					a_2_temp.append(a_2+4) # append the action taken to the list of actions in the second stage
@@ -200,7 +204,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 						r_temp[0,:counter_1-1] = 0 
 					r_temp[0,counter_1-1] = 1 
 					if counter_2 > 1:
-						r_temp[1, counter_1-1:(counter_1+counter_2-3)] = 0
+						r_temp[1, counter_1-1:] = 0
 					r_temp[1, -1] = 1
 					r_12_12[sub,block,trial] = r_temp
 				else: # record action, RT and reward only for Blocks 3-8
