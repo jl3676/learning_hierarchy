@@ -125,8 +125,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				else:
 					RPE = TS_2s[TS_2,state,a_2-1]
 				Q_full = TS_2s[TS_2,state,:].copy()
-				if len(actions_tried) > 0:
-					Q_full[list(actions_tried)] = -1e20
+				# if len(actions_tried) > 0:
+				# 	Q_full[list(actions_tried)] = -1e20
 				lt_2 += (softmax(beta_2 * Q_full)[a_2-1] * (1-epsilon) + epsilon/4) * PTS_2[TS_2,c_2]
 
 				reg[TS_2] = PTS_2[TS_2,c_2] * RPE
@@ -390,8 +390,8 @@ def option_model(num_subject, alpha_2, concentration_2, epsilon, experiment, str
 							Q_compress_2 = np.mean(TS_2s[TS_2], axis=0)
 						Q_full = TS_2s[TS_2,state,:].copy()
 						
-						if len(actions_tried) > 0:
-							Q_full[list(actions_tried)] = -1e20
+						# if len(actions_tried) > 0:
+						# 	Q_full[list(actions_tried)] = -1e20
 						# 	Q_compress_1[list(actions_tried)] = -1e20
 						# 	Q_compress_2[list(actions_tried)] = -1e20
 
