@@ -20,9 +20,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	TS_2s = np.ones((nTS_2,2,4)) / 4
 	nC_2 = 2 * num_block
 	PTS_2 = np.zeros((nTS_2,nC_2)) 
-	PTS_2[0] = 1
-	# PTS_2[0,0::2] = 1
-	# PTS_2[1,1::2] = 1
+	# PTS_2[0] = 1
+	PTS_2[0,0::2] = 1
+	PTS_2[1,1::2] = 1
 	encounter_matrix_2 = np.zeros(nC_2)
 	encounter_matrix_2[:nTS_2] = 1
 
@@ -47,8 +47,6 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				cue = s_1
 				state = s_2
 			c_2 = block * 2 + cue # The context of the second stage
-			if c_2 > 0:
-				continue
 
 			Q_full = TS_2s[:, state]
 			pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
@@ -254,7 +252,6 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 	data = {'tr': tr, 'a':a, 'r':r, 's1':s1, 's2':s2, 'counter1':population_counter1, 'counter2':population_counter2, \
 		 'counter12_12':counter12_12, 'a_12_12':a_12_12, 's_12_12':s_12_12, 'r_12_12':r_12_12, \
 			'p_policies_history': p_policies_history, 'TS_2_history': TS_2_history} 	
-	print(TS_2s)
 	return data
 
 
