@@ -731,6 +731,6 @@ def parallel_worker(args):
 
 
 def parallel_simulator(args):
-    this_model, i, niters_sim, alpha_2, concentration_2, epsilon, prior, exp, structure, meta_learning = args
-    this_data = globals()[this_model](niters_sim, alpha_2, concentration_2, epsilon, prior, exp, structure, meta_learning)
+    this_model, i, niters_sim, alpha_2, concentration_2, exp, structure, meta_learning = args
+    this_data = globals()[this_model](niters_sim, alpha_2, concentration_2, exp, structure, meta_learning)
     return i, this_data
