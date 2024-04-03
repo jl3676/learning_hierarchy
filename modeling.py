@@ -10,29 +10,26 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	[alpha_2] = params
 	beta_2 = 5
-	epsilon = 0.0
 	concentration_2 = 0.2
 
 	llh = 0
 	num_block = 12
 	s_2 = a_2 = -1
-	last_stage = 2
 	block = -1
 
 	nTS_2 = 1 # initialize the number of task-set in the second stage
 	TS_2s = np.empty((nTS_2,2,4))
-	TS_2s[0,:,:] = np.ones((2,4)) / 4
+	TS_2s[:2,:,:] = np.ones((2,2,4)) / 4
 	nC_2 = 2 * num_block
 	PTS_2 = np.ones((nTS_2,nC_2))
 	encounter_matrix_2 = np.zeros(nC_2)
-	encounter_matrix_2[0] = 1
+	encounter_matrix_2[:2] = 1
 
 	for t in range(D.shape[0]):	
 		stage = int(D[t,1])
 
 		if int(D[t,5]) == 1: # new block
 			block += 1
-			print(block)
 
 		if stage == 1:
 			s_1 = int(D[t, 2])
@@ -128,12 +125,12 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 
 		nTS_2 = 1 # initialize the number of task-set in the second stage
 		TS_2s = np.empty((nTS_2,2,4)) 
-		TS_2s[0,:,:] = np.ones((2,4)) / 4
+		TS_2s[:2,:,:] = np.ones((2,2,4)) / 4
 		PTS_2 = np.ones((nTS_2,nC_2))
 		
 		# compression over stage 1, compression over stage 2, full hierarchical
 		encounter_matrix_2 = np.zeros(nC_2)
-		encounter_matrix_2[0] = 1
+		encounter_matrix_2[:2] = 1
 
 		# 3. start looping over all blocks
 		for block in range(num_block):
