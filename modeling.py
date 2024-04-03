@@ -47,6 +47,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			# pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
 			# pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0)
 			pchoice_2 = softmax(beta_2 * TS_2s[cue, state])
+			print(pchoice_2)
 			llh += np.log(pchoice_2[a_2-1])
 
 			# if r_2 == 0:
@@ -165,6 +166,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					# pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
 					# pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0)
 					pchoice_2 = softmax(beta_2 * TS_2s[cue, state])
+					print(pchoice_2)
 
 					a_2 = np.random.choice(np.arange(1,5), 1, p=pchoice_2)[0]
 					a_2_temp.append(a_2+4) # append the action taken to the list of actions in the second stage
