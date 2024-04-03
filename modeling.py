@@ -18,7 +18,6 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	s_2 = a_2 = -1
 	last_stage = 2
 	block = -1
-	trial = -1
 
 	nTS_2 = 1 # initialize the number of task-set in the second stage
 	TS_2s = np.empty((nTS_2,2,4))
@@ -30,18 +29,10 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 
 	for t in range(D.shape[0]):	
 		stage = int(D[t,1])
-        
-		b_1 = int(D[t,5])
-		if b_1 == 1: # new block
-			block += 1
-			block_trial = 0
 
-		# Reset actions_tried when starting a new stage
-		if last_stage != stage:
-			last_stage = stage
-			if stage == 1:
-				trial += 1
-				block_trial += 1
+		if int(D[t,5]) == 1: # new block
+			block += 1
+			print(block)
 
 		if stage == 1:
 			s_1 = int(D[t, 2])
