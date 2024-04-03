@@ -186,7 +186,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					PTS_2[:,c_2] += 1e-6
 					PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
-					TS_2s[c_2,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[c_2,state,a_2-1]) # * PTS_2[:,c_2]
+					TS_2s[cue,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[cue,state,a_2-1]) # * PTS_2[:,c_2]
 
 				# Record variables per trial
 				counter_1_temp[trial] = counter_1
