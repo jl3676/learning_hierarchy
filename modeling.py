@@ -145,6 +145,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				else:
 					lt_2 += pchoice_2_full[a_2-1] * PTS_2[TS_2,c_2]
 
+				TS_2s[TS_2,state,a_2-1] += alpha_2 * (r_2 - TS_2s[TS_2,state,a_2-1])
+
 			if fit_all_actions or len(actions_tried) == 0:
 				llh += np.log(lt_2 * (1 - epsilon) + epsilon / 4)
 
@@ -156,10 +158,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
 			# TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0] # np.argmax(PTS_2[:,c_2])
-			TS_2 = np.argmax(PTS_2[:,c_2])
-			TS_2s[TS_2,state,a_2-1] += alpha_2 * (r_2 - TS_2s[TS_2,state,a_2-1])
-
-				
+			# TS_2 = np.argmax(PTS_2[:,c_2])
+			# TS_2s[TS_2,state,a_2-1] += alpha_2 * (r_2 - TS_2s[TS_2,state,a_2-1])
 			# TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 
 			if meta_learning:
