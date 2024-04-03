@@ -176,7 +176,6 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 				elif structure == 'forward':
 					cue = s_1
 					state = s_2
-				print(cue)
 				c_2 = block * 2 + cue # The context of the second stage
 				c_2_alt = block * 2 + (1 - cue)
 				while correct_2 == 0 and counter_2 < 10:
