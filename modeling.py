@@ -17,7 +17,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	s_2 = a_2 = -1
 	block = -1
 
-	nTS_2 = 1 # initialize the number of task-set in the second stage
+	nTS_2 = 2 # initialize the number of task-set in the second stage
 	TS_2s = np.ones((nTS_2,2,4)) / 4
 	nC_2 = 2 * num_block
 	PTS_2 = np.zeros((nTS_2,nC_2)) 
@@ -49,8 +49,6 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				state = s_2
 			c_2 = block * 2 + cue # The context of the second stage
 			c_2_alt = block * 2 + (1 - cue)
-			if c_2 > 0:
-				continue
 			for this_c_2 in sorted([c_2, c_2_alt]):
 				if encounter_matrix_2[this_c_2] == 0:
 					PTS_2 = new_SS_update_option(PTS_2, this_c_2, concentration_2)
@@ -127,7 +125,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		a_all = np.empty((num_block-2,num_trial_else),dtype='object')
 		r_all = np.empty_like(a_all,dtype='object')
 
-		nTS_2 = 1 # initialize the number of task-set in the second stage
+		nTS_2 = 2 # initialize the number of task-set in the second stage
 		TS_2s = np.ones((nTS_2,2,4)) / 4
 		PTS_2 = np.zeros((nTS_2,nC_2)) 
 		PTS_2[0] = 1
@@ -181,8 +179,6 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					cue = s_1
 					state = s_2
 				c_2 = block * 2 + cue # The context of the second stage
-				if c_2 > 0:
-					continue
 				c_2_alt = block * 2 + (1 - cue)
 				while correct_2 == 0 and counter_2 < 10:
 					for this_c_2 in sorted([c_2, c_2_alt]):
