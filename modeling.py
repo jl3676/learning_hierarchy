@@ -12,7 +12,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	# alpha_2 = 1
 	beta_2 = 5
 	prior = 0.25
-	epsilon = 0
+	epsilon = 0.1
 	# eps_meta = 10**eps_meta if meta_learning else 0.0
 	concentration_2 = 10**concentration_2
 	eps_meta = 0.01 if meta_learning else 0.0
@@ -114,7 +114,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
             #             + p_policies_softmax[2] * pchoice_2_full
 			
 			# lt_2 = pchoice_2[a_2-1]
-			actions_tried.add(a_2-1)
+			# actions_tried.add(a_2-1)
 			# llh += np.log(lt_2)
 
 			# Use the result to update PTS_2 with Bayes Rule
@@ -132,8 +132,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				# 	Q_compress_1 = np.mean(TS_2s * (PTS_2[:,c_2]/2 + PTS_2[:,c_2_alt]/2).reshape(-1, 1, 1), axis=0)[state]
 				# 	Q_compress_2 = np.mean(TS_2s * PTS_2[:,c_2].reshape(-1, 1, 1), axis=(0,1))
 				Q_full = TS_2s[TS_2,state,:].copy()
-				# if len(actions_tried) > 0:
-				# 	Q_full[list(actions_tried)] = 0
+				if len(actions_tried) > 0:
+					Q_full[list(actions_tried)] = 0
 				pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1)
 				pchoice_2_full = softmax(beta_2 * Q_full)
 				pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2)
@@ -146,7 +146,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				reg[TS_2] = PTS_2[TS_2,c_2] * RPE
 
 			PTS_2[:,c_2_alt] /= np.sum(PTS_2[:,c_2_alt])
-			llh += np.log(lt_2 * (1-epsilon) + epsilon/4)
+			if len(actions_tried) == 0:
+				llh += np.log(lt_2 * (1-epsilon) + epsilon/4)
 
 			reg += 1e-6
 			PTS_2[:,c_2] = reg / np.sum(reg)
@@ -160,6 +161,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			if np.min(p_policies) < eps_meta:
 				p_policies += eps_meta
 			p_policies /= np.sum(p_policies)
+
+			actions_tried.add(a_2-1)
 
 	return -llh
 
@@ -191,7 +194,7 @@ def option_model(num_subject, alpha_2, concentration_2, experiment, structure, m
 	beta_1 = beta_2 = 5
 	concentration_1 = 0.2
 	prior = 0.25
-	epsilon = 0
+	epsilon = 0.1
 
 	# eps_meta = 10**eps_meta if meta_learning else 0.0
 	eps_meta = 0.01 if meta_learning else 0.0
@@ -405,8 +408,8 @@ def option_model(num_subject, alpha_2, concentration_2, experiment, structure, m
 							Q_compress_2 = np.mean(TS_2s[TS_2], axis=0)
 						Q_full = TS_2s[TS_2,state,:].copy()
 						
-						# if len(actions_tried) > 0:
-						# 	Q_full[list(actions_tried)] = 0
+						if len(actions_tried) > 0:
+							Q_full[list(actions_tried)] = 0
 						# 	Q_compress_1[list(actions_tried)] = -1e20
 						# 	Q_compress_2[list(actions_tried)] = -1e20
 
