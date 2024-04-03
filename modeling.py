@@ -21,6 +21,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	trial = -1
 
 	nTS_2 = 1 # initialize the number of task-set in the second stage
+	TS_2s = np.empty((nTS_2,2,4))
 	TS_2s[0,:,:] = np.ones((2,4)) / 4
 	nC_2 = 2 * num_block
 	PTS_2 = np.ones((nTS_2,nC_2))
@@ -311,7 +312,7 @@ def option_model_nllh_backup(params, D, structure, meta_learning=True):
 	nTS = 1 # initialize the number of task-set in the first stage
 	nTS_2 = 1 # initialize the number of task-set in the second stage
 	TSs = np.empty((nTS,2,4)) # each cell is the policy for a new TS
-	TS_2s = np.empty((nTS,2,4)) 
+	TS_2s = np.empty((nTS_2,2,4)) 
 	TSs[0,:,:] = np.ones((2,4)) / 4 # the first built-in TS is just random
 	TS_2s[0,:,:] = np.ones((2,4)) / 4
 	nC_2 = 2 * num_block
