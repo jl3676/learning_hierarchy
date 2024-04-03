@@ -272,7 +272,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		 'counter12_12':counter12_12, 'a_12_12':a_12_12, 's_12_12':s_12_12, 'r_12_12':r_12_12, \
 			'p_policies_history': p_policies_history, 'TS_2_history': TS_2_history} 	
 	
-	print(PTS[:,:2])
+	print(PTS_2[:,:2])
 	return data
 
 
