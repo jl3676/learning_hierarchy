@@ -397,7 +397,8 @@ def option_model(num_subject, alpha_2, concentration_2, experiment, structure, m
 								+ p_policies_softmax[2] * pchoice_2_full	
 						pchoice_2 = pchoice_2 * (1 - epsilon) + epsilon / 4
 					else:
-						pchoice_2 = pchoice_2_full * (1 - epsilon) + epsilon / 4
+						# pchoice_2 = pchoice_2_full * (1 - epsilon) + epsilon / 4
+						pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2], axis=-1)
 					
 					
 					# if len(actions_tried) > 0:
