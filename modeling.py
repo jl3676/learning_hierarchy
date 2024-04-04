@@ -65,8 +65,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 					encounter_matrix_2[this_c_2] = 1
 
 			Q_full = TS_2s[:, state].copy()
-			if len(actions_tried) > 0:
-				Q_full[:,list(actions_tried)] = -1e20
+			# if len(actions_tried) > 0:
+			# 	Q_full[:,list(actions_tried)] = -1e20
 			pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
 			pchoice_2_full = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0) * (1 - epsilon) + epsilon / 4
 
@@ -76,9 +76,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 					Q_compress_1 = np.mean(TS_2s, axis=(1))
 					Q_compress_2 = (TS_2s/2 + np.sum(TS_2s * PTS_2[:,c_2_alt].reshape(-1,1,1),axis=0)/2)[:,state]
 				
-				if len(actions_tried) > 0:
-					Q_compress_1[:,list(actions_tried)] = -1e20
-					Q_compress_2[:,list(actions_tried)] = -1e20
+				# if len(actions_tried) > 0:
+				# 	Q_compress_1[:,list(actions_tried)] = -1e20
+				# 	Q_compress_2[:,list(actions_tried)] = -1e20
 				pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1, axis=-1)
 				pchoice_2_compress_1 = np.sum(pchoice_2_compress_1 * PTS_2[:,c_2].reshape(-1,1), axis=0) * (1 - epsilon) + epsilon / 4
 				pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2, axis=-1) 
@@ -238,8 +238,8 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 				while correct_2 == 0 and counter_2 < 10:
 					TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0]
 					Q_full = TS_2s[TS_2, state].copy()
-					if len(actions_tried) > 0:
-						Q_full[list(actions_tried)] = -1e20
+					# if len(actions_tried) > 0:
+					# 	Q_full[list(actions_tried)] = -1e20
 					pchoice_2_full = softmax(beta_2 * Q_full)
 					
 					if meta_learning:
@@ -248,9 +248,9 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 						Q_compress_2 = (TS_2s[TS_2]/2 + TS_2s[TS_2_alt]/2)[state]
 						pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1)
 						pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2)
-						if len(actions_tried) > 0:
-							Q_compress_1[list(actions_tried)] = -1e20
-							Q_compress_2[list(actions_tried)] = -1e20
+						# if len(actions_tried) > 0:
+						# 	Q_compress_1[list(actions_tried)] = -1e20
+						# 	Q_compress_2[list(actions_tried)] = -1e20
 						pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
 									+ p_policies_softmax[1] * pchoice_2_compress_2 \
 									+ p_policies_softmax[2] * pchoice_2_full
