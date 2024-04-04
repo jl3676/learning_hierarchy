@@ -69,6 +69,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			# if len(actions_tried) > 0:
 			# 	Q_full[:,list(actions_tried)] = -1e20
 			pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
+			pchoice_2_full = np.sum(pchoice_2_full[a_2-1] * PTS_2[:,c_2])
 
 			if meta_learning:
 				lt = 0
@@ -80,16 +81,16 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				# 	Q_compress_1[:,list(actions_tried)] = -1e20
 				# 	Q_compress_2[:,list(actions_tried)] = -1e20
 				pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1, axis=-1)
+				pchoice_2_compress_1 = np.sum(pchoice_2_compress_1[a_2-1] * PTS_2[:,c_2])
 				pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2, axis=-1) 
+				pchoice_2_compress_2 = np.sum(pchoice_2_compress_2[a_2-1] * PTS_2[:,c_2])
 				pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
 							+ p_policies_softmax[1] * pchoice_2_compress_2 \
 							+ p_policies_softmax[2] * pchoice_2_full
 			else:
 				pchoice_2 = pchoice_2_full 
 
-			pchoice_2 = np.sum(pchoice_2 * PTS_2[:,c_2].reshape(-1,1), axis=0)
-			lt = pchoice_2[a_2-1]
-			llh += np.log(lt)
+			llh += np.log(pchoice_2)
 
 			if r_2 == 0:
 				PTS_2[:,c_2] *= (1 - TS_2s[:,state,a_2-1])
@@ -102,9 +103,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			actions_tried.add(a_2-1)
 
 			if meta_learning:
-				p_policies[0] *= pchoice_2_compress_1[a_2-1]
-				p_policies[1] *= pchoice_2_compress_2[a_2-1]
-				p_policies[2] *= pchoice_2_full[a_2-1]
+				p_policies[0] *= pchoice_2_compress_1
+				p_policies[1] *= pchoice_2_compress_2
+				p_policies[2] *= pchoice_2_full
 				p_policies /= np.sum(p_policies)
 				if np.min(p_policies) < eps_meta:
 					p_policies += eps_meta
