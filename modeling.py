@@ -10,6 +10,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	[alpha_2] = params
 	beta_2 = 5
+	concentration_2 = 0.2
 
 	llh = 0
 	num_block = 12
@@ -24,6 +25,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	# PTS_2[0] = 1
 	PTS_2[0,0::2] = 1
 	PTS_2[1,1::2] = 1
+	encounter_matrix_2 = np.zeros(nC_2)
+	encounter_matrix_2[:nTS_2] = 1
 
 	for t in range(D.shape[0]):	
 		stage = int(D[t,1])
@@ -45,6 +48,14 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				cue = s_2
 				state = s_1
 			c_2 = block * 2 + cue # The context of the second stage
+			c_2_alt = block * 2 + (1 - cue)
+			for this_c_2 in sorted([c_2, c_2_alt]):
+				if encounter_matrix_2[this_c_2] == 0:
+					if this_c_2 > 0:
+						PTS_2 = new_SS_update_option(PTS_2, this_c_2, concentration_2)
+						TS_2s = np.vstack((TS_2s, [np.ones((2,4)) / 4])) # initialize Q-values for new TS creation
+						nTS_2 += 1
+					encounter_matrix_2[this_c_2] = 1
 
 			Q_full = TS_2s[:, state]
 			pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
@@ -65,12 +76,13 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 
 def option_model(num_subject, params, experiment, structure, meta_learning=True):
 	[alpha_2] = params
+	beta_2 = 5
+	concentration_2 = 0.2
 
 	# num_block = 6 if experiment == 'All' else 12
 	num_block = 2
 	num_trial_12 = 60
 	num_trial_else = 32
-	beta_2 = 5
 
 	nC_2 = 2 * num_block
 
@@ -120,6 +132,8 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		# PTS_2[0] = 1
 		PTS_2[0,0::2] = 1
 		PTS_2[1,1::2] = 1
+		encounter_matrix_2 = np.zeros(nC_2)
+		encounter_matrix_2[:nTS_2] = 1
 
 		# 3. start looping over all blocks
 		for block in range(num_block):
@@ -162,6 +176,14 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					cue = s_2 
 					state = s_1
 				c_2 = block * 2 + cue # The context of the second stage
+				c_2_alt = block * 2 + (1 - cue)
+				for this_c_2 in sorted([c_2, c_2_alt]):
+					if encounter_matrix_2[this_c_2] == 0:
+						if this_c_2 > 0:
+							PTS_2 = new_SS_update_option(PTS_2, this_c_2, concentration_2)
+							TS_2s = np.vstack((TS_2s, [np.ones((2,4)) / 4])) # initialize Q-values for new TS creation
+							nTS_2 += 1
+						encounter_matrix_2[this_c_2] = 1
 				while correct_2 == 0 and counter_2 < 10:
 					Q_full = TS_2s[:, state]
 					pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
@@ -179,6 +201,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 						PTS_2[:,c_2] *= pchoice_2_full[:,a_2-1]
 					PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
+					# TS_2 = np.argmax(PTS_2[:,c_2])
 					TS_2s[:,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 
 				# Record variables per trial
