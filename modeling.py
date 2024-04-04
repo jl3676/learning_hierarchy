@@ -46,21 +46,19 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				state = s_1
 			c_2 = block * 2 + cue # The context of the second stage
 
-			# Q_full = TS_2s[:, state]
-			# pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
-			# pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0)
-			pchoice_2 = softmax(beta_2 * TS_2s[cue, state])
-			# print(f'B{block}, T{trial}, rec: {pchoice_2}')
+			Q_full = TS_2s[:, state]
+			pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
+			pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0)
+
 			llh += np.log(pchoice_2[a_2-1])
 
-			# if r_2 == 0:
-			# 	PTS_2[:,c_2] *= (1 - pchoice_2_full[:,a_2-1])
-			# else:
-			# 	PTS_2[:,c_2] *= pchoice_2_full[:,a_2-1]	
-			# PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
+			if r_2 == 0:
+				PTS_2[:,c_2] *= (1 - pchoice_2_full[:,a_2-1])
+			else:
+				PTS_2[:,c_2] *= pchoice_2_full[:,a_2-1]	
+			PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
-			# TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
-			TS_2s[cue, state, a_2-1] += alpha_2 * (r_2 - TS_2s[cue, state, a_2-1])
+			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 
 	return -llh
 
@@ -165,12 +163,9 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					state = s_1
 				c_2 = block * 2 + cue # The context of the second stage
 				while correct_2 == 0 and counter_2 < 10:
-					# Q_full = TS_2s[:, state]
-					# pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
-					# pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0)
-					pchoice_2 = softmax(beta_2 * TS_2s[cue, state])
-					# if block < 1:
-					# 	print(f'B{block}, T{trial}, gen: {pchoice_2}')
+					Q_full = TS_2s[:, state]
+					pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
+					pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0)
 
 					a_2 = np.random.choice(np.arange(1,5), 1, p=pchoice_2)[0]
 					a_2_temp.append(a_2+4) # append the action taken to the list of actions in the second stage
@@ -178,14 +173,13 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					correct_2 = int((a_2 + 4) == correct_action_2)
 
 					# Use the result to update PTS_2 with Bayes Rule
-					# if correct_2 == 0:
-					# 	PTS_2[:,c_2] *= (1 - pchoice_2_full[:,a_2-1])
-					# else:
-					# 	PTS_2[:,c_2] *= pchoice_2_full[:,a_2-1]
-					# PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
+					if correct_2 == 0:
+						PTS_2[:,c_2] *= (1 - pchoice_2_full[:,a_2-1])
+					else:
+						PTS_2[:,c_2] *= pchoice_2_full[:,a_2-1]
+					PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
-					# TS_2s[:,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
-					TS_2s[cue, state, a_2-1] += alpha_2 * (correct_2 - TS_2s[cue, state, a_2-1])
+					TS_2s[:,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 
 				# Record variables per trial
 				counter_1_temp[trial] = counter_1
