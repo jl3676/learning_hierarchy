@@ -8,10 +8,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	Computes the negative log likelihood of the data D given the option model.
 	'''
-	[beta_2, concentration_2] = params
+	[beta_2, concentration_2, epsilon] = params
 	alpha_2 = 1
 	concentration_2 = 10**concentration_2
-	epsilon = 0
 	
 	llh = 0
 	num_block = 12
@@ -66,10 +65,10 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 					encounter_matrix_2[this_c_2] = 1
 
 			Q_full = TS_2s[:, state].copy()
-			# if len(actions_tried) > 0:
-			# 	Q_full[:,list(actions_tried)] = -1e20
+			if len(actions_tried) > 0:
+				Q_full[:,list(actions_tried)] = -1e20
 			pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
-			pchoice_2_full = np.sum(pchoice_2_full[:,a_2-1] * PTS_2[:,c_2])
+			pchoice_2_full = np.sum(pchoice_2_full[:,a_2-1] * PTS_2[:,c_2]) * (1-epsilon) + epsilon / 4
 
 			if meta_learning:
 				lt = 0
@@ -77,13 +76,13 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 					Q_compress_1 = np.mean(TS_2s, axis=(1))
 					Q_compress_2 = (TS_2s + np.sum(TS_2s * PTS_2[:,c_2_alt].reshape(-1,1,1),axis=0))[:,state] / 2
 				
-				# if len(actions_tried) > 0:
-				# 	Q_compress_1[:,list(actions_tried)] = -1e20
-				# 	Q_compress_2[:,list(actions_tried)] = -1e20
+				if len(actions_tried) > 0:
+					Q_compress_1[:,list(actions_tried)] = -1e20
+					Q_compress_2[:,list(actions_tried)] = -1e20
 				pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1, axis=-1)
-				pchoice_2_compress_1 = np.sum(pchoice_2_compress_1[:,a_2-1] * PTS_2[:,c_2])
+				pchoice_2_compress_1 = np.sum(pchoice_2_compress_1[:,a_2-1] * PTS_2[:,c_2]) * (1-epsilon) + epsilon / 4
 				pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2, axis=-1) 
-				pchoice_2_compress_2 = np.sum(pchoice_2_compress_2[:,a_2-1] * PTS_2[:,c_2])
+				pchoice_2_compress_2 = np.sum(pchoice_2_compress_2[:,a_2-1] * PTS_2[:,c_2]) * (1-epsilon) + epsilon / 4
 				pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
 							+ p_policies_softmax[1] * pchoice_2_compress_2 \
 							+ p_policies_softmax[2] * pchoice_2_full
@@ -116,9 +115,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 
 
 def option_model(num_subject, params, experiment, structure, meta_learning=True):
-	[beta_2, concentration_2] = params
+	[beta_2, concentration_2, epsilon] = params
 	alpha_2 = 1
-	epsilon = 0
 	# beta_2 = 5
 	concentration_2 = 10**concentration_2
 
