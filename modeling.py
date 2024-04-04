@@ -59,7 +59,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 						nTS_2 += 1
 					encounter_matrix_2[this_c_2] = 1
 
-			Q_full = TS_2s[:, state]
+			Q_full = TS_2s[:, state].copy()
 			if len(actions_tried) > 0:
 				Q_full[:,list(actions_tried)] = epsilon
 			pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
@@ -197,7 +197,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 						
 				while correct_2 == 0 and counter_2 < 10:
 					TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0]
-					Q_full = TS_2s[TS_2, state]
+					Q_full = TS_2s[TS_2, state].copy()
 					if len(actions_tried) > 0:
 						Q_full[list(actions_tried)] = epsilon
 					pchoice_2_full = softmax(beta_2 * Q_full)
