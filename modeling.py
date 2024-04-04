@@ -67,9 +67,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			llh += np.log(pchoice_2[a_2-1])
 
 			if r_2 == 0:
-				PTS_2[:,c_2] *= (1 - TS_2s[:,a_2-1])
+				PTS_2[:,c_2] *= (1 - TS_2s[:,state,a_2-1])
 			else:
-				PTS_2[:,c_2] *= TS_2s[:,a_2-1]	
+				PTS_2[:,c_2] *= TS_2s[:,state,a_2-1]	
 			PTS_2[:,c_2] += 1e-6
 			PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
