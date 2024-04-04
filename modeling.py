@@ -11,7 +11,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	[alpha_2, alpha_cf, concentration_2, epsilon] = params
 	beta_2 = 5
 	concentration_2 = 10**concentration_2
-	alpha_cf = 0.6
+	# alpha_cf = 0.6
 	
 	llh = 0
 	num_block = 12
