@@ -8,9 +8,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	Computes the negative log likelihood of the data D given the option model.
 	'''
-	[alpha_2] = params
+	[alpha_2, concentration_2] = params
 	beta_2 = 5
-	concentration_2 = 0.2
+	concentration_2 = 10**concentration_2
 
 	llh = 0
 	num_block = 12
@@ -79,9 +79,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 
 
 def option_model(num_subject, params, experiment, structure, meta_learning=True):
-	[alpha_2] = params
+	[alpha_2, concentration_2] = params
 	beta_2 = 5
-	concentration_2 = 0.2
+	concentration_2 = 10**concentration_2
 
 	num_block = 6 if experiment == 'All' else 12
 	num_trial_12 = 60
@@ -132,7 +132,6 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		nTS_2 = 2 # initialize the number of task-set in the second stage
 		TS_2s = np.ones((nTS_2,2,4)) / 4
 		PTS_2 = np.zeros((nTS_2,nC_2)) 
-		# PTS_2[0] = 1
 		PTS_2[0,0::2] = 1
 		PTS_2[1,1::2] = 1
 		encounter_matrix_2 = np.zeros(nC_2)
@@ -211,10 +210,8 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					PTS_2[:,c_2] += 1e-6
 					PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
-					# TS_2 = np.argmax(PTS_2[:,c_2])
 					TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0]
 					TS_2s[TS_2, state, a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2, state, a_2-1])
-					# TS_2s[:,state,a_2-1] += alpha_2 * (correct_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 
 				# Record variables per trial
 				counter_1_temp[trial] = counter_1
