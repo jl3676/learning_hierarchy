@@ -205,9 +205,9 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 
 					# Use the result to update PTS_2 with Bayes Rule
 					if correct_2 == 0:
-						PTS_2[:,c_2] *= (1 - TS_2s[:,a_2-1])
+						PTS_2[:,c_2] *= (1 - TS_2s[:, state, a_2-1])
 					else:
-						PTS_2[:,c_2] *= TS_2s[:,a_2-1]
+						PTS_2[:,c_2] *= TS_2s[:, state, a_2-1]
 					PTS_2[:,c_2] += 1e-6
 					PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
