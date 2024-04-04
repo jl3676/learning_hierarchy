@@ -273,7 +273,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 							PTS_2[:,c_2] = PTS_2[:,c_2] * (1 - b) + bias * b
 
 					TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0]
-					TS_2_history[sub,block,trial] = TS_2
+					TS_2_history[sub,c_2,trial] = TS_2
 					Q_full = TS_2s[TS_2, state].copy()
 					if len(actions_tried) > 0:
 						Q_full[list(actions_tried)] = epsilon # -1e20
