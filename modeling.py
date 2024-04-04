@@ -74,7 +74,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				lt = 0
 				if structure == 'backward':
 					Q_compress_1 = np.mean(TS_2s, axis=(1))
-					Q_compress_2 = (TS_2s/2 + np.sum(TS_2s * PTS_2[:,c_2_alt].reshape(-1,1,1),axis=0)/2)[state]
+					Q_compress_2 = (TS_2s/2 + np.sum(TS_2s * PTS_2[:,c_2_alt].reshape(-1,1,1),axis=0)/2)[:,state]
 				
 				if len(actions_tried) > 0:
 					Q_compress_1[:,list(actions_tried)] = -1e20
