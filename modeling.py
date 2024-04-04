@@ -8,7 +8,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	Computes the negative log likelihood of the data D given the option model.
 	'''
-	[alpha_2, concentration_2] = params
+	[alpha_2, concentration_2, epsilon] = params
 	beta_2 = 5
 	concentration_2 = 10**concentration_2
 
@@ -65,7 +65,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
 			pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0)
 
-			llh += np.log(pchoice_2[a_2-1])
+			llh += np.log(pchoice_2[a_2-1] * (1 - epsilon) + epsilon / 4)
 
 			if r_2 == 0:
 				PTS_2[:,c_2] *= (1 - TS_2s[:,state,a_2-1])
@@ -81,7 +81,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 
 
 def option_model(num_subject, params, experiment, structure, meta_learning=True):
-	[alpha_2, concentration_2] = params
+	[alpha_2, concentration_2, epsilon] = params
 	beta_2 = 5
 	concentration_2 = 10**concentration_2
 
@@ -201,7 +201,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					if len(actions_tried) > 0:
 						Q_full[list(actions_tried)] = 0
 					pchoice_2_full = softmax(beta_2 * Q_full)
-					pchoice_2 = pchoice_2_full
+					pchoice_2 = pchoice_2_full * (1-epsilon) + epsilon / 4
 
 					a_2 = np.random.choice(np.arange(1,5), 1, p=pchoice_2)[0]
 					actions_tried.add(a_2-1)
