@@ -245,11 +245,11 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 						TS_2_alt = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2_alt])[0]
 						Q_compress_1 = np.mean(TS_2s[TS_2], axis=(0))
 						Q_compress_2 = (TS_2s[TS_2]/2 + TS_2s[TS_2_alt]/2)[state]
-						pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1) * (1-epsilon) + epsilon / 4
-						pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2) * (1-epsilon) + epsilon / 4
 						if len(actions_tried) > 0:
 							Q_compress_1[list(actions_tried)] = -1e20
 							Q_compress_2[list(actions_tried)] = -1e20
+						pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1) * (1-epsilon) + epsilon / 4
+						pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2) * (1-epsilon) + epsilon / 4
 						pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
 									+ p_policies_softmax[1] * pchoice_2_compress_2 \
 									+ p_policies_softmax[2] * pchoice_2_full
