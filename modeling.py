@@ -11,12 +11,12 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	[alpha_2, beta_2, concentration_2, epsilon] = params
 	# beta_2 = 10
 	concentration_2 = 10**concentration_2
+	alpha_cf = 0.6
 	
 	llh = 0
 	num_block = 12
 	s_2 = a_2 = -1
 	block = -1
-	trial = -1
 
 	nTS_2 = 2 # initialize the number of task-set in the second stage
 	TS_2s = np.ones((nTS_2,2,4)) / 4
@@ -98,6 +98,10 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
 			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
+			# counterfactual learning
+			if r_2:
+				TS_2s[:,1-state,a_2-1] -= alpha_2 * TS_2s[:,1-state,a_2-1] * PTS_2[:,c_2] * alpha_cf
+				TS_2s[:,state,a_2-1] -= alpha_2 * TS_2s[:,state,a_2-1] * PTS_2[:,c_2_alt] * alpha_cf
 			actions_tried.add(a_2-1)
 
 			if meta_learning:
@@ -117,6 +121,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 	[alpha_2, beta_2, concentration_2, epsilon] = params
 	# alpha_2 = 1
 	# beta_2 = 10
+	alpha_cf = 0.6
 	concentration_2 = 10**concentration_2
 
 	num_block = 6 if experiment == 'All' else 12
@@ -272,6 +277,11 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 
 					TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0]
 					TS_2s[TS_2, state, a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2, state, a_2-1])
+
+					# counterfactual learning
+					if correct_2:
+						TS_2s[TS_2,1-state,a_2-1] -= alpha_2 * TS_2s[TS_2,1-state,a_2-1] * alpha_cf
+						TS_2s[TS_2_alt,state,a_2-1] -= alpha_2 * TS_2s[TS_2_alt,state,a_2-1] * alpha_cf
 
 					if meta_learning:
 						p_policies[0] *= pchoice_2_compress_1[a_2-1]
