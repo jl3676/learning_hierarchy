@@ -64,36 +64,31 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 						nTS_2 += 1
 					encounter_matrix_2[this_c_2] = 1
 
+			Q_full = TS_2s[:, state].copy()
+			if len(actions_tried) > 0:
+				Q_full[:,list(actions_tried)] = -1e20
+			pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
+
 			if meta_learning:
 				lt = 0
-				for TS_2 in range(PTS_2.shape[0]):
-					Q_full = TS_2s[TS_2,state].copy()
-					if len(actions_tried) > 0:
-						Q_full[list(actions_tried)] = -1e20
-					pchoice_2_full = softmax(beta_2 * Q_full)
-
-					if structure == 'backward':
-						Q_compress_1 = np.mean(TS_2s[TS_2], axis=(0))
-						pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1)
-						if len(actions_tried) > 0:
-							Q_compress_1[list(actions_tried)] = -1e20
-
-						for TS_2_alt in range(PTS_2.shape[0]):
-							Q_compress_2 = (TS_2s[TS_2]/2 + TS_2s[TS_2_alt]/2)[state]
-							if len(actions_tried) > 0:
-								Q_compress_2[list(actions_tried)] = -1e20
-							pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2)
-							pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
-										+ p_policies_softmax[1] * pchoice_2_compress_2 \
-										+ p_policies_softmax[2] * pchoice_2_full
-							lt += pchoice_2[a_2-1] * PTS_2[TS_2,c_2] * PTS_2[TS_2_alt,c_2] 
-			else:
-				Q_full = TS_2s[:, state].copy()
+				if structure == 'backward':
+					Q_compress_1 = np.mean(TS_2s, axis=(1))
+					Q_compress_2 = (TS_2s/2 + np.sum(TS_2s * PTS_2[:,c_2_alt].reshape(-1,1,1),axis=0)/2)[state]
+				
 				if len(actions_tried) > 0:
-					Q_full[:,list(actions_tried)] = -1e20
-				pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
-				pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0)
-				lt = pchoice_2[a_2-1]
+					Q_compress_1[:,list(actions_tried)] = -1e20
+					Q_compress_2[:,list(actions_tried)] = -1e20
+				pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1, axis=-1)
+				pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2, axis=-1)
+				pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
+							+ p_policies_softmax[1] * pchoice_2_compress_2 \
+							+ p_policies_softmax[2] * pchoice_2_full
+				pchoice_2 = np.sum(pchoice_2 * PTS_2[:,c_2].reshape(-1,1), axis=0)
+			else:
+				pchoice_2 = pchoice_2_full 
+				
+			pchoice_2 = np.sum(pchoice_2 * PTS_2[:,c_2].reshape(-1,1), axis=0)
+			lt = pchoice_2[a_2-1]
 
 			llh += np.log(lt * (1 - epsilon) + epsilon / 4)
 
