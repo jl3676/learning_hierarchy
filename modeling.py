@@ -33,11 +33,10 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 
 		if int(D[t,5]) == 1: # new block
 			block += 1
-			trial = -1
 
 		if stage == 1:
 			s_1 = int(D[t, 2])
-			trial += 1
+			actions_tried = set()
 		elif stage == 2:
 			s_2 = int(D[t, 2])
 			a_2 = int(D[t, 3]) - 4
@@ -61,6 +60,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 					encounter_matrix_2[this_c_2] = 1
 
 			Q_full = TS_2s[:, state]
+			if len(actions_tried) > 0:
+				Q_full[list(actions_tried)] = 0
 			pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
 			pchoice_2 = np.sum(pchoice_2_full * PTS_2[:,c_2].reshape(-1,1), axis=0)
 
@@ -74,6 +75,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
 			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
+			actions_tried.add(a_2-1)
 
 	return -llh
 
@@ -173,6 +175,8 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 				a_1_temp.append(a_1) # append the action taken to the list of actions in the first stage
 				counter_1 += 1
 
+				actions_tried = set()
+
 				# (v) Second stage starts
 				if structure == 'backward':
 					cue = s_2 
@@ -194,10 +198,13 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 				while correct_2 == 0 and counter_2 < 10:
 					TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0]
 					Q_full = TS_2s[TS_2, state]
+					if len(actions_tried) > 0:
+						Q_full[list(actions_tried)] = 0
 					pchoice_2_full = softmax(beta_2 * Q_full)
 					pchoice_2 = pchoice_2_full
 
 					a_2 = np.random.choice(np.arange(1,5), 1, p=pchoice_2)[0]
+					actions_tried.add(a_2-1)
 					a_2_temp.append(a_2+4) # append the action taken to the list of actions in the second stage
 					counter_2 += 1
 					correct_2 = int((a_2 + 4) == correct_action_2)
