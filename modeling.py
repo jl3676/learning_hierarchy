@@ -9,7 +9,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	Computes the negative log likelihood of the data D given the option model.
 	'''
 	[alpha_2, concentration_2, epsilon] = params
-	beta_2 = 5
+	beta_2 = 10
 	concentration_2 = 10**concentration_2
 	
 	llh = 0
@@ -116,7 +116,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 def option_model(num_subject, params, experiment, structure, meta_learning=True):
 	[alpha_2, concentration_2, epsilon] = params
 	# alpha_2 = 1
-	beta_2 = 5
+	beta_2 = 10
 	concentration_2 = 10**concentration_2
 
 	num_block = 6 if experiment == 'All' else 12
