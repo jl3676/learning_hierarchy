@@ -80,8 +80,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 	beta_2 = 5
 	concentration_2 = 0.2
 
-	# num_block = 6 if experiment == 'All' else 12
-	num_block = 2
+	num_block = 6 if experiment == 'All' else 12
 	num_trial_12 = 60
 	num_trial_else = 32
 
