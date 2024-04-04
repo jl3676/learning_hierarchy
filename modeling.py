@@ -64,6 +64,22 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 						nTS_2 += 1
 					encounter_matrix_2[this_c_2] = 1
 
+			biases = np.zeros((nTS_2, nTS_2))
+			for i in range(block):
+				this_TS_1 = np.argmax(PTS_2[:-2,i*2])
+				this_TS_2 = np.argmax(PTS_2[:-2,i*2+1])
+				biases[this_TS_1, this_TS_2] += 1
+				biases[this_TS_2, this_TS_1] += 1
+
+			# Now we have picked the second stage TS, just pick an action based on the policy of this TS
+			TS_2_alt = np.argmax(PTS_2[:,c_2_alt])
+			if block > 0:
+				bias = biases[TS_2_alt].copy()
+				b = np.max(PTS_2[:,c_2_alt])
+				if np.sum(bias) > 0 and np.max(PTS_2[:,c_2]) < 0.5:
+					bias /= np.sum(bias)
+					PTS_2[:,c_2] = PTS_2[:,c_2] * (1 - b) + bias * b
+
 			Q_full = TS_2s[:, state].copy()
 			if len(actions_tried) > 0:
 				Q_full[:,list(actions_tried)] = epsilon # -1e20
@@ -240,6 +256,22 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 						encounter_matrix_2[this_c_2] = 1
 						
 				while correct_2 == 0 and counter_2 < 10:
+					biases = np.zeros((nTS_2, nTS_2))
+					for i in range(block):
+						this_TS_1 = np.argmax(PTS_2[:-2,i*2])
+						this_TS_2 = np.argmax(PTS_2[:-2,i*2+1])
+						biases[this_TS_1, this_TS_2] += 1
+						biases[this_TS_2, this_TS_1] += 1
+
+					# Now we have picked the second stage TS, just pick an action based on the policy of this TS
+					TS_2_alt = np.argmax(PTS_2[:,c_2_alt])
+					if block > 0:
+						bias = biases[TS_2_alt].copy()
+						b = np.max(PTS_2[:,c_2_alt])
+						if np.sum(bias) > 0 and np.max(PTS_2[:,c_2]) < 0.5:
+							bias /= np.sum(bias)
+							PTS_2[:,c_2] = PTS_2[:,c_2] * (1 - b) + bias * b
+
 					TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0]
 					TS_2_history[sub,block,trial] = TS_2
 					Q_full = TS_2s[TS_2, state].copy()
