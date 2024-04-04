@@ -31,7 +31,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 		prior = 0.25
 		eps_meta = 0.01
 		p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
-		p_policies_softmax = softmax(beta_2 * p_policies)
+		p_policies_softmax = p_policies # softmax(beta_2 * p_policies)
 
 	for t in range(D.shape[0]):	
 		stage = int(D[t,1])
@@ -128,7 +128,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				if np.min(p_policies) < eps_meta:
 					p_policies += eps_meta
 				p_policies /= np.sum(p_policies)
-				p_policies_softmax = softmax(beta_2 * p_policies)
+				p_policies_softmax = p_policies # softmax(beta_2 * p_policies)
 
 	return -llh
 
@@ -197,7 +197,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 			eps_meta = 0.01
 			prior = 0.25
 			p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
-			p_policies_softmax = softmax(beta_2 * p_policies)
+			p_policies_softmax = p_policies # softmax(beta_2 * p_policies)
 
 		# 3. start looping over all blocks
 		for block in range(num_block):
@@ -326,7 +326,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 						if np.min(p_policies) < eps_meta:
 							p_policies += eps_meta
 						p_policies /= np.sum(p_policies)
-						p_policies_softmax = softmax(beta_2 * p_policies)
+						p_policies_softmax = p_policies # softmax(beta_2 * p_policies)
 
 				# Record variables per trial
 				counter_1_temp[trial] = counter_1
