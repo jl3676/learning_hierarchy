@@ -8,8 +8,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	Computes the negative log likelihood of the data D given the option model.
 	'''
-	[alpha_2, beta_2, concentration_2, epsilon] = params
-	# beta_2 = 10
+	[alpha_2, alpha_cf, concentration_2, epsilon] = params
+	beta_2 = 5
 	concentration_2 = 10**concentration_2
 	alpha_cf = 0.6
 	
@@ -118,10 +118,10 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 
 
 def option_model(num_subject, params, experiment, structure, meta_learning=True):
-	[alpha_2, beta_2, concentration_2, epsilon] = params
+	[alpha_2, alpha_cf, concentration_2, epsilon] = params
 	# alpha_2 = 1
-	# beta_2 = 10
-	alpha_cf = 0.6
+	beta_2 = 5
+	# alpha_cf = 0.6
 	concentration_2 = 10**concentration_2
 
 	num_block = 6 if experiment == 'All' else 12
@@ -241,6 +241,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 						
 				while correct_2 == 0 and counter_2 < 10:
 					TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0]
+					TS_2_history[sub,block,trial] = TS_2
 					Q_full = TS_2s[TS_2, state].copy()
 					if len(actions_tried) > 0:
 						Q_full[list(actions_tried)] = epsilon # -1e20
@@ -285,6 +286,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 						TS_2s[TS_2_alt,state,a_2-1] -= alpha_2 * TS_2s[TS_2_alt,state,a_2-1] * alpha_cf
 
 					if meta_learning:
+						p_policies_history[sub,block,trial] = p_policies
 						p_policies[0] *= pchoice_2_compress_1[a_2-1]
 						p_policies[1] *= pchoice_2_compress_2[a_2-1]
 						p_policies[2] *= pchoice_2_full[a_2-1]
