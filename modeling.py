@@ -30,7 +30,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	if meta_learning:
 		prior = 0.25
 		eps_meta = 0.01
-		beta_policies = 100 # hard max
+		beta_policies = beta_2 # hard max
 		p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
 		p_policies_softmax = softmax(beta_policies * p_policies)
 
@@ -193,7 +193,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		if meta_learning:
 			eps_meta = 0.01
 			prior = 0.25
-			beta_policies = 100 # hard max
+			beta_policies = beta_2 # hard max
 			p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
 			p_policies_softmax = softmax(beta_policies * p_policies)
 
