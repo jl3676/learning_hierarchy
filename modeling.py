@@ -90,14 +90,14 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			if meta_learning:
 				if structure == 'backward':
 					Q_compress_1 = np.mean(TS_2s, axis=(1))
-					Q_compress_2 = np.sum(TS_2s * (PTS_2[:,c_2]/2 + PTS_2[:,c_2_alt]/2).reshape(-1,1,1), axis=0)[state, a_2-1]
+					Q_compress_2 = np.sum(TS_2s * (PTS_2[:,c_2]/2 + PTS_2[:,c_2_alt]/2).reshape(-1,1,1), axis=0)[state]
 				
 				if len(actions_tried) > 0:
 					Q_compress_1[:,list(actions_tried)] = epsilon # -1e20
 					Q_compress_2[:,list(actions_tried)] = epsilon # -1e20
 				pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1, axis=-1)
 				pchoice_2_compress_1 = np.sum(pchoice_2_compress_1[:,a_2-1] * PTS_2[:,c_2]) # * (1-epsilon) + epsilon / 4
-				pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2, axis=-1) 
+				pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2, axis=-1) [a_2-1]
 				# pchoice_2_compress_2 = np.sum(pchoice_2_compress_2[:,a_2-1] * PTS_2[:,c_2]) # * (1-epsilon) + epsilon / 4
 				pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
 							+ p_policies_softmax[1] * pchoice_2_compress_2 \
