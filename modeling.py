@@ -196,8 +196,9 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		if meta_learning:
 			eps_meta = 0.01
 			prior = 0.25
+			beta_policies = 100 # hard max
 			p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
-			p_policies_softmax = softmax(beta_2 * p_policies)
+			p_policies_softmax = softmax(beta_policies * p_policies)
 
 		# 3. start looping over all blocks
 		for block in range(num_block):
@@ -326,7 +327,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 						if np.min(p_policies) < eps_meta:
 							p_policies += eps_meta
 						p_policies /= np.sum(p_policies)
-						p_policies_softmax = softmax(beta_2 * p_policies)
+						p_policies_softmax = softmax(beta_policies * p_policies)
 
 				# Record variables per trial
 				counter_1_temp[trial] = counter_1
