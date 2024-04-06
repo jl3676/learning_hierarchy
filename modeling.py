@@ -122,7 +122,6 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 					TS_2s[:, state, a_2-1] += alpha_2 * RPE_2
 				TS_2s[:, state, a_2-1] += alpha_2 * RPE_3
 				RPE = np.sum(RPE_1) + np.sum(RPE_2) + np.sum(RPE_3)
-				print([RPE_1, RPE_2, RPE_3])
 			else:
 				RPE = (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 				TS_2s[:,state,a_2-1] += alpha_2 * RPE
