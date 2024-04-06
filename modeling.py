@@ -92,7 +92,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 
 			lt_2 = 0
 			
-			Q_full = np.mean(TS_2s * PTS_2[:,c_2].reshape(-1, 1, 1), axis=0)[state]
+			Q_full = np.sum(TS_2s * PTS_2[:,c_2].reshape(-1, 1, 1), axis=0)[state]
 			if len(actions_tried) > 0:
 				Q_full[list(actions_tried)] = -1e20
 			pchoice_2_full = softmax(beta_2 * Q_full) * (1-epsilon) + epsilon / 4
