@@ -127,7 +127,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				p_policies_softmax = softmax(beta_policies * p_policies)
 
 	if meta_learning:
-		llh -= np.sum((alpha_2 - 0.8) ** 2 / (2 * 0.2 ** 2))
+		llh -= np.sum((beta_policies - 5) ** 2 / (2 * 1 ** 2))
 
 	return -llh
 
