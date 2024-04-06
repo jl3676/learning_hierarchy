@@ -143,7 +143,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	return -llh
 
 
-def option_model(num_subject, alpha_2, concentration_2, epsilon, prior, experiment, structure, meta_learning=True):
+def option_model(num_subject, params, experiment, structure, meta_learning=True):
 	'''
 	Fits the option model to the data of the OT-CA1-CA1 task.
 
@@ -725,6 +725,6 @@ def parallel_worker(args):
 
 
 def parallel_simulator(args):
-    this_model, i, niters_sim, alpha_2, concentration_2, epsilon, prior, exp, structure, meta_learning = args
-    this_data = globals()[this_model](niters_sim, alpha_2, concentration_2, epsilon, prior, exp, structure, meta_learning)
+    this_model, i, niters_sim, params, exp, structure, meta_learning = args
+    this_data = globals()[this_model](niters_sim, params, exp, structure, meta_learning)
     return i, this_data
