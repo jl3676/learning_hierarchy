@@ -8,8 +8,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	Computes the negative log likelihood of the data D given the option model.
 	'''
-	[alpha_2, beta_2, concentration_2, epsilon] = params
-	# beta_2 = 8
+	[alpha_2, beta, beta_scale, concentration_2, epsilon] = params
+	beta_2 = beta
 	concentration_2 = 10**concentration_2
 	
 	llh = 0
@@ -113,7 +113,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			PTS_2[:,c_2] += 1e-6
 			PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
-			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
+			RPE = (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
+			TS_2s[:,state,a_2-1] += alpha_2 * RPE
+			beta_2 = beta + beta_scale * (1 - np.abs(np.sum(RPE)))
 			actions_tried.add(a_2-1)
 
 			if meta_learning:
@@ -133,9 +135,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 
 
 def option_model(num_subject, params, experiment, structure, meta_learning=True):
-	[alpha_2, beta_2, concentration_2, epsilon] = params
+	[alpha_2, beta, beta_scale, concentration_2, epsilon] = params
 	# alpha_2 = 1
-	# beta_2 = 8
+	beta_2 = beta
 	concentration_2 = 10**concentration_2
 
 	num_block = 6 if experiment == 'All' else 12
@@ -193,7 +195,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		encounter_matrix_2[:nTS_2] = 1
 		if meta_learning:
 			eps_meta = 0.01
-			prior = 0.25
+			prior = 0.1
 			beta_policies = 50 # hard max
 			p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
 			p_policies_softmax = softmax(beta_policies * p_policies)
@@ -309,7 +311,9 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 
 					TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0]
 					TS_2_alt = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2_alt])[0]
-					TS_2s[TS_2, state, a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2, state, a_2-1])
+					RPE = correct_2 - TS_2s[TS_2, state, a_2-1]
+					TS_2s[TS_2, state, a_2-1] += alpha_2 * RPE
+					beta_2 = beta + beta_scale * (1 - np.abs(RPE))
 
 					if meta_learning:
 						p_policies_history[sub,block,trial] = p_policies
