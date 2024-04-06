@@ -12,7 +12,6 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	beta_2 = 10
 	# eps_meta = 10**eps_meta if meta_learning else 0.0
 	concentration_2 = 10**concentration_2
-	eps_meta = 0.01 if meta_learning else 0.0
 
 	llh = 0
 	num_block = 12
@@ -29,7 +28,10 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	TS_2s[0,:,:] = np.ones((2,4)) / 4
 	nC_2 = 2 * num_block
 	PTS_2 = np.ones((nTS_2,nC_2))
-	p_policies = np.array([1-eps_meta-prior, prior, eps_meta]) if meta_learning else np.array([0.0, 0.0, 1.0])
+	if meta_learning:
+		eps_meta = 0.01
+		p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
+		p_policies_softmax = softmax(beta_2 * p_policies)
 	encounter_matrix_2 = np.zeros(nC_2)
 
 	for t in range(D.shape[0]):	
@@ -105,7 +107,6 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1) * (1-epsilon) + epsilon / 4
 			pchoice_2_full = softmax(beta_2 * Q_full) * (1-epsilon) + epsilon / 4
 			pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2) * (1-epsilon) + epsilon / 4
-			p_policies_softmax = softmax(beta_2 * p_policies)
 			pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
 						+ p_policies_softmax[1] * pchoice_2_compress_2 \
                         + p_policies_softmax[2] * pchoice_2_full
@@ -115,30 +116,21 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			llh += np.log(lt_2)
 
 			# Use the result to update PTS_2 with Bayes Rule
-			specs = PTS_2.shape
-			reg = np.zeros(specs[0])
-			for TS_2 in range(PTS_2.shape[0]):
-				if r_2 == 0:
-					RPE = 1-TS_2s[TS_2,state,a_2-1]
-				else:
-					RPE = TS_2s[TS_2,state,a_2-1]
-
-				reg[TS_2] = PTS_2[TS_2,c_2] * RPE
-
-			PTS_2[:,c_2_alt] /= np.sum(PTS_2[:,c_2_alt])
-
-			reg += 1e-6
-			PTS_2[:,c_2] = reg / np.sum(reg)
+			PTS_2[:,c_2] *= (1-r_2 - (-1)**r_2 * TS_2s[:,state,a_2-1])
+			PTS_2[:,c_2] += 1e-6
+			PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 				
 			TS_2s[:,state,a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 
-			p_policies[0] *= pchoice_2_compress_1[a_2-1]
-			p_policies[1] *= pchoice_2_compress_2[a_2-1]
-			p_policies[2] *= pchoice_2_full[a_2-1]
-			p_policies /= np.sum(p_policies)
-			if np.min(p_policies) < eps_meta:
-				p_policies += eps_meta
-			p_policies /= np.sum(p_policies)
+			if meta_learning:
+				p_policies[0] *= pchoice_2_compress_1[a_2-1]
+				p_policies[1] *= pchoice_2_compress_2[a_2-1]
+				p_policies[2] *= pchoice_2_full[a_2-1]
+				p_policies /= np.sum(p_policies)
+				if np.min(p_policies) < eps_meta:
+					p_policies += eps_meta
+				p_policies /= np.sum(p_policies)
+				p_policies_softmax = softmax(beta_2 * p_policies)
 
 	return -llh
 
