@@ -450,7 +450,7 @@ def option_model(num_subject, alpha_2, concentration_2, epsilon, prior, experime
 						r_temp[0,:counter_1-1] = 0 
 					r_temp[0,counter_1-1] = 1 
 					if counter_2 > 1:
-						r_temp[1, counter_1-1:(counter_1+counter_2-3)] = 0
+						r_temp[1, counter_1-1:] = 0
 					r_temp[1, -1] = 1
 					r_12_12[sub,block,trial] = r_temp
 				else: # record action, RT and reward only for Blocks 3-8
