@@ -115,7 +115,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 
 			if meta_learning:
 				if structure == 'backward':
-					RPE_1 = ((r_2 - np.mean(TS_2s[:, :, a_2-1], axis=1)) * p_policies[0] * PTS_2[:,c_2]).reshape(-1,1)
+					RPE_1 = (r_2 - np.mean(TS_2s[:, :, a_2-1], axis=1)) * p_policies[0] * PTS_2[:,c_2].reshape(-1,1)
 					RPE_2 = (r_2 - TS_2s[:, state, a_2-1]) * p_policies[1] * PTS_2[:,c_2_alt]
 					RPE_3 = (r_2 - TS_2s[:, state, a_2-1]) * p_policies[2] * PTS_2[:,c_2]
 					TS_2s[:, :, a_2-1] += alpha_2 * RPE_1
