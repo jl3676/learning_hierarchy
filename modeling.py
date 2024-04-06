@@ -113,20 +113,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			PTS_2[:,c_2] += 1e-6
 			PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
-			if meta_learning:
-				if structure == 'backward':
-					RPE_1 = (r_2 - np.mean(TS_2s[:, :, a_2-1], axis=1)) * p_policies[0] * PTS_2[:,c_2].reshape(-1,1)
-					RPE_2 = (r_2 - TS_2s[:, state, a_2-1]) * p_policies[1] * PTS_2[:,c_2_alt]
-					RPE_3 = (r_2 - TS_2s[:, state, a_2-1]) * p_policies[2] * PTS_2[:,c_2]
-					TS_2s[:, :, a_2-1] += alpha_2 * RPE_1
-					TS_2s[:, state, a_2-1] += alpha_2 * RPE_2
-				TS_2s[:, state, a_2-1] += alpha_2 * RPE_3
-				RPE = np.sum(RPE_1) + np.sum(RPE_2) + np.sum(RPE_3)
-			else:
-				RPE = (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
-				TS_2s[:,state,a_2-1] += alpha_2 * RPE
-				RPE = np.sum(RPE)
-			beta_2 = beta + beta_scale * (1 - np.abs(RPE))
+			RPE = (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
+			TS_2s[:,state,a_2-1] += alpha_2 * RPE
+			beta_2 = beta + beta_scale * (1 - np.abs(np.sum(RPE)))
 			actions_tried.add(a_2-1)
 
 			if meta_learning:
@@ -322,18 +311,8 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 
 					TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0]
 					TS_2_alt = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2_alt])[0]
-					if meta_learning:
-						if structure == 'backward':
-							RPE_1 = (correct_2 - np.mean(TS_2s[TS_2, :, a_2-1])) * p_policies[0]
-							RPE_2 = (correct_2 - TS_2s[TS_2_alt, state, a_2-1]) * p_policies[1]
-							RPE_3 = (correct_2 - TS_2s[TS_2, state, a_2-1]) * p_policies[2]
-							TS_2s[TS_2, :, a_2-1] += alpha_2 * RPE_1
-							TS_2s[TS_2_alt, state, a_2-1] += alpha_2 * RPE_2
-						TS_2s[TS_2, state, a_2-1] += alpha_2 * RPE_3
-						RPE = RPE_1 + RPE_2 + RPE_3
-					else:
-						RPE = correct_2 - TS_2s[TS_2, state, a_2-1]
-						TS_2s[TS_2, state, a_2-1] += alpha_2 * RPE
+					RPE = correct_2 - TS_2s[TS_2, state, a_2-1]
+					TS_2s[TS_2, state, a_2-1] += alpha_2 * RPE
 					beta_2 = beta + beta_scale * (1 - np.abs(RPE))
 
 					if meta_learning:
