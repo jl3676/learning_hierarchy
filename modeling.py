@@ -13,6 +13,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	# eps_meta = 10**eps_meta if meta_learning else 0.0
 	concentration_2 = 10**concentration_2
 
+	mu_alpha, sigma_alpha = 0.8, 0.2
+
 	llh = 0
 	num_block = 12
 	s_2 = a_2 = -1
@@ -137,6 +139,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				p_policies /= np.sum(p_policies)
 				p_policies_softmax = softmax(beta_2 * p_policies)
 
+	if meta_learning:
+		llh -= np.sum((alpha_2 - mu_alpha) ** 2 / (2 * sigma_alpha ** 2))
 	return -llh
 
 
