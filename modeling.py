@@ -99,11 +99,11 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			
 			if meta_learning:
 				if structure == 'backward':
-					Q_compress_1 = np.mean(TS_2s * PTS_2[:,c_2].reshape(-1, 1, 1), axis=(0,1))
-					Q_compress_2 = np.mean(TS_2s * (PTS_2[:,c_2]/2 + PTS_2[:,c_2_alt]/2).reshape(-1, 1, 1), axis=0)[state]
+					Q_compress_1 = np.sum(TS_2s * PTS_2[:,c_2].reshape(-1, 1, 1), axis=(0,1))
+					Q_compress_2 = np.sum(TS_2s * (PTS_2[:,c_2]/2 + PTS_2[:,c_2_alt]/2).reshape(-1, 1, 1), axis=0)[state]
 				elif structure == 'forward':
-					Q_compress_1 = np.mean(TS_2s * (PTS_2[:,c_2]/2 + PTS_2[:,c_2_alt]/2).reshape(-1, 1, 1), axis=0)[state]
-					Q_compress_2 = np.mean(TS_2s * PTS_2[:,c_2].reshape(-1, 1, 1), axis=(0,1))
+					Q_compress_1 = np.sum(TS_2s * (PTS_2[:,c_2]/2 + PTS_2[:,c_2_alt]/2).reshape(-1, 1, 1), axis=0)[state]
+					Q_compress_2 = np.sum(TS_2s * PTS_2[:,c_2].reshape(-1, 1, 1), axis=(0,1))
 				if len(actions_tried) > 0:
 					Q_compress_1[list(actions_tried)] = -1e20
 					Q_compress_2[list(actions_tried)] = -1e20
