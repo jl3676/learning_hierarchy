@@ -91,25 +91,30 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 					PTS_2[:,c_2] = PTS_2[:,c_2] * (1 - b) + bias * b
 
 			lt_2 = 0
-			if structure == 'backward':
-				Q_compress_1 = np.mean(TS_2s * PTS_2[:,c_2].reshape(-1, 1, 1), axis=(0,1))
-				Q_compress_2 = np.mean(TS_2s * (PTS_2[:,c_2]/2 + PTS_2[:,c_2_alt]/2).reshape(-1, 1, 1), axis=0)[state]
-			elif structure == 'forward':
-				Q_compress_1 = np.mean(TS_2s * (PTS_2[:,c_2]/2 + PTS_2[:,c_2_alt]/2).reshape(-1, 1, 1), axis=0)[state]
-				Q_compress_2 = np.mean(TS_2s * PTS_2[:,c_2].reshape(-1, 1, 1), axis=(0,1))
-			Q_full = np.mean(TS_2s * PTS_2[:,c_2].reshape(-1, 1, 1), axis=0)[state]
 			
+			Q_full = np.mean(TS_2s * PTS_2[:,c_2].reshape(-1, 1, 1), axis=0)[state]
 			if len(actions_tried) > 0:
-				Q_compress_1[list(actions_tried)] = -1e20
-				Q_compress_2[list(actions_tried)] = -1e20
 				Q_full[list(actions_tried)] = -1e20
-
-			pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1) * (1-epsilon) + epsilon / 4
 			pchoice_2_full = softmax(beta_2 * Q_full) * (1-epsilon) + epsilon / 4
-			pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2) * (1-epsilon) + epsilon / 4
-			pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
-						+ p_policies_softmax[1] * pchoice_2_compress_2 \
-                        + p_policies_softmax[2] * pchoice_2_full
+			
+			if meta_learning:
+				if structure == 'backward':
+					Q_compress_1 = np.mean(TS_2s * PTS_2[:,c_2].reshape(-1, 1, 1), axis=(0,1))
+					Q_compress_2 = np.mean(TS_2s * (PTS_2[:,c_2]/2 + PTS_2[:,c_2_alt]/2).reshape(-1, 1, 1), axis=0)[state]
+				elif structure == 'forward':
+					Q_compress_1 = np.mean(TS_2s * (PTS_2[:,c_2]/2 + PTS_2[:,c_2_alt]/2).reshape(-1, 1, 1), axis=0)[state]
+					Q_compress_2 = np.mean(TS_2s * PTS_2[:,c_2].reshape(-1, 1, 1), axis=(0,1))
+				if len(actions_tried) > 0:
+					Q_compress_1[list(actions_tried)] = -1e20
+					Q_compress_2[list(actions_tried)] = -1e20
+
+				pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1) * (1-epsilon) + epsilon / 4
+				pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2) * (1-epsilon) + epsilon / 4
+				pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
+							+ p_policies_softmax[1] * pchoice_2_compress_2 \
+							+ p_policies_softmax[2] * pchoice_2_full
+			else:
+				pchoice_2 = pchoice_2_full
 			
 			lt_2 = pchoice_2[a_2-1]
 			actions_tried.add(a_2-1)
