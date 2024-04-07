@@ -107,7 +107,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			else:
 				pchoice_2 = pchoice_2_full 
 
-			llh += np.log(pchoice_2)
+			if len(actions_tried) == 0:
+				llh += np.log(pchoice_2)
 
 			if r_2 == 0:
 				PTS_2[:,c_2] *= (1 - TS_2s[:,state,a_2-1])
