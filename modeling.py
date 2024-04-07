@@ -117,7 +117,18 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
 			RPE = (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
-			TS_2s[:,state,a_2-1] += alpha_2 * RPE
+			if meta_learning:
+				if structure == 'backward':
+					inc = alpha_2 * RPE / 2
+					TS_2s[:, state, a_2-1] += inc
+					if np.argmax(p_policies) == 0:
+						TS_2s[:, 1-state, a_2-1] += inc
+					elif np.argmax(p_policies) == 1:
+						TS_2s[:, state, a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2_alt] / 2
+					elif np.argmax(p_policies) == 2:
+						TS_2s[:, state, a_2-1] += inc
+			else:
+				TS_2s[:,state,a_2-1] += alpha_2 * RPE
 			# if meta_learning:
 			# 	beta_2 = beta + beta_scale * p_policies[-1]
 			actions_tried.add(a_2-1)
@@ -318,9 +329,20 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
 					TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0]
-					# TS_2_alt = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2_alt])[0]
+					TS_2_alt = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2_alt])[0]
 					RPE = correct_2 - TS_2s[TS_2, state, a_2-1]
-					TS_2s[TS_2, state, a_2-1] += alpha_2 * RPE
+					if meta_learning:
+						if structure == 'backward':
+							inc = alpha_2 * RPE / 2
+							TS_2s[TS_2, state, a_2-1] += inc
+							if np.argmax(p_policies) == 0:
+								TS_2s[TS_2, 1-state, a_2-1] += inc
+							elif np.argmax(p_policies) == 1:
+								TS_2s[TS_2_alt, state, a_2-1] += inc
+							elif np.argmax(p_policies) == 2:
+								TS_2s[TS_2, state, a_2-1] += inc
+					else:
+						TS_2s[TS_2, state, a_2-1] += alpha_2 * RPE
 					# if meta_learning:
 					# 	beta_2 = beta + beta_scale * p_policies[-1]
 
@@ -335,14 +357,14 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 							p_policies += eps_meta
 						p_policies /= np.sum(p_policies)
 						p_policies_softmax = softmax(beta_policies * p_policies)
-						if block > 10 and trial > 30 and len(actions_tried) < 2:
-							if p_policies_softmax[-1] > 0.9:
-								p_policies_history = np.full((num_subject,num_block,num_trial_12,3), np.nan)
-								TS_2_history = np.full((num_subject,num_block*2,num_trial_12), np.nan)
-					if len(actions_tried) == 1:
-						p_policies_history[sub,block,trial,0] = pchoice_2[a_2-1]
-						p_policies_history[sub,block,trial,1] = pchoice_2[correct_action_2-5]
-						p_policies_history[sub,block,trial,2] = pchoice_2_full[correct_action_2-5]
+						# if block > 10 and trial > 30 and len(actions_tried) < 2:
+						# 	if p_policies_softmax[-1] > 0.9:
+						# 		p_policies_history = np.full((num_subject,num_block,num_trial_12,3), np.nan)
+						# 		TS_2_history = np.full((num_subject,num_block*2,num_trial_12), np.nan)
+					# if len(actions_tried) == 1:
+					# 	p_policies_history[sub,block,trial,0] = pchoice_2[a_2-1]
+					# 	p_policies_history[sub,block,trial,1] = pchoice_2[correct_action_2-5]
+					# 	p_policies_history[sub,block,trial,2] = pchoice_2_full[correct_action_2-5]
 
 				# Record variables per trial
 				counter_1_temp[trial] = counter_1
