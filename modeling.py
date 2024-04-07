@@ -337,6 +337,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 						p_policies_softmax = softmax(beta_policies * p_policies)
 					if len(actions_tried) == 1:
 						p_policies_history[sub,block,trial,0] = pchoice_2[a_2-1]
+						p_policies_history[sub,block,trial,1] = pchoice_2[correct_action_2-5]
 
 				# Record variables per trial
 				counter_1_temp[trial] = counter_1
