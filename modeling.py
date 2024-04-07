@@ -120,13 +120,13 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			if meta_learning:
 				if structure == 'backward':
 					inc = alpha_2 * RPE / 2
-					TS_2s[:, state, a_2-1] += inc
+					TS_2s[:, state, a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2] / 2
 					if np.argmax(p_policies) == 0:
-						TS_2s[:, 1-state, a_2-1] += inc
+						TS_2s[:, 1-state, a_2-1] += alpha_2 * (r_2 - TS_2s[:,1-state,a_2-1]) * PTS_2[:,c_2] / 2
 					elif np.argmax(p_policies) == 1:
 						TS_2s[:, state, a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2_alt] / 2
 					elif np.argmax(p_policies) == 2:
-						TS_2s[:, state, a_2-1] += inc
+						TS_2s[:, state, a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2] / 2
 			else:
 				TS_2s[:,state,a_2-1] += alpha_2 * RPE
 			# if meta_learning:
@@ -334,13 +334,13 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					if meta_learning:
 						if structure == 'backward':
 							inc = alpha_2 * RPE / 2
-							TS_2s[TS_2, state, a_2-1] += inc
+							TS_2s[TS_2, state, a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2, state, a_2-1]) / 2
 							if np.argmax(p_policies) == 0:
-								TS_2s[TS_2, 1-state, a_2-1] += inc
+								TS_2s[TS_2, 1-state, a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2, 1-state, a_2-1]) / 2
 							elif np.argmax(p_policies) == 1:
-								TS_2s[TS_2_alt, state, a_2-1] += inc
+								TS_2s[TS_2_alt, state, a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2_alt, state, a_2-1]) / 2
 							elif np.argmax(p_policies) == 2:
-								TS_2s[TS_2, state, a_2-1] += inc
+								TS_2s[TS_2, state, a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2, state, a_2-1]) / 2
 					else:
 						TS_2s[TS_2, state, a_2-1] += alpha_2 * RPE
 					# if meta_learning:
