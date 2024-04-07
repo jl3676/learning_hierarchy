@@ -198,7 +198,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		encounter_matrix_2 = np.zeros(nC_2)
 		encounter_matrix_2[:nTS_2] = 1
 		if meta_learning:
-			eps_meta = 0.01
+			eps_meta = 0.1
 			# prior = 0.1
 			beta_policies = 50 # hard max
 			p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
