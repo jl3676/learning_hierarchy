@@ -110,16 +110,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			llh += np.log(pchoice_2)
 			correct_2 = r_2
 
-			if meta_learning:
-				if structure == 'backward':
-					if np.argmax(p_policies_softmax) == 0:
-						PTS_2[:,c_2] *= (1 - correct_2 - (-1)**correct_2 * np.mean(TS_2s[:, :, a_2-1],axis=1))
-					elif np.argmax(p_policies_softmax) == 1:
-						PTS_2[:,c_2] *= (1 - correct_2 - (-1)**correct_2 * (TS_2s*(PTS_2[:,c_2]+PTS_2[:,c_2_alt]).reshape(-1,1,1)/2)[:,state,a_2-1])
-					elif np.argmax(p_policies_softmax) == 2:
-						PTS_2[:,c_2] *= (1 - correct_2 - (-1)**correct_2 * TS_2s[:, state, a_2-1])
-			else:	
-				PTS_2[:,c_2] *= (1 - correct_2 - (-1)**correct_2 * TS_2s[:, state, a_2-1])
+			PTS_2[:,c_2] *= (1 - correct_2 - (-1)**correct_2 * TS_2s[:, state, a_2-1])
 			PTS_2[:,c_2] += 1e-6
 			PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
@@ -317,19 +308,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					correct_2 = int((a_2 + 4) == correct_action_2)
 
 					# Use the result to update PTS_2 with Bayes Rule
-					if meta_learning:
-						if structure == 'backward':
-							if np.argmax(p_policies_softmax) == 0:
-								PTS_2[:,c_2] *= (1 - correct_2 - (-1)**correct_2 * np.mean(TS_2s[:, :, a_2-1],axis=1))
-							elif np.argmax(p_policies_softmax) == 1:
-								PTS_2[:,c_2] *= (1 - correct_2 - (-1)**correct_2 * (TS_2s*(PTS_2[:,c_2]+PTS_2[:,c_2_alt]).reshape(-1,1,1)/2)[:,state,a_2-1])
-							elif np.argmax(p_policies_softmax) == 2:
-								PTS_2[:,c_2] *= (1 - correct_2 - (-1)**correct_2 * TS_2s[:, state, a_2-1])
-					else:
-						if correct_2 == 0:
-							PTS_2[:,c_2] *= (1 - TS_2s[:, state, a_2-1])
-						else:
-							PTS_2[:,c_2] *= TS_2s[:, state, a_2-1]
+					PTS_2[:,c_2] *= (1 - correct_2 - (-1)**correct_2 * TS_2s[:, state, a_2-1])
 					PTS_2[:,c_2] += 1e-6
 					PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
