@@ -117,18 +117,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
 			RPE = (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
-			if meta_learning:
-				if structure == 'backward':
-					inc = alpha_2 * RPE / 2
-					TS_2s[:, state, a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2] / 2
-					if np.argmax(p_policies) == 0:
-						TS_2s[:, 1-state, a_2-1] += alpha_2 * (r_2 - TS_2s[:,1-state,a_2-1]) * PTS_2[:,c_2] / 2
-					elif np.argmax(p_policies) == 1:
-						TS_2s[:, state, a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2_alt] / 2
-					elif np.argmax(p_policies) == 2:
-						TS_2s[:, state, a_2-1] += alpha_2 * (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2] / 2
-			else:
-				TS_2s[:,state,a_2-1] += alpha_2 * RPE
+			TS_2s[:,state,a_2-1] += alpha_2 * RPE
 			# if meta_learning:
 			# 	beta_2 = beta + beta_scale * p_policies[-1]
 			actions_tried.add(a_2-1)
@@ -331,18 +320,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0]
 					TS_2_alt = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2_alt])[0]
 					RPE = correct_2 - TS_2s[TS_2, state, a_2-1]
-					if meta_learning:
-						if structure == 'backward':
-							inc = alpha_2 * RPE / 2
-							TS_2s[TS_2, state, a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2, state, a_2-1]) / 2
-							if np.argmax(p_policies) == 0:
-								TS_2s[TS_2, 1-state, a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2, 1-state, a_2-1]) / 2
-							elif np.argmax(p_policies) == 1:
-								TS_2s[TS_2_alt, state, a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2_alt, state, a_2-1]) / 2
-							elif np.argmax(p_policies) == 2:
-								TS_2s[TS_2, state, a_2-1] += alpha_2 * (correct_2 - TS_2s[TS_2, state, a_2-1]) / 2
-					else:
-						TS_2s[TS_2, state, a_2-1] += alpha_2 * RPE
+					TS_2s[TS_2, state, a_2-1] += alpha_2 * RPE
 					# if meta_learning:
 					# 	beta_2 = beta + beta_scale * p_policies[-1]
 
