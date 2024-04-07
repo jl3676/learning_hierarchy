@@ -169,10 +169,10 @@ def plot_validation_PTS(data_sim, m, cond, ntrials=1, save_vector=False, pallett
     # Step 4: Average these probabilities across all subjects
     average_probabilities = np.mean(probabilities_per_subject, axis=0).T
 
-    plt.figure(figsize=(2,8))
+    plt.figure(figsize=(7,2))
     gs = gridspec.GridSpec(3, 1, height_ratios=[1, 2, 2])
 
-    plt.subplot(gs[0,0])
+    # plt.subplot(gs[0,0])
     mean_policies = np.nanmean(p_policies.reshape(p_policies.shape[0],-1,p_policies.shape[-1]),axis=0)
     mean_policies = mean_policies[mean_policies[:,0]>0,:]
     plt.plot(mean_policies[:,0], color='cornflowerblue', label='Compressed over stage 1')
@@ -183,10 +183,10 @@ def plot_validation_PTS(data_sim, m, cond, ntrials=1, save_vector=False, pallett
     plt.ylabel('p(policy)')
     plt.legend()
 
-    plt.subplot(gs[1:,0])
-    vmin = 0
-    # vmax = np.max(average_probabilities) 
-    vmax = 1
+    # plt.subplot(gs[1:,0])
+    # vmin = 0
+    # # vmax = np.max(average_probabilities) 
+    # vmax = 1
     
     # if pallette is None:
     #     c = 180
