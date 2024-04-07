@@ -118,7 +118,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 
 			RPE = (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 			TS_2s[:,state,a_2-1] += alpha_2 * RPE
-			beta_2 = beta + beta_scale * block
+			if meta_learning:
+				beta_2 = beta + beta_scale * p_policies[-1]
 			actions_tried.add(a_2-1)
 
 			if meta_learning:
@@ -320,7 +321,8 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					TS_2_alt = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2_alt])[0]
 					RPE = correct_2 - TS_2s[TS_2, state, a_2-1]
 					TS_2s[TS_2, state, a_2-1] += alpha_2 * RPE
-					beta_2 = beta + beta_scale * block
+					if meta_learning:
+						beta_2 = beta + beta_scale * p_policies[-1]
 
 					if meta_learning:
 						p_policies_history[sub,block,trial] = p_policies
