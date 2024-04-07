@@ -339,12 +339,10 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 							if p_policies_softmax[-1] > 0.9:
 								p_policies_history = np.full((num_subject,num_block,num_trial_12,3), np.nan)
 								TS_2_history = np.full((num_subject,num_block*2,num_trial_12), np.nan)
-							else:
-								print(beta_2)
-					# if len(actions_tried) == 1:
-					# 	p_policies_history[sub,block,trial,0] = pchoice_2[a_2-1] if not meta_learning else p_policies_softmax[-1]
-					# 	p_policies_history[sub,block,trial,1] = pchoice_2[correct_action_2-5]
-					# 	p_policies_history[sub,block,trial,2] = pchoice_2_full[correct_action_2-5]
+					if len(actions_tried) == 1:
+						p_policies_history[sub,block,trial,0] = pchoice_2[a_2-1]
+						p_policies_history[sub,block,trial,1] = pchoice_2[correct_action_2-5]
+						p_policies_history[sub,block,trial,2] = pchoice_2_full[correct_action_2-5]
 
 				# Record variables per trial
 				counter_1_temp[trial] = counter_1
