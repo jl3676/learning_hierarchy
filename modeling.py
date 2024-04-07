@@ -90,6 +90,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				if structure == 'backward':
 					Q_compress_1 = np.mean(TS_2s, axis=(1))
 					Q_compress_2 = (TS_2s + np.sum(TS_2s * PTS_2[:,c_2_alt].reshape(-1,1,1),axis=0))[:,state] / 2
+				elif structure == 'forward':
+					Q_compress_1 = (TS_2s + np.sum(TS_2s * PTS_2[:,c_2_alt].reshape(-1,1,1),axis=0))[:,state] / 2
+					Q_compress_2 = np.mean(TS_2s, axis=(1))
 				
 				if len(actions_tried) > 0:
 					Q_compress_1[:,list(actions_tried)] = epsilon # -1e20
@@ -106,10 +109,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 
 			llh += np.log(pchoice_2)
 
-			if r_2 == 0:
-				PTS_2[:,c_2] *= (1 - TS_2s[:,state,a_2-1])
-			else:
-				PTS_2[:,c_2] *= TS_2s[:,state,a_2-1]	
+			PTS_2[:,c_2] *= (1 - r_2 - ((-1) ** r_2) * TS_2s[:,state,a_2-1])	
 			PTS_2[:,c_2] += 1e-6
 			PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
@@ -282,8 +282,12 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					
 					if meta_learning:
 						TS_2_alt = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2_alt])[0]
-						Q_compress_1 = np.mean(TS_2s[TS_2], axis=(0))
-						Q_compress_2 = (TS_2s[TS_2]/2 + TS_2s[TS_2_alt]/2)[state]
+						if structure == 'backward':
+							Q_compress_1 = np.mean(TS_2s[TS_2], axis=(0))
+							Q_compress_2 = (TS_2s[TS_2]/2 + TS_2s[TS_2_alt]/2)[state]
+						elif structure == 'forward':
+							Q_compress_1 = (TS_2s[TS_2]/2 + TS_2s[TS_2_alt]/2)[state]
+							Q_compress_2 = np.mean(TS_2s[TS_2], axis=(0))
 						if len(actions_tried) > 0:
 							Q_compress_1[list(actions_tried)] = epsilon # -1e20
 							Q_compress_2[list(actions_tried)] = epsilon # -1e20
@@ -302,10 +306,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					correct_2 = int((a_2 + 4) == correct_action_2)
 
 					# Use the result to update PTS_2 with Bayes Rule
-					if correct_2 == 0:
-						PTS_2[:,c_2] *= (1 - TS_2s[:, state, a_2-1])
-					else:
-						PTS_2[:,c_2] *= TS_2s[:, state, a_2-1]
+					PTS_2[:,c_2] *= (1 - r_2 - ((-1) ** r_2) * TS_2s[:,state,a_2-1])
 					PTS_2[:,c_2] += 1e-6
 					PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
