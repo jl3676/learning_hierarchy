@@ -108,11 +108,18 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				pchoice_2 = pchoice_2_full 
 
 			llh += np.log(pchoice_2)
+			correct_2 = r_2
 
-			if r_2 == 0:
-				PTS_2[:,c_2] *= (1 - TS_2s[:,state,a_2-1])
-			else:
-				PTS_2[:,c_2] *= TS_2s[:,state,a_2-1]	
+			if meta_learning:
+				if structure == 'backward':
+					if np.argmax(p_policies_softmax) == 0:
+						PTS_2[:,c_2] *= (1 - correct_2 - (-1)**correct_2 * np.mean(TS_2s[:, state, a_2-1],axis=1))
+					elif np.argmax(p_policies_softmax) == 1:
+						PTS_2[:,c_2] *= (1 - correct_2 - (-1)**correct_2 * (TS_2s*(PTS_2[:,c_2]+PTS_2[:,c_2_alt]).reshape(-1,1,1)/2)[state])
+					elif np.argmax(p_policies_softmax) == 2:
+						PTS_2[:,c_2] *= (1 - correct_2 - (-1)**correct_2 * TS_2s[:, state, a_2-1])
+			else:	
+				PTS_2[:,c_2] *= (1 - correct_2 - (-1)**correct_2 * TS_2s[:, state, a_2-1])
 			PTS_2[:,c_2] += 1e-6
 			PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
@@ -310,10 +317,19 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					correct_2 = int((a_2 + 4) == correct_action_2)
 
 					# Use the result to update PTS_2 with Bayes Rule
-					if correct_2 == 0:
-						PTS_2[:,c_2] *= (1 - TS_2s[:, state, a_2-1])
+					if meta_learning:
+						if structure == 'backward':
+							if np.argmax(p_policies_softmax) == 0:
+								PTS_2[:,c_2] *= (1 - correct_2 - (-1)**correct_2 * np.mean(TS_2s[:, state, a_2-1],axis=1))
+							elif np.argmax(p_policies_softmax) == 1:
+								PTS_2[:,c_2] *= (1 - correct_2 - (-1)**correct_2 * (TS_2s*(PTS_2[:,c_2]+PTS_2[:,c_2_alt]).reshape(-1,1,1)/2)[state])
+							elif np.argmax(p_policies_softmax) == 2:
+								PTS_2[:,c_2] *= (1 - correct_2 - (-1)**correct_2 * TS_2s[:, state, a_2-1])
 					else:
-						PTS_2[:,c_2] *= TS_2s[:, state, a_2-1]
+						if correct_2 == 0:
+							PTS_2[:,c_2] *= (1 - TS_2s[:, state, a_2-1])
+						else:
+							PTS_2[:,c_2] *= TS_2s[:, state, a_2-1]
 					PTS_2[:,c_2] += 1e-6
 					PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
@@ -335,12 +351,12 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 							p_policies += eps_meta
 						p_policies /= np.sum(p_policies)
 						p_policies_softmax = softmax(beta_policies * p_policies)
-						if block > 10 and trial > 30 and len(actions_tried) < 2:
-							if p_policies_softmax[-1] > 0.9:
-								p_policies_history = np.full((num_subject,num_block,num_trial_12,3), np.nan)
-								TS_2_history = np.full((num_subject,num_block*2,num_trial_12), np.nan)
-							else:
-								print(f'p_policies: {p_policies}, compress_1: {pchoice_2_compress_1[a_2-1]}, compress_2: {pchoice_2_compress_2[a_2-1]}, full: {pchoice_2_full[a_2-1]}, TS_2s: {TS_2s[:2]}')
+						# if block > 10 and trial > 30 and len(actions_tried) < 2:
+						# 	if p_policies_softmax[-1] > 0.9:
+						# 		p_policies_history = np.full((num_subject,num_block,num_trial_12,3), np.nan)
+						# 		TS_2_history = np.full((num_subject,num_block*2,num_trial_12), np.nan)
+						# 	else:
+						# 		print(f'p_policies: {p_policies}, compress_1: {pchoice_2_compress_1[a_2-1]}, compress_2: {pchoice_2_compress_2[a_2-1]}, full: {pchoice_2_full[a_2-1]}, TS_2s: {TS_2s[:2]}')
 					# if len(actions_tried) == 1:
 					# 	p_policies_history[sub,block,trial,0] = pchoice_2[a_2-1]
 					# 	p_policies_history[sub,block,trial,1] = pchoice_2[correct_action_2-5]
