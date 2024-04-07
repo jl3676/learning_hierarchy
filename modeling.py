@@ -322,24 +322,24 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					if meta_learning:
 						if len(actions_tried) == 1:
 							p_policies_history[sub,block,trial] = p_policies
-						p_policies[0] *= pchoice_2_compress_1[a_2-1]
-						p_policies[1] *= pchoice_2_compress_2[a_2-1]
-						p_policies[2] *= pchoice_2_full[a_2-1]
+						p_policies[0] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_compress_1[a_2-1])
+						p_policies[1] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_compress_2[a_2-1])
+						p_policies[2] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_full[a_2-1])
 						p_policies /= np.sum(p_policies)
 						if np.min(p_policies) < eps_meta:
 							p_policies += eps_meta
 						p_policies /= np.sum(p_policies)
 						p_policies_softmax = softmax(beta_policies * p_policies)
-						if block > 10 and trial > 20 and len(actions_tried) < 2:
-							if p_policies_softmax[-1] > 0.9:
-								p_policies_history = np.full((num_subject,num_block,num_trial_12,3), np.nan)
-								TS_2_history = np.full((num_subject,num_block*2,num_trial_12), np.nan)
-							else:
-								print(f'Trial {trial}, p_policies: {p_policies}, compress_1: {pchoice_2_compress_1[a_2-1]}, compress_2: {pchoice_2_compress_2[a_2-1]}, full: {pchoice_2_full[a_2-1]}, TS_2s: {TS_2s[:2]}')
-					if len(actions_tried) == 1:
-						p_policies_history[sub,block,trial,0] = pchoice_2[a_2-1]
-						p_policies_history[sub,block,trial,1] = pchoice_2[correct_action_2-5]
-						p_policies_history[sub,block,trial,2] = pchoice_2_full[correct_action_2-5]
+					# 	if block > 10 and trial > 20 and len(actions_tried) < 2:
+					# 		if p_policies_softmax[-1] > 0.9:
+					# 			p_policies_history = np.full((num_subject,num_block,num_trial_12,3), np.nan)
+					# 			TS_2_history = np.full((num_subject,num_block*2,num_trial_12), np.nan)
+					# 		else:
+					# 			print(f'\nTrial {trial}, Context {s_1}, TS {TS_2}, a {a_2-1}, Correct a {correct_action_2-5}, \np_choices: {pchoice_2}, \np_policies: {p_policies}, \ncompress_1: {pchoice_2_compress_1[a_2-1]}, compress_2: {pchoice_2_compress_2[a_2-1]}, full: {pchoice_2_full[a_2-1]}, \nPTS_2: {PTS_2[:4,c_2]}, \nTS_2s: {TS_2s[:4]}')
+					# if len(actions_tried) == 1:
+					# 	p_policies_history[sub,block,trial,0] = pchoice_2[a_2-1]
+					# 	p_policies_history[sub,block,trial,1] = pchoice_2[correct_action_2-5]
+					# 	p_policies_history[sub,block,trial,2] = pchoice_2_full[correct_action_2-5]
 
 				# Record variables per trial
 				counter_1_temp[trial] = counter_1
