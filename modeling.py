@@ -335,7 +335,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 								p_policies_history = np.full((num_subject,num_block,num_trial_12,3), np.nan)
 								TS_2_history = np.full((num_subject,num_block*2,num_trial_12), np.nan)
 							else:
-								print(f'p_policies: {p_policies}, compress_1: {pchoice_2_compress_1[a_2-1]}, compress_2: {pchoice_2_compress_2[a_2-1]}, full: {pchoice_2_full[a_2-1]}, TS_2s: {TS_2s[:2]}')
+								print(f'Trial {trial}, p_policies: {p_policies}, compress_1: {pchoice_2_compress_1[a_2-1]}, compress_2: {pchoice_2_compress_2[a_2-1]}, full: {pchoice_2_full[a_2-1]}, TS_2s: {TS_2s[:2]}')
 					if len(actions_tried) == 1:
 						p_policies_history[sub,block,trial,0] = pchoice_2[a_2-1]
 						p_policies_history[sub,block,trial,1] = pchoice_2[correct_action_2-5]
