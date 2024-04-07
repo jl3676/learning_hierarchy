@@ -180,6 +180,7 @@ def plot_validation_PTS(data_sim, m, cond, ntrials=1, save_vector=False, pallett
     plt.plot(mean_policies[:,2], color='k', label='Hierarchical')
     plt.xticks([30, 90]+list(np.arange(10)*32+16+120), np.arange(1,13), rotation=0)
     plt.xlabel('Block')
+    plt.ylim([0,1])
     plt.ylabel('p(policy)')
     plt.legend()
 
