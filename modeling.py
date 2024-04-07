@@ -29,7 +29,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	if meta_learning:
 		# prior = 0.1
 		eps_meta = 0.01
-		beta_policies = 50 # hard max
+		beta_policies = beta_scale # hard max
 		p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
 		p_policies_softmax = softmax(beta_policies * p_policies)
 
@@ -118,8 +118,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 
 			RPE = (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 			TS_2s[:,state,a_2-1] += alpha_2 * RPE
-			if meta_learning:
-				beta_2 = beta + beta_scale * p_policies[-1]
+			# if meta_learning:
+			# 	beta_2 = beta + beta_scale * p_policies[-1]
 			actions_tried.add(a_2-1)
 
 			if meta_learning:
@@ -200,7 +200,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		if meta_learning:
 			eps_meta = 0.01
 			# prior = 0.1
-			beta_policies = 50 # hard max
+			beta_policies = beta_scale # hard max
 			p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
 			p_policies_softmax = softmax(beta_policies * p_policies)
 
@@ -321,8 +321,8 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					TS_2_alt = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2_alt])[0]
 					RPE = correct_2 - TS_2s[TS_2, state, a_2-1]
 					TS_2s[TS_2, state, a_2-1] += alpha_2 * RPE
-					if meta_learning:
-						beta_2 = beta + beta_scale * p_policies[-1]
+					# if meta_learning:
+					# 	beta_2 = beta + beta_scale * p_policies[-1]
 
 					if meta_learning:
 						p_policies_history[sub,block,trial] = p_policies
