@@ -325,7 +325,8 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					# 	beta_2 = beta + beta_scale * p_policies[-1]
 
 					if meta_learning:
-						p_policies_history[sub,block,trial] = p_policies
+						if len(actions_tried) == 1:
+							p_policies_history[sub,block,trial] = p_policies
 						p_policies[0] *= pchoice_2_compress_1[a_2-1]
 						p_policies[1] *= pchoice_2_compress_2[a_2-1]
 						p_policies[2] *= pchoice_2_full[a_2-1]
@@ -334,7 +335,8 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 							p_policies += eps_meta
 						p_policies /= np.sum(p_policies)
 						p_policies_softmax = softmax(beta_policies * p_policies)
-					p_policies_history[sub,block,trial,0] = pchoice_2[a_2-1]
+					if len(actions_tried) == 1:
+						p_policies_history[sub,block,trial*10+iter,0] = pchoice_2[a_2-1]
 
 				# Record variables per trial
 				counter_1_temp[trial] = counter_1
