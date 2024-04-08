@@ -118,9 +118,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			TS_2s[:,state,a_2-1] += alpha_2 * RPE
 			# if meta_learning:
 			# 	beta_2 = beta + beta_scale * p_policies[-1]
-			actions_tried.add(a_2-1)
+			
 
-			if meta_learning:
+			if meta_learning and a_2-1 not in actions_tried:
 				p_policies[0] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_compress_1)
 				p_policies[1] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_compress_2)
 				p_policies[2] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_full)
@@ -131,6 +131,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 					p_policies += eps_meta
 				p_policies /= np.sum(p_policies)
 				p_policies_softmax = softmax(beta_policies * p_policies)
+
+			actions_tried.add(a_2-1)
 
 	# if meta_learning:
 	# 	llh -= np.sum((beta_policies - 5) ** 2 / (2 * 1 ** 2))
