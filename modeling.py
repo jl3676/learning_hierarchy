@@ -124,6 +124,8 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				p_policies[0] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_compress_1)
 				p_policies[1] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_compress_2)
 				p_policies[2] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_full)
+				if np.sum(p_policies) <= 0: 
+					print(p_policies)
 				p_policies /= np.sum(p_policies)
 				if np.min(p_policies) < eps_meta:
 					p_policies += eps_meta
