@@ -92,7 +92,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 					Q_compress_2 = (TS_2s + np.sum(TS_2s * PTS_2[:,c_2_alt].reshape(-1,1,1),axis=0))[:,state] / 2
 				elif structure == 'forward':
 					Q_compress_1 = (TS_2s + np.sum(TS_2s * PTS_2[:,c_2_alt].reshape(-1,1,1),axis=0))[:,state] / 2
-					Q_compress_2 = np.mean(TS_2s, axis=(0))
+					Q_compress_2 = np.mean(TS_2s, axis=(1))
 				
 				if len(actions_tried) > 0:
 					Q_compress_1[:,list(actions_tried)] = epsilon # -1e20
@@ -121,9 +121,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			actions_tried.add(a_2-1)
 
 			if meta_learning:
-				p_policies[0] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_compress_1[a_2-1])
-				p_policies[1] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_compress_2[a_2-1])
-				p_policies[2] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_full[a_2-1])
+				p_policies[0] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_compress_1)
+				p_policies[1] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_compress_2)
+				p_policies[2] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_full)
 				p_policies /= np.sum(p_policies)
 				if np.min(p_policies) < eps_meta:
 					p_policies += eps_meta
