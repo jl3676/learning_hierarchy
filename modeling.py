@@ -100,6 +100,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 					Q_compress_2[:,list(actions_tried)] = epsilon # -1e20
 				pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1, axis=-1)
 				pchoice_2_compress_1 = np.sum(pchoice_2_compress_1[:,a_2-1] * PTS_2[:,c_2]) # * (1-epsilon) + epsilon / 4
+				print(pchoice_2_compress_1)
 				pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2, axis=-1) 
 				pchoice_2_compress_2 = np.sum(pchoice_2_compress_2[:,a_2-1] * PTS_2[:,c_2]) # * (1-epsilon) + epsilon / 4
 				pchoice_2 = p_policies[0] * pchoice_2_compress_1 \
