@@ -8,7 +8,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	Computes the negative log likelihood of the data D given the option model.
 	'''
-	[alpha_2, beta, beta_scale, concentration_2, epsilon, prior] = params
+	[alpha_2, beta, beta_policies, concentration_2, epsilon, prior] = params
 	beta_2 = beta
 	concentration_2 = 10**concentration_2
 	
@@ -29,7 +29,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	if meta_learning:
 		# prior = 0.1
 		eps_meta = 0.01
-		beta_policies = 50 # hard max
+		# beta_policies = beta_policies # hard max
 		p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
 		p_policies_softmax = softmax(beta_policies * p_policies)
 
@@ -101,9 +101,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				pchoice_2_compress_1 = np.sum(pchoice_2_compress_1[:,a_2-1] * PTS_2[:,c_2]) # * (1-epsilon) + epsilon / 4
 				pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2, axis=-1) 
 				pchoice_2_compress_2 = np.sum(pchoice_2_compress_2[:,a_2-1] * PTS_2[:,c_2]) # * (1-epsilon) + epsilon / 4
-				pchoice_2 = p_policies[0] * pchoice_2_compress_1 \
-							+ p_policies[1] * pchoice_2_compress_2 \
-							+ p_policies[2] * pchoice_2_full
+				pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
+							+ p_policies_softmax[1] * pchoice_2_compress_2 \
+							+ p_policies_softmax[2] * pchoice_2_full
 			else:
 				pchoice_2 = pchoice_2_full 
 
@@ -139,7 +139,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 
 
 def option_model(num_subject, params, experiment, structure, meta_learning=True):
-	[alpha_2, beta, beta_scale, concentration_2, epsilon, prior] = params
+	[alpha_2, beta, beta_policies, concentration_2, epsilon, prior] = params
 	# alpha_2 = 1
 	beta_2 = beta
 	concentration_2 = 10**concentration_2
@@ -200,7 +200,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		if meta_learning:
 			eps_meta = 0.01
 			# prior = 0.1
-			beta_policies = 1 # hard max
+			# beta_policies =  # hard max
 			p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
 			p_policies_softmax = softmax(beta_policies * p_policies)
 
