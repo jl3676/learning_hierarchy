@@ -8,7 +8,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	Computes the negative log likelihood of the data D given the option model.
 	'''
-	[alpha_2, beta, beta_policies, concentration_2, epsilon, prior] = params
+	[alpha_2, beta, epsilon, concentration_2, epsilon, prior] = params
 	beta_2 = beta
 	concentration_2 = 10**concentration_2
 	
@@ -29,7 +29,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	if meta_learning:
 		# prior = 0.1
 		eps_meta = 0.01
-		# beta_policies = beta_policies # hard max
+		beta_policies = 50 # hard max
 		p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
 		p_policies_softmax = softmax(beta_policies * p_policies)
 
@@ -124,6 +124,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				p_policies[0] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_compress_1)
 				p_policies[1] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_compress_2)
 				p_policies[2] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_full)
+				p_policies += epsilon
 				# p_policies /= np.sum(p_policies)
 				if np.min(p_policies) < eps_meta:
 					p_policies += eps_meta
@@ -139,7 +140,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 
 
 def option_model(num_subject, params, experiment, structure, meta_learning=True):
-	[alpha_2, beta, beta_policies, concentration_2, epsilon, prior] = params
+	[alpha_2, beta, epsilon, concentration_2, epsilon, prior] = params
 	# alpha_2 = 1
 	beta_2 = beta
 	concentration_2 = 10**concentration_2
@@ -200,7 +201,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		if meta_learning:
 			eps_meta = 0.01
 			# prior = 0.1
-			# beta_policies =  # hard max
+			beta_policies = 50 # hard max
 			p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
 			p_policies_softmax = softmax(beta_policies * p_policies)
 
@@ -327,6 +328,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 						p_policies[0] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_compress_1[a_2-1])
 						p_policies[1] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_compress_2[a_2-1])
 						p_policies[2] *= (1 - correct_2 - (-1)**correct_2 * pchoice_2_full[a_2-1])
+						p_policies += epsilon
 						# p_policies /= np.sum(p_policies)
 						if np.min(p_policies) < eps_meta:
 							p_policies += eps_meta
