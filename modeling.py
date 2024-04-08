@@ -200,7 +200,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		if meta_learning:
 			eps_meta = 0.01
 			# prior = 0.1
-			beta_policies = 1 # hard max
+			beta_policies = 0.1 # hard max
 			p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
 			p_policies_softmax = softmax(beta_policies * p_policies)
 
