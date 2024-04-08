@@ -10,6 +10,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	[alpha_2, beta, alpha_meta, concentration_2, epsilon, prior] = params
 	beta_2 = beta
+	alpha_meta = 0.1
 	concentration_2 = 10**concentration_2
 	
 	llh = 0
@@ -27,7 +28,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	encounter_matrix_2 = np.zeros(nC_2)
 	encounter_matrix_2[:nTS_2] = 1
 	if meta_learning:
-		prior = 0.01
+		# prior = 0.01
 		eps_meta = 0.01
 		beta_policies = 50 # hard max
 		p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
@@ -146,6 +147,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 	[alpha_2, beta, alpha_meta, concentration_2, epsilon, prior] = params
 	# alpha_2 = 1
 	beta_2 = beta
+	alpha_meta = 0.1
 	concentration_2 = 10**concentration_2
 
 	num_block = 6 if experiment == 'All' else 12
