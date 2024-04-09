@@ -309,17 +309,22 @@ def plot_validation_p_policies(data_sim, m, cond, ntrials=1, save_vector=False, 
     last_trials[:,:2,:] = data_sim['TS_2_history'][:,:2,-ntrials:]
     max_value = int(np.nanmax(last_trials)) + 1
 
-    plt.figure(figsize=(12,3))
+    plt.figure(figsize=(12,9))
+
+    policies = ['Compressed over stage 1', 'Compressed over stage 2', 'Hierarchical']
     
-    for i in range(p_policies.shape[0]):
-        y = p_policies[i,:,:,2].reshape(-1)
-        y = y[~np.isnan(y)]
-        plt.plot(y, color='k', alpha=0.05)
-    # plt.plot(mean_policies[:,0], color='cornflowerblue', label='Compressed over stage 1')
-    # plt.plot(mean_policies[:,1], color='lightcoral', label='Compressed over stage 2')
-    # plt.plot(mean_policies[:,2], color='k', label='Hierarchical')
-    plt.xticks([30, 90]+list(np.arange(10)*32+16+120), np.arange(1,13), rotation=0)
-    plt.xlabel('Block')
-    plt.ylim([-0.05,1.05])
-    plt.ylabel('p(hierarchy)')
+    for s in range(3):
+        plt.subplot(1,3,s+1)
+        for i in range(p_policies.shape[0]):
+            y = p_policies[i,:,:,s].reshape(-1)
+            y = y[~np.isnan(y)]
+            plt.plot(y, color='k', alpha=0.05)
+            # plt.plot(mean_policies[:,0], color='cornflowerblue', label='Compressed over stage 1')
+            # plt.plot(mean_policies[:,1], color='lightcoral', label='Compressed over stage 2')
+            # plt.plot(mean_policies[:,2], color='k', label='Hierarchical')
+        plt.xticks([30, 90]+list(np.arange(10)*32+16+120), np.arange(1,13), rotation=0)
+        plt.xlabel('Block')
+        plt.ylim([-0.05,1.05])
+        plt.ylabel('p({policies[s]})')
+    plt.tight_layout()
     plt.legend()
