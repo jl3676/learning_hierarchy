@@ -309,7 +309,7 @@ def plot_validation_p_policies(data_sim, m, cond, ntrials=1, save_vector=False, 
     last_trials[:,:2,:] = data_sim['TS_2_history'][:,:2,-ntrials:]
     max_value = int(np.nanmax(last_trials)) + 1
 
-    plt.figure(figsize=(8,3))
+    plt.figure(figsize=(12,3))
     
     for i in range(p_policies.shape[0]):
         y = p_policies[i,:,:,2].reshape(-1,p_policies.shape[-1])
@@ -320,6 +320,6 @@ def plot_validation_p_policies(data_sim, m, cond, ntrials=1, save_vector=False, 
     # plt.plot(mean_policies[:,2], color='k', label='Hierarchical')
     plt.xticks([30, 90]+list(np.arange(10)*32+16+120), np.arange(1,13), rotation=0)
     plt.xlabel('Block')
-    plt.ylim([0,1])
+    plt.ylim([-0.05,1.05])
     plt.ylabel('p(policy)')
     plt.legend()
