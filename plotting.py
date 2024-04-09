@@ -321,5 +321,5 @@ def plot_validation_p_policies(data_sim, m, cond, ntrials=1, save_vector=False, 
     plt.xticks([30, 90]+list(np.arange(10)*32+16+120), np.arange(1,13), rotation=0)
     plt.xlabel('Block')
     plt.ylim([-0.05,1.05])
-    plt.ylabel('p(policy)')
+    plt.ylabel('p(hierarchy)')
     plt.legend()
