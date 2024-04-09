@@ -314,7 +314,7 @@ def plot_validation_p_policies(data_sim, m, cond, ntrials=1, save_vector=False, 
     for i in range(p_policies.shape[0]):
         y = p_policies[i,:,:,2].reshape(-1)
         y = y[~np.isnan(y)]
-        plt.plot(y, color='k', alpha=0.01)
+        plt.plot(y, color='k', alpha=0.05)
     # plt.plot(mean_policies[:,0], color='cornflowerblue', label='Compressed over stage 1')
     # plt.plot(mean_policies[:,1], color='lightcoral', label='Compressed over stage 2')
     # plt.plot(mean_policies[:,2], color='k', label='Hierarchical')
