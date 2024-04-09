@@ -128,7 +128,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 					p_policies += 1e-6
 				p_policies /= np.sum(p_policies)
 				# p_policies = p_policies * (1 - epsilon_meta) + epsilon_meta / 3
-				p_policies_softmax = softmax(beta_policies * p_policies)
+				# p_policies_softmax = softmax(beta_policies * p_policies)
 
 			actions_tried.add(a_2-1)
 
@@ -331,7 +331,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 							p_policies += 1e-6
 						p_policies /= np.sum(p_policies)
 						# p_policies = p_policies * (1 - epsilon_meta) + epsilon_meta / 3
-						p_policies_softmax = softmax(beta_policies * p_policies)
+						# p_policies_softmax = softmax(beta_policies * p_policies)
 					# 	if block > 10 and trial > 20 and len(actions_tried) < 2:
 					# 		if p_policies_softmax[-1] > 0.9:
 					# 			p_policies_history = np.full((num_subject,num_block,num_trial_12,3), np.nan)
