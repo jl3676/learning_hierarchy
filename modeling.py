@@ -8,7 +8,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	Computes the negative log likelihood of the data D given the option model.
 	'''
-	[alpha_2, beta, beta_meta, epsilon_meta, concentration_2, epsilon, prior] = params
+	[alpha_2, beta, beta_meta, concentration_2, epsilon, prior] = params
 	beta_2 = beta
 	# alpha_meta = 0.1
 	concentration_2 = 10**concentration_2
@@ -29,9 +29,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	encounter_matrix_2[:nTS_2] = 1
 	if meta_learning:
 		eps_meta = 1e-2
-		beta_policies = beta_meta 
+		# beta_policies = beta_meta 
 		p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
-		p_policies_softmax = softmax(beta_policies * p_policies)
+		# p_policies_softmax = softmax(beta_policies * p_policies)
 
 	for t in range(D.shape[0]):	
 		stage = int(D[t,1])
@@ -101,9 +101,9 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				pchoice_2_compress_1 = np.sum(pchoice_2_compress_1[:,a_2-1] * PTS_2[:,c_2]) * (1-epsilon) + epsilon / 4
 				pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2, axis=-1) 
 				pchoice_2_compress_2 = np.sum(pchoice_2_compress_2[:,a_2-1] * PTS_2[:,c_2]) * (1-epsilon) + epsilon / 4
-				pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
-							+ p_policies_softmax[1] * pchoice_2_compress_2 \
-							+ p_policies_softmax[2] * pchoice_2_full
+				pchoice_2 = p_policies[0] * pchoice_2_compress_1 \
+							+ p_policies[1] * pchoice_2_compress_2 \
+							+ p_policies[2] * pchoice_2_full
 			else:
 				pchoice_2 = pchoice_2_full 
 
@@ -120,15 +120,15 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			# 	beta_2 = beta + beta_scale * p_policies[-1]
 			
 
-			if meta_learning and a_2-1 not in actions_tried:
+			if meta_learning:
 				likelihoods = np.array([pchoice_2_compress_1, pchoice_2_compress_2, pchoice_2_full])
 				# likelihoods = softmax(beta_meta * likelihoods)
 				p_policies *= (1 - correct_2 - (-1)**correct_2 * likelihoods)
-				if np.min(p_policies) < eps_meta:
-					p_policies += eps_meta
+				if np.min(p_policies) < 1e-6:
+					p_policies += 1e-6
 				p_policies /= np.sum(p_policies)
-				p_policies = p_policies * (1 - epsilon_meta) + epsilon_meta / 3
-				p_policies_softmax = softmax(beta_policies * p_policies)
+				# p_policies = p_policies * (1 - epsilon_meta) + epsilon_meta / 3
+				# p_policies_softmax = softmax(beta_policies * p_policies)
 
 			actions_tried.add(a_2-1)
 
@@ -139,7 +139,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 
 
 def option_model(num_subject, params, experiment, structure, meta_learning=True):
-	[alpha_2, beta, beta_meta, epsilon_meta, concentration_2, epsilon, prior] = params
+	[alpha_2, beta, beta_meta, concentration_2, epsilon, prior] = params
 	# alpha_2 = 1
 	beta_2 = beta
 	concentration_2 = 10**concentration_2
@@ -200,9 +200,9 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		if meta_learning:
 			eps_meta = 1e-2
 			# prior = 0.01
-			beta_policies = beta_meta # hard max
+			# beta_policies = beta_meta # hard max
 			p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
-			p_policies_softmax = softmax(beta_policies * p_policies)
+			# p_policies_softmax = softmax(beta_policies * p_policies)
 
 		# 3. start looping over all blocks
 		for block in range(num_block):
@@ -297,9 +297,9 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 							Q_compress_2[list(actions_tried)] = -1e20
 						pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1) * (1-epsilon) + epsilon / 4
 						pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2) * (1-epsilon) + epsilon / 4
-						pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
-									+ p_policies_softmax[1] * pchoice_2_compress_2 \
-									+ p_policies_softmax[2] * pchoice_2_full
+						pchoice_2 = p_policies[0] * pchoice_2_compress_1 \
+									+ p_policies[1] * pchoice_2_compress_2 \
+									+ p_policies[2] * pchoice_2_full
 					else:
 						pchoice_2 = pchoice_2_full 
 
@@ -325,13 +325,13 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 						if len(actions_tried) == 1:
 							p_policies_history[sub,block,trial] = p_policies
 						likelihoods = np.array([pchoice_2_compress_1[a_2-1], pchoice_2_compress_2[a_2-1], pchoice_2_full[a_2-1]])
-						# likelihoods = softmax(beta_meta * likelihoods)
+						likelihoods = softmax(beta_meta * likelihoods)
 						p_policies *= (1 - correct_2 - (-1)**correct_2 * likelihoods)
-						if np.min(p_policies) < eps_meta:
-							p_policies += eps_meta
+						if np.min(p_policies) < 1e-6:
+							p_policies += 1e-6
 						p_policies /= np.sum(p_policies)
-						p_policies = p_policies * (1 - epsilon_meta) + epsilon_meta / 3
-						p_policies_softmax = softmax(beta_policies * p_policies)
+						# p_policies = p_policies * (1 - epsilon_meta) + epsilon_meta / 3
+						# p_policies_softmax = softmax(beta_policies * p_policies)
 					# 	if block > 10 and trial > 20 and len(actions_tried) < 2:
 					# 		if p_policies_softmax[-1] > 0.9:
 					# 			p_policies_history = np.full((num_subject,num_block,num_trial_12,3), np.nan)
