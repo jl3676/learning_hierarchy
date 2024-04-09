@@ -314,7 +314,7 @@ def plot_validation_p_policies(data_sim, m, cond, ntrials=1, save_vector=False, 
     policies = ['Compressed over stage 1', 'Compressed over stage 2', 'Hierarchical']
     
     for s in range(3):
-        plt.subplot(1,3,s+1)
+        plt.subplot(3,1,s+1)
         for i in range(p_policies.shape[0]):
             y = p_policies[i,:,:,s].reshape(-1)
             y = y[~np.isnan(y)]
