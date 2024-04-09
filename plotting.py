@@ -309,7 +309,7 @@ def plot_validation_p_policies(data_sim, m, cond, ntrials=1, save_vector=False, 
     last_trials[:,:2,:] = data_sim['TS_2_history'][:,:2,-ntrials:]
     max_value = int(np.nanmax(last_trials)) + 1
 
-    plt.figure(figsize=(3,8))
+    plt.figure(figsize=(8,3))
     
     for i in range(p_policies.shape[0]):
         plt.plot(p_policies[i,:,:,2].reshape(-1,p_policies.shape[-1]), color='k', alpha=0.1)
