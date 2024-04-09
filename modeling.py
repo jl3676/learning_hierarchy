@@ -122,7 +122,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 
 			if meta_learning:
 				likelihoods = np.array([pchoice_2_compress_1, pchoice_2_compress_2, pchoice_2_full])
-				# likelihoods = softmax(beta_meta * likelihoods)
+				likelihoods = softmax(beta_meta * likelihoods)
 				p_policies *= (1 - correct_2 - (-1)**correct_2 * likelihoods)
 				if np.min(p_policies) < 1e-6:
 					p_policies += 1e-6
