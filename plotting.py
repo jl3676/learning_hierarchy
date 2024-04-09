@@ -305,6 +305,7 @@ def plot_transfer_learning_curves(data, meta_data, cond1, cond2, cond3, exp, clu
 
 def plot_validation_p_policies(data_sim, m, cond, ntrials=1, save_vector=False, pallette=None):
     p_policies = data_sim['p_policies_history']
+    print(p_policies.shape)
     last_trials = data_sim['TS_2_history'][:,:,32-ntrials:32]
     last_trials[:,:2,:] = data_sim['TS_2_history'][:,:2,-ntrials:]
     max_value = int(np.nanmax(last_trials)) + 1
@@ -312,7 +313,6 @@ def plot_validation_p_policies(data_sim, m, cond, ntrials=1, save_vector=False, 
     plt.figure(figsize=(3,8))
     
     for i in range(p_policies.shape[0]):
-        print(p_policies[i,:,2].shape)
         plt.plot(p_policies[i,:,2], color='k', alpha=0.1)
     # plt.plot(mean_policies[:,0], color='cornflowerblue', label='Compressed over stage 1')
     # plt.plot(mean_policies[:,1], color='lightcoral', label='Compressed over stage 2')
