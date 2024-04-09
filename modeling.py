@@ -29,7 +29,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 	encounter_matrix_2[:nTS_2] = 1
 	if meta_learning:
 		# prior = 0.01
-		eps_meta = 0.01
+		eps_meta = 1e-6
 		beta_policies = 50 # hard max
 		p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
 		p_policies_softmax = softmax(beta_policies * p_policies)
@@ -121,7 +121,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 			# 	beta_2 = beta + beta_scale * p_policies[-1]
 			
 
-			if meta_learning and a_2-1 not in actions_tried and block > 0:
+			if meta_learning and a_2-1 not in actions_tried:
 				# p_policies[0] += alpha_meta * (correct_2 - pchoice_2_compress_1)
 				# p_policies[1] += alpha_meta * (correct_2 - pchoice_2_compress_2)
 				# p_policies[2] += alpha_meta * (correct_2 - pchoice_2_full)
@@ -207,7 +207,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		encounter_matrix_2 = np.zeros(nC_2)
 		encounter_matrix_2[:nTS_2] = 1
 		if meta_learning:
-			eps_meta = 0.01
+			eps_meta = 1e-6
 			# prior = 0.01
 			beta_policies = 50 # hard max
 			p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
@@ -333,20 +333,19 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					if meta_learning:
 						if len(actions_tried) == 1:
 							p_policies_history[sub,block,trial] = p_policies
-						if block > 0:
-							likelihoods = np.array([pchoice_2_compress_1[a_2-1], pchoice_2_compress_2[a_2-1], pchoice_2_full[a_2-1]])
-							likelihoods = softmax(beta_meta * likelihoods)
-							p_policies *= (1 - correct_2 - (-1)**correct_2 * likelihoods)
-							# p_policies[0] *= (1 - correct_2 - (-1)**correct_2 * likelihoods[0])
-							# p_policies[1] *= (1 - correct_2 - (-1)**correct_2 * likelihoods[1])
-							# p_policies[2] *= (1 - correct_2 - (-1)**correct_2 * likelihoods[2])
-							# p_policies += epsilon_meta
-							# p_policies /= np.sum(p_policies)
-							if np.min(p_policies) < eps_meta:
-								p_policies += eps_meta
-							p_policies /= np.sum(p_policies)
-							# p_policies = p_policies * (1 - epsilon_meta) + epsilon_meta / 3
-							p_policies_softmax = softmax(beta_policies * p_policies)
+						likelihoods = np.array([pchoice_2_compress_1[a_2-1], pchoice_2_compress_2[a_2-1], pchoice_2_full[a_2-1]])
+						likelihoods = softmax(beta_meta * likelihoods)
+						p_policies *= (1 - correct_2 - (-1)**correct_2 * likelihoods)
+						# p_policies[0] *= (1 - correct_2 - (-1)**correct_2 * likelihoods[0])
+						# p_policies[1] *= (1 - correct_2 - (-1)**correct_2 * likelihoods[1])
+						# p_policies[2] *= (1 - correct_2 - (-1)**correct_2 * likelihoods[2])
+						# p_policies += epsilon_meta
+						# p_policies /= np.sum(p_policies)
+						if np.min(p_policies) < eps_meta:
+							p_policies += eps_meta
+						p_policies /= np.sum(p_policies)
+						# p_policies = p_policies * (1 - epsilon_meta) + epsilon_meta / 3
+						p_policies_softmax = softmax(beta_policies * p_policies)
 					# 	if block > 10 and trial > 20 and len(actions_tried) < 2:
 					# 		if p_policies_softmax[-1] > 0.9:
 					# 			p_policies_history = np.full((num_subject,num_block,num_trial_12,3), np.nan)
