@@ -54,7 +54,6 @@ def plot_validation_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster
     else:
         plt.show()
 
-
 def plot_validation_error_types(data, sim_data_m1, sim_data_m2, condition, cluster, m1='Top-down', m2='Bottom-up', nblocks=12, save_vector=False):
     trials_to_probe = 1
     error_types = ['Correct', 'Compression over stage 1 error', 'Compression over stage 2 error', 'Other error']
@@ -135,6 +134,149 @@ def plot_validation_error_types(data, sim_data_m1, sim_data_m2, condition, clust
 
     if save_vector:
         plt.savefig(f'plots/validation_error_types_{condition}_cluster{cluster}.svg', format='svg', dpi=1200)
+    else:
+        plt.show()
+
+
+def plot_validation_error_types_filled(data, sim_data_m1, sim_data_m2, condition, cluster, m1='Forward', m2='Backward', nblocks=12, save_vector=False):
+    trials_to_probe = 1
+    error_types = ['Correct', 'Compression over stage 1 error', 'Compression over stage 2 error', 'Other error']
+    colors = ['mistyrose', 'lightcoral', 'lightsteelblue', 'cornflowerblue']
+    models = ['Human', m1, m2]
+    num_subject = data['tr'].shape[0]
+
+    stage2_info = helpers.extract_stage2_info(data, condition)
+    stage2_info_m1 = helpers.extract_stage2_info(sim_data_m1, condition)
+    stage2_info_m2 = helpers.extract_stage2_info(sim_data_m2, condition)
+
+    block_trial_data_ca1 = np.zeros((4, (8*nblocks)//trials_to_probe))
+    block_trial_data_ca2 = np.zeros_like(block_trial_data_ca1)
+    block_trial_data_ca3 = np.zeros_like(block_trial_data_ca1)
+    block_trial_data_ca1_se = np.zeros_like(block_trial_data_ca1)
+    block_trial_data_ca2_se = np.zeros_like(block_trial_data_ca2)
+    block_trial_data_ca3_se = np.zeros_like(block_trial_data_ca3)
+
+    plt.figure(figsize=(6,10))
+    fig, axes = plt.subplots(3,1, sharex=True, sharey=True)
+    for ind_to_plot in [0, 1, 2, 3]:
+        # compute data
+        pointer = 0
+        for block in range(nblocks):
+            this_n_trials = 8
+            for start_trial in range(0,this_n_trials,trials_to_probe):
+                if block % 2 == 0:
+                    V2 = (condition[:2] == 'V2' and block == 6) or (condition[-2:] == 'V2' and block == 10)
+                    V3 = (condition[:2] == 'V3' and block == 6) or (condition[-2:] == 'V3' and block == 10)
+                    mean_population_counter2_ca1 = helpers.aggregate_type_stage2_b9(stage2_info,trials_to_probe,start_trial=start_trial,block=block+1,V2=V2,V3=V3)
+                    mean_population_counter2_ca2 = helpers.aggregate_type_stage2_b9(stage2_info_m1,trials_to_probe,start_trial=start_trial,block=block+1,V2=V2,V3=V3)
+                    mean_population_counter2_ca3 = helpers.aggregate_type_stage2_b9(stage2_info_m2,trials_to_probe,start_trial=start_trial,block=block+1,V2=V2,V3=V3)
+                else:
+                    mean_population_counter2_ca1 = helpers.aggregate_type_stage2_b8(stage2_info,trials_to_probe,start_trial=start_trial,block=block+1)
+                    mean_population_counter2_ca2 = helpers.aggregate_type_stage2_b8(stage2_info_m1,trials_to_probe,start_trial=start_trial,block=block+1)
+                    mean_population_counter2_ca3 = helpers.aggregate_type_stage2_b8(stage2_info_m2,trials_to_probe,start_trial=start_trial,block=block+1)
+                
+                block_trial_data_ca1[ind_to_plot, pointer] = np.nanmean(mean_population_counter2_ca1[:,ind_to_plot])
+                block_trial_data_ca1_se[ind_to_plot, pointer] = stats.sem(mean_population_counter2_ca1[:,ind_to_plot],nan_policy='omit')
+                block_trial_data_ca2[ind_to_plot, pointer] = np.nanmean(mean_population_counter2_ca2[:,ind_to_plot])
+                block_trial_data_ca2_se[ind_to_plot, pointer] = stats.sem(mean_population_counter2_ca2[:,ind_to_plot],nan_policy='omit')
+                block_trial_data_ca3[ind_to_plot, pointer] = np.nanmean(mean_population_counter2_ca3[:,ind_to_plot])
+                block_trial_data_ca3_se[ind_to_plot, pointer] = stats.sem(mean_population_counter2_ca3[:,ind_to_plot],nan_policy='omit')
+                
+                pointer += 1
+
+    # plot
+    nticks = (8*nblocks)//trials_to_probe
+    blocks = np.arange(nticks) * trials_to_probe + 1
+
+    for i, this_data in enumerate([block_trial_data_ca1, block_trial_data_ca2, block_trial_data_ca3]):
+        axes[i].fill_between(blocks,np.zeros_like(this_data[0]),this_data[0],color=colors[0])
+        axes[i].fill_between(blocks,this_data[0],this_data[0]+this_data[1],color=colors[1])
+        axes[i].fill_between(blocks,this_data[0]+this_data[1],this_data[0]+this_data[1]+this_data[2],color=colors[2])
+        axes[i].fill_between(blocks,this_data[0]+this_data[1]+this_data[2],np.ones(nticks),color=colors[3])
+        axes[i].set_ylim([0,1])
+
+    plt.suptitle(f'Choice types, Cluster {cluster}, stage 2,  (n={num_subject})')
+    plt.tight_layout()
+
+    if save_vector:
+        plt.savefig(f'plots/validation_error_types_filled_{condition}_cluster{cluster}.svg', format='svg', dpi=1200)
+    else:
+        plt.show()
+
+
+def plot_validation_error_types_bars(data, sim_data_m1, sim_data_m2, condition, cluster, m1='Forward', m2='Backward', nblocks=12, save_vector=False):
+    trials_to_probe = 8
+    error_types = ['Correct', 'Compression over stage 1 error', 'Compression over stage 2 error', 'Other error']
+    colors = [['k', '#666666', '#8F8F8F', '#C8C8C8'],
+              ['k', '#5B7553', '#8EB897', '#C3E8BD'],
+              ['k', '#735D78', '#B392AC', '#E8C2CA']]
+    models = ['Human', m1, m2]
+    num_subject = data['tr'].shape[0]
+
+    stage2_info = helpers.extract_stage2_info(data, condition)
+    stage2_info_m1 = helpers.extract_stage2_info(sim_data_m1, condition)
+    stage2_info_m2 = helpers.extract_stage2_info(sim_data_m2, condition)
+
+    block_trial_data_ca1 = np.zeros((4, (8*nblocks)//trials_to_probe))
+    block_trial_data_ca2 = np.zeros_like(block_trial_data_ca1)
+    block_trial_data_ca3 = np.zeros_like(block_trial_data_ca1)
+    block_trial_data_ca1_se = np.zeros_like(block_trial_data_ca1)
+    block_trial_data_ca2_se = np.zeros_like(block_trial_data_ca2)
+    block_trial_data_ca3_se = np.zeros_like(block_trial_data_ca3)
+
+    _, axes = plt.subplots(3,1, figsize=(8,5), sharex=True, sharey=True)
+    for ind_to_plot in [0, 1, 2, 3]:
+        # compute data
+        pointer = 0
+        for block in range(nblocks):
+            this_n_trials = 8
+            for start_trial in range(0,this_n_trials,trials_to_probe):
+                if block % 2 == 0:
+                    V2 = (condition[:2] == 'V2' and block == 6) or (condition[-2:] == 'V2' and block == 10)
+                    V3 = (condition[:2] == 'V3' and block == 6) or (condition[-2:] == 'V3' and block == 10)
+                    mean_population_counter2_ca1 = helpers.aggregate_type_stage2_b9(stage2_info,trials_to_probe,start_trial=start_trial,block=block+1,V2=V2,V3=V3)
+                    mean_population_counter2_ca2 = helpers.aggregate_type_stage2_b9(stage2_info_m1,trials_to_probe,start_trial=start_trial,block=block+1,V2=V2,V3=V3)
+                    mean_population_counter2_ca3 = helpers.aggregate_type_stage2_b9(stage2_info_m2,trials_to_probe,start_trial=start_trial,block=block+1,V2=V2,V3=V3)
+                else:
+                    mean_population_counter2_ca1 = helpers.aggregate_type_stage2_b8(stage2_info,trials_to_probe,start_trial=start_trial,block=block+1)
+                    mean_population_counter2_ca2 = helpers.aggregate_type_stage2_b8(stage2_info_m1,trials_to_probe,start_trial=start_trial,block=block+1)
+                    mean_population_counter2_ca3 = helpers.aggregate_type_stage2_b8(stage2_info_m2,trials_to_probe,start_trial=start_trial,block=block+1)
+                
+                block_trial_data_ca1[ind_to_plot, pointer] = np.nanmean(mean_population_counter2_ca1[:,ind_to_plot])
+                block_trial_data_ca1_se[ind_to_plot, pointer] = stats.sem(mean_population_counter2_ca1[:,ind_to_plot],nan_policy='omit')
+                block_trial_data_ca2[ind_to_plot, pointer] = np.nanmean(mean_population_counter2_ca2[:,ind_to_plot])
+                block_trial_data_ca2_se[ind_to_plot, pointer] = stats.sem(mean_population_counter2_ca2[:,ind_to_plot],nan_policy='omit')
+                block_trial_data_ca3[ind_to_plot, pointer] = np.nanmean(mean_population_counter2_ca3[:,ind_to_plot])
+                block_trial_data_ca3_se[ind_to_plot, pointer] = stats.sem(mean_population_counter2_ca3[:,ind_to_plot],nan_policy='omit')
+                
+                pointer += 1
+
+    # plot
+    nticks = (trials_to_probe*nblocks)//trials_to_probe
+    blocks = np.arange(nticks) * trials_to_probe + 1
+
+    ses = [block_trial_data_ca1_se, block_trial_data_ca2_se, block_trial_data_ca3_se]
+    for i, this_data in enumerate([block_trial_data_ca1, block_trial_data_ca2, block_trial_data_ca3]):
+        # add dashed gray line at 0.25
+        # axes[i].plot([blocks[0]-1, blocks[-1]+1], [0.25, 0.25], '--', color='gray', alpha=0.5)
+        for b in range(nticks):
+            xs = (np.arange(4)-1.5)*1 + blocks[b]
+            axes[i].bar(xs[1:],this_data[1:,b],color=colors[i][1:],width=1)
+            axes[i].errorbar(xs[1:],this_data[1:,b],ses[i][1:,b],capsize=0,fmt='none',ecolor='k')
+        axes[i].errorbar(blocks+0.5*1,1-this_data[0,:],ses[i][0,:],color='k',capsize=0,ecolor='k')
+        axes[i].set_ylabel('Accuracy')
+        axes[i].invert_yaxis()
+        axes[i].set_yticks([0,0.2,0.4,0.6],[1.0,0.8,0.6,0.4])
+        axes[i].set_title(models[i])
+    axes[-1].set_xticks(blocks+0.5*1, np.arange(1, 1+nblocks))
+    axes[-1].set_xlabel('Block')
+
+
+    plt.suptitle(f'Choice types, Cluster {cluster}, stage 2,  (n={num_subject})')
+    plt.tight_layout()
+
+    if save_vector:
+        plt.savefig(f'plots/validation_error_types_bars_{condition}_cluster{cluster}.svg', format='svg', dpi=1200)
     else:
         plt.show()
 
