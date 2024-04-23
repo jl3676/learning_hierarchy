@@ -1019,7 +1019,10 @@ def slice_data(data, meta_data, condition, exp, cluster):
     sliced_data = {}
     inds = (meta_data['Experiment'].isin(exp)) & (meta_data['Cluster'] == cluster)
     if condition != 'All':
-        inds = inds & (meta_data['Condition'] == condition)
+        if len(condition) == 2:
+          inds = inds & (meta_data['Condition'].str.slice(0,2) == condition)
+        elif len(condition) == 5:
+          inds = inds & (meta_data['Condition'] == condition)
     for key in keys:
         sliced_data[key] = data[key][inds]
     return sliced_data
