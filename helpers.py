@@ -1,21 +1,22 @@
 import numpy as np
 import copy
 
-def extract_stage2_info(data,experiment,same_same=True,same_diff=True,diff_same=True,diff_diff=True):
+import warnings
+
+def extract_stage2_info(data, experiment):
   '''
-  Extracts stage2 info from preprocessed data. In particular, reorganize data
-  in F1 or F2 by S1 or S2.
+  Extracts and re-organize stage2 data from preprocessed data. Organize trials by iteration for each
+  (stage1, stage2) stimuli combination, rather than the raw trial number.
 
   Args:
-    - data: the data dictionary returned by restructure_data_ca
-    - experiment: 'V1-V1', 'V1-V2', 'V1-V3', 'V2-V1', 'V2-V2', 'V3-V1', 'V3-V3'
-    - prev_same: True, False, or None; indicating whether the stimulus of the previous trial was the same as the current stim
+    - data[dict]: the data dictionary
+    - experiment[str]: one of 'V1-V1', 'V1-V2', 'V1-V3', 'V2-V1', 'V2-V2', 'V3-V1', 'V3-V3'
 
   Returns:
     - stage2_info: reorganized stage2 data
   '''
   nsubjects = data['tr'].shape[0]
-  nblocks =12
+  nblocks = 12
   ntrials = 32
 
   # the 2*2 is F1 or F2 by S1 or S2
@@ -32,13 +33,10 @@ def extract_stage2_info(data,experiment,same_same=True,same_diff=True,diff_same=
   population_counter12_12 = data['counter12_12']
 
   for subject in range(nsubjects):
-    # find the permutation for A1-4
     all_actions = tr[subject,4:]
 
     for block in range(nblocks):
       index = np.zeros((2,2),dtype=int)
-      prev_stim_1 = None
-      prev_stim_2 = None
 
       for trial in range(ntrials):
         if block < 2:
@@ -56,8 +54,6 @@ def extract_stage2_info(data,experiment,same_same=True,same_diff=True,diff_same=
             temp_counter2 = int(temp_counter2)
 
           this_a = a_12_12[subject, block, trial]
-          this_s1 = s_12_12[subject, block, 0, trial]
-          this_s2 = s_12_12[subject, block, 1, trial]
         else:
           if np.isnan(s1[subject,block-2,trial]) or np.isnan(s2[subject,block-2,trial]):
             continue
@@ -75,9 +71,7 @@ def extract_stage2_info(data,experiment,same_same=True,same_diff=True,diff_same=
             temp_counter2 = int(temp_counter2)
 
           this_a = a[subject,block-2,trial]
-          this_s1 = s1[subject,block-2,trial]
-          this_s2 = s2[subject,block-2,trial]
-
+          
         if len(this_a.ravel()) == 0 or np.isnan(temp_counter1) or np.isnan(temp_counter2):
           result = []
         else:
@@ -129,20 +123,6 @@ def extract_stage2_info(data,experiment,same_same=True,same_diff=True,diff_same=
         if index[sf-1,ss-1] == 8:
           continue
 
-        if (not same_same and prev_stim_1 == this_s1 and prev_stim_2 == this_s2) or \
-        (not same_diff and prev_stim_1 == this_s1 and prev_stim_2 != this_s2) or \
-        (not diff_same and prev_stim_1 != this_s1 and prev_stim_2 == this_s2) or \
-        (not diff_diff and prev_stim_1 != this_s1 and prev_stim_2 != this_s2):
-          proceed = False
-        else:
-          proceed = True 
-
-        prev_stim_1 = this_s1
-        prev_stim_2 = this_s2
-
-        if not proceed:
-          continue
-
         stage2_info[subject,block,sf-1,ss-1,index[sf-1,ss-1]] = result # -1 for 0-indexing
         index[sf-1,ss-1] = index[sf-1,ss-1] + 1
 
@@ -151,34 +131,23 @@ def extract_stage2_info(data,experiment,same_same=True,same_diff=True,diff_same=
 
 def get_choice_type_stage2_V1(block, sf, ss, temp_a, actions):
   '''
-  This function outputs the choice type in the second stage of OT-CA1. The
-  choice types are defined as follows:
+  This function outputs the choice type in stage2 for V1, which are defined as:
 
-  In Blocks 1-6, 8, 10 and 12
   1 = correct
-  2 = sequence
-  3 = non-sequence
-  4 = f-choice
+  2 = compression error over stage 1
+  3 = compression error over stage 2
+  4 = other error
   5 = all else
-
-  In Blocks 7, 9 and 11 (F1, S1) and (F2, S2)
-  1 = correct
-  2 = option transfer
-  3 = other
-  4 = f-choice
-  5 = all else
-
-  In all blocks (F1, S2) and (F2, S1)
 
   Args:
-    - block: the block number (indexing starts at 0)
-    - sf: stage1 stimulus
-    - ss: stage2 stimulus
-    - temp_a: first action of the stage2
-    - actions: all actions in stage1, ordered
+    - block[int]: the block number (indexing starts at 0)
+    - sf[int]: stage1 stimulus
+    - ss[int]: stage2 stimulus
+    - temp_a[int]: first action of the stage2
+    - actions[list]: all actions in stage1, ordered
 
   Returns:
-    - choice_type
+    - choice_type[int]: the choice type for the given trial
   '''
   a1 = actions[0]
   a2 = actions[1]
@@ -371,34 +340,23 @@ def get_choice_type_stage2_V1(block, sf, ss, temp_a, actions):
 
 def get_choice_type_stage2_V2(block, sf, ss, temp_a, actions):
   '''
-  This function outputs the choice type in the second stage of OT-CA1. The
-  choice types are defined as follows:
+  This function outputs the choice type in stage2 for V2, which are defined as:
 
-  In Blocks 1-6, 8, 10 and 12
   1 = correct
-  2 = sequence
-  3 = non-sequence
-  4 = f-choice
+  2 = compression error over stage 1
+  3 = compression error over stage 2
+  4 = other error
   5 = all else
-
-  In Blocks 7, 9 and 11 (F1, S1) and (F2, S2)
-  1 = correct
-  2 = option transfer
-  3 = other
-  4 = f-choice
-  5 = all else
-
-  In all blocks (F1, S2) and (F2, S1)
 
   Args:
-    - block: the block number (indexing starts at 0)
-    - sf: stage1 stimulus
-    - ss: stage2 stimulus
-    - temp_a: first action of the stage2
-    - actions: all actions in stage1, ordered
+    - block[int]: the block number (indexing starts at 0)
+    - sf[int]: stage1 stimulus
+    - ss[int]: stage2 stimulus
+    - temp_a[int]: first action of the stage2
+    - actions[list]: all actions in stage1, ordered
 
   Returns:
-    - choice_type
+    - choice_type[int]: the choice type for the given trial
   '''
   a1 = actions[0]
   a2 = actions[1]
@@ -636,34 +594,23 @@ def get_choice_type_stage2_V2(block, sf, ss, temp_a, actions):
 
 def get_choice_type_stage2_V3(block, sf, ss, temp_a, actions):
   '''
-  This function outputs the choice type in the second stage of OT-CA1. The
-  choice types are defined as follows:
+  This function outputs the choice type in stage2 for V3, which are defined as:
 
-  In Blocks 1-6, 8, 10 and 12
   1 = correct
-  2 = sequence
-  3 = non-sequence
-  4 = f-choice
+  2 = compression error over stage 1
+  3 = compression error over stage 2
+  4 = other error
   5 = all else
-
-  In Blocks 7, 9 and 11 (F1, S1) and (F2, S2)
-  1 = correct
-  2 = option transfer
-  3 = other
-  4 = f-choice
-  5 = all else
-
-  In all blocks (F1, S2) and (F2, S1)
 
   Args:
-    - block: the block number (indexing starts at 0)
-    - sf: stage1 stimulus
-    - ss: stage2 stimulus
-    - temp_a: first action of the stage2
-    - actions: all actions in stage1, ordered
+    - block[int]: the block number (indexing starts at 0)
+    - sf[int]: stage1 stimulus
+    - ss[int]: stage2 stimulus
+    - temp_a[int]: first action of the stage2
+    - actions[list]: all actions in stage1, ordered
 
   Returns:
-    - choice_type
+    - choice_type[int]: the choice type for the given trial
   '''
   a1 = actions[0]
   a2 = actions[1]
@@ -854,29 +801,23 @@ def get_choice_type_stage2_V3(block, sf, ss, temp_a, actions):
   return choice_type
 
 
-def calc_mean(data, start_trial=0, trials_to_probe=10, exclude_repeated_trials=False, stage1_correct=False, first_press_accuracy=False):
+def calc_mean(data, start_trial=0, trials_to_probe=10, first_press_accuracy=False):
   '''
-  Calculates the mean number of key presses for each subject for both stages.
+  Calculates the mean number of key presses for each subject in each stage.
 
   Args:
-    - data: the preprocessed data dictionary
-    - blocks: a list of block numbers to calculate; start indexing at 0
-    - start_trial: index of first trial
-    - trials_to_probe: the number of trials to include
-    - inds_to_include: a list of subjects to include
-    - exclude_repeated_trials: if True, exclude a trial that has the exact same stimuli as the previous one
+    - data[dict]: the preprocessed data dictionary
+    - start_trial[int]: index of first trial
+    - trials_to_probe[int]: the number of trials to include since start_trial
+    - first_press_accuracy[bool]: True if plotting first press accuracy, False if plotting number of presses
 
   Returns:
-    - mean_population_counter1: the means of all subjects in the first stage
-    - mean_population_counter2: the means of all subjects in the second stage
+    - mean_population_counter1[np.array]: the means of all subjects in the first stage
+    - mean_population_counter2[np.array]: the means of all subjects in the second stage
   '''
   data_counter12_12 = copy.deepcopy(data['counter12_12'])
   data_counter1 = copy.deepcopy(data['counter1'])
   data_counter2 = copy.deepcopy(data['counter2'])
-
-  if stage1_correct:
-    data_counter12_12[:,:,1,:][np.where(data_counter12_12[:,:,1,:]>1)] = np.nan 
-    data_counter2[np.where(data_counter1>1)] = np.nan 
 
   nsubjects = data_counter2.shape[0]
 
@@ -884,55 +825,40 @@ def calc_mean(data, start_trial=0, trials_to_probe=10, exclude_repeated_trials=F
   mean_population_counter2_12 = np.full((nsubjects,2),np.nan)
 
   for sub in range(nsubjects):
-    if exclude_repeated_trials: # set repeated trials to nan
-      stims_12_12 = data['s_12_12'][sub,:,0,:] * 2 + data['s_12_12'][sub,:,1,:]
-      stims = data['s1'][sub,:,:] * 2 + data['s2'][sub,:,:]
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning) # skip warnings for nanmean over all nan values
+        if first_press_accuracy:
+          mean_population_counter1_12[sub,0] = np.nanmean(data_counter12_12[sub,0,0,start_trial:int(start_trial+trials_to_probe)]==1)
+          mean_population_counter1_12[sub,1] = np.nanmean(data_counter12_12[sub,1,0,start_trial:int(start_trial+trials_to_probe)]==1)
+          mean_population_counter2_12[sub,0] = np.nanmean(data_counter12_12[sub,0,1,start_trial:int(start_trial+trials_to_probe)]==1) 
+          mean_population_counter2_12[sub,1] = np.nanmean(data_counter12_12[sub,1,1,start_trial:int(start_trial+trials_to_probe)]==1) 
 
-      rep_inds_12 = np.ones_like(stims_12_12)
-      rep_inds_12[:,1:] = stims_12_12[:,1:] - stims_12_12[:,:-1]
-      rep_inds_12 = np.argwhere(np.abs(rep_inds_12)<0.1)
+          mean_population_counter1 = np.hstack((mean_population_counter1_12, np.nanmean(data_counter1[:,:,start_trial:int(start_trial+trials_to_probe)]==1,axis=2)))
+          mean_population_counter2 = np.hstack((mean_population_counter2_12, np.nanmean(data_counter2[:,:,start_trial:int(start_trial+trials_to_probe)]==1,axis=2)))
+        else:
+          mean_population_counter1_12[sub,0] = np.nanmean(data_counter12_12[sub,0,0,start_trial:int(start_trial+trials_to_probe)])
+          mean_population_counter1_12[sub,1] = np.nanmean(data_counter12_12[sub,1,0,start_trial:int(start_trial+trials_to_probe)]) 
+          mean_population_counter2_12[sub,0] = np.nanmean(data_counter12_12[sub,0,1,start_trial:int(start_trial+trials_to_probe)])
+          mean_population_counter2_12[sub,1] = np.nanmean(data_counter12_12[sub,1,1,start_trial:int(start_trial+trials_to_probe)]) 
 
-      rep_inds = np.ones_like(stims) 
-      rep_inds[:,1:] = stims[:,1:] - stims[:,:-1]
-      rep_inds = np.argwhere(np.abs(rep_inds)<0.1)
-
-      data_counter12_12[sub,rep_inds_12[:,0],:,rep_inds_12[:,1]] = np.nan
-      data_counter1[sub,rep_inds[:,0],rep_inds[:,1]] = np.nan 
-      data_counter2[sub,rep_inds[:,0],rep_inds[:,1]] = np.nan 
-
-    if first_press_accuracy:
-      mean_population_counter1_12[sub,0] = np.nanmean(data_counter12_12[sub,0,0,start_trial:int(start_trial+trials_to_probe)]==1)
-      mean_population_counter1_12[sub,1] = np.nanmean(data_counter12_12[sub,1,0,start_trial:int(start_trial+trials_to_probe)]==1)
-      mean_population_counter2_12[sub,0] = np.nanmean(data_counter12_12[sub,0,1,start_trial:int(start_trial+trials_to_probe)]==1) 
-      mean_population_counter2_12[sub,1] = np.nanmean(data_counter12_12[sub,1,1,start_trial:int(start_trial+trials_to_probe)]==1) 
-
-      mean_population_counter1 = np.hstack((mean_population_counter1_12, np.nanmean(data_counter1[:,:,start_trial:int(start_trial+trials_to_probe)]==1,axis=2)))
-      mean_population_counter2 = np.hstack((mean_population_counter2_12, np.nanmean(data_counter2[:,:,start_trial:int(start_trial+trials_to_probe)]==1,axis=2)))
-
-    else:
-      mean_population_counter1_12[sub,0] = np.nanmean(data_counter12_12[sub,0,0,start_trial:int(start_trial+trials_to_probe)])
-      mean_population_counter1_12[sub,1] = np.nanmean(data_counter12_12[sub,1,0,start_trial:int(start_trial+trials_to_probe)]) 
-      mean_population_counter2_12[sub,0] = np.nanmean(data_counter12_12[sub,0,1,start_trial:int(start_trial+trials_to_probe)])
-      mean_population_counter2_12[sub,1] = np.nanmean(data_counter12_12[sub,1,1,start_trial:int(start_trial+trials_to_probe)]) 
-
-      mean_population_counter1 = np.hstack((mean_population_counter1_12, np.nanmean(data_counter1[:,:,start_trial:int(start_trial+trials_to_probe)],axis=2)))
-      mean_population_counter2 = np.hstack((mean_population_counter2_12, np.nanmean(data_counter2[:,:,start_trial:int(start_trial+trials_to_probe)],axis=2)))
+          mean_population_counter1 = np.hstack((mean_population_counter1_12, np.nanmean(data_counter1[:,:,start_trial:int(start_trial+trials_to_probe)],axis=2)))
+          mean_population_counter2 = np.hstack((mean_population_counter2_12, np.nanmean(data_counter2[:,:,start_trial:int(start_trial+trials_to_probe)],axis=2)))
 
   return mean_population_counter1, mean_population_counter2
 
 
-def get_model_fit_data(data,num_block):
+def get_model_fit_data(data, num_block):
   '''
-  Gets the data for fitting model.
+  Reorganizes the data into a format used for model fitting.
 
   Args:
-    - data: the data dictionary
-    - naive: True if naive model, False otherwise
+    - data[dict]: the data dictionary
+    - num_block[int]: the number of blocks to get data for
 
   Returns:
-    - D_1: first stage model fitting data
-    - D_2: second stage model fitting data
+    - D[np.array]: model fitting data
   '''
+
   s1 = data['s1']
   s2 = data['s2']
   s_12_12 = data['s_12_12'] # nsubjects * block * stage * trial
@@ -1015,6 +941,19 @@ def get_model_fit_data(data,num_block):
 
 
 def slice_data(data, meta_data, condition, exp, cluster):
+    '''
+    Slices the data based on the given condition, experiment, and cluster.
+
+    Args:
+      - data[dict]: the data dictionary
+      - meta_data[pd.DataFrame]: the meta data
+      - condition[str]: the condition to slice the data, such as 'V1-V1'
+      - exp[list]: the experiments to slice the data, such as [1] or [1, 2]
+      - cluster[int]: the cluster to slice the data, such as 0
+
+    Returns:
+      - sliced_data[dict]: the sliced data
+    '''
     keys = data.keys()
     sliced_data = {}
     inds = (meta_data['Experiment'].isin(exp)) & (meta_data['Cluster'] == cluster)
@@ -1029,6 +968,16 @@ def slice_data(data, meta_data, condition, exp, cluster):
 
 
 def concatenate_data(this_data, all_data):
+  '''
+  Concatenates the data.
+
+  Args:
+    - this_data[dict]: the data to concatenate
+    - all_data[dict]: the data to concatenate to
+
+  Returns:
+    - all_data[dict]: the concatenated data
+  '''
   keys = this_data.keys()
   
   if all_data == {}:
@@ -1041,38 +990,31 @@ def concatenate_data(this_data, all_data):
   return all_data
 
 
-def aggregate_type_stage2_b8(stage2_info,trials_to_probe,start_trial=0,block=8,F1S1_F2S2=True,all_choices=True):
+def aggregate_type_stage2_b8(stage2_info,trials_to_probe,start_trial=0,block=8):
   '''
-  Calculates the proportions of all 4 types of choices in the second stage of
-  block 8 for all types of trials. 
+  Calculates the proportions of all 4 types of choices in stage2 of the second training structure (e.g., Block 8) for all types of trials. 
     1 = Correct
     2 = Compression over stage 1
     3 = Compression over stage 2
     4 = Other
 
   Args:
-    - data: the preprocessed data dictionary
-    - stage2_info: the preprocessed stage2 data
-    - trials_to_probe: the number of trials to include from the beginning of the block
-    - start_trial: the trial at which to start
+    - stage2_info[np.array]: the preprocessed stage2 data
+    - trials_to_probe[int]: the number of trials to include from start_trial
+    - start_trial[int]: the trial at which to start aggregation
+    - block[int]: the block number (indexing starts at 0)
 
   Return:
-    - aggregate_type: nsubject x 4 array containing choice type counts per subject
+    - aggregate_type[np.array]: nsubject x 4 array containing choice type counts per subject
   '''
   # calculate data
   nsubjects = stage2_info.shape[0]
   aggregate_type = np.zeros((nsubjects,4))
-  if all_choices:
-    choice_types = [(0,0),(0,1),(1,0),(1,1)]
-  else:
-    if F1S1_F2S2:
-      choice_types = [(0,0),(1,1)]
-    else:
-      choice_types = [(0,1),(1,0)]
+  choice_types = [(0,0),(0,1),(1,0),(1,1)]
 
   counter = 0
   for i in range(nsubjects):
-      for sf,ss in choice_types: # only consider F1S1 & F2S2
+      for sf,ss in choice_types:
           for t in range(start_trial,start_trial+trials_to_probe):
               try:
                   if stage2_info[i,block-1,sf,ss,t] is None or \
@@ -1131,39 +1073,33 @@ def aggregate_type_stage2_b8(stage2_info,trials_to_probe,start_trial=0,block=8,F
   return aggregate_type
 
 
-def aggregate_type_stage2_b9(stage2_info,trials_to_probe,start_trial=0,block=9,F1S1_F2S2=None,V2=False,V3=False):
+def aggregate_type_stage2_b9(stage2_info,trials_to_probe,start_trial=0,block=9,V2=False,V3=False):
   '''
-  Calculates the proportions of all 4 types of choices in the second stage of
-  block 9 for all types of trials.
+  Calculates the proportions of all 4 types of choices in stage2 of the second training structure (e.g., Block 8) for all types of trials. 
+    1 = Correct
+    2 = Compression over stage 1
+    3 = Compression over stage 2
+    4 = Other
 
   Args:
-    - data: the preprocessed data dictionary
-    - stage2_info: the preprocessed stage2 data
-    - trials_to_probe: the number of trials to include from the beginning of the block
-    - start_trial: the trial at which to start
+    - stage2_info[np.array]: the preprocessed stage2 data
+    - trials_to_probe[int]: the number of trials to include from start_trial
+    - start_trial[int]: the trial at which to start aggregation
+    - block[int]: the block number (indexing starts at 0)
+    - V2[bool]: True if V2, False if not
+    - V3[bool]: True if V3, False if not
 
   Return:
-    - aggregate_type: nsubject x 4 array containing choice type counts per subject
+    - aggregate_type[np.array]: nsubject x 4 array containing choice type counts per subject
   '''
   # calculate data
   nsubjects = stage2_info.shape[0]
   aggregate_type = np.zeros((nsubjects,4))
-  if F1S1_F2S2 is None:
-    choice_types = [(0,0),(0,1),(1,0),(1,1)]
-  elif F1S1_F2S2:
-    if V3 and block==6 or block==10:
-      choice_types = [(0,0),(1,0)]
-    else:
-      choice_types = [(0,0),(1,1)]
-  else:
-    if V3 and block == 6 or block == 10:
-      choice_types = [(0,1),(1,1)]
-    else:
-      choice_types = [(0,1),(1,0)]
+  choice_types = [(0,0),(0,1),(1,0),(1,1)]
 
   counter = 0
   for i in range(nsubjects):
-      for sf,ss in choice_types: # only consider F1S1 & F2S2
+      for sf,ss in choice_types: 
           for t in range(start_trial,start_trial+trials_to_probe):
               try:
                   if stage2_info[i,block-1,sf,ss,t] is None or \

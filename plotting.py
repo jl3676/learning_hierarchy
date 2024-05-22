@@ -6,8 +6,28 @@ import seaborn as sns
 import helpers 
 from scipy import stats 
 
+import warnings
 
-def plot_validation_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster, start_trial=0, trials_to_probe=10, m1='Top-down', m2='Bottom-up', nblocks=12, first_press_accuracy=False, save_vector=False, normalize=False):
+
+def plot_validation_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster, start_trial=0, trials_to_probe=10, m1='Forward', m2='Backward', nblocks=12, first_press_accuracy=False, save_vector=False, normalize=False):
+    '''
+    Plot the number of key presses for the human data and two models for each block as validation.
+
+    Args:
+        - data[dict]: the human data
+        - sim_data_m1[dict]: the simulation data for model 1
+        - sim_data_m2[dict]: the simulation data for model 2
+        - condition[str]: the condition to plot, such as 'V1-V1'
+        - cluster[int]: the cluster to plot
+        - start_trial[int]: the starting trial to plot
+        - trials_to_probe[int]: the number of trials to plot since start_trial
+        - m1[str]: the name of model 1
+        - m2[str]: the name of model 2
+        - nblocks[int]: the number of blocks to plot
+        - first_press_accuracy[bool]: True to plot first press accuracy and False to plot number of key presses
+        - save_vector[bool]: True to save the plot as a vector graphic and False to display it
+        - normalize[bool]: True to normalize the number of key presses by subtracting the mean of the 5th and 6th blocks
+    '''
     num_subjects = data['tr'].shape[0]
     
     _, n_presses_stage_2 = helpers.calc_mean(data, start_trial=start_trial, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
@@ -54,7 +74,22 @@ def plot_validation_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster
     else:
         plt.show()
 
-def plot_validation_error_types(data, sim_data_m1, sim_data_m2, condition, cluster, m1='Top-down', m2='Bottom-up', nblocks=12, save_vector=False):
+
+def plot_validation_error_types(data, sim_data_m1, sim_data_m2, condition, cluster, m1='Forward', m2='Backward', nblocks=12, save_vector=False):
+    '''
+    Plot the proportion of different types of errors for the human data and two models for each block as validation in a line plot.
+
+    Args:
+        - data[dict]: the human data
+        - sim_data_m1[dict]: the simulation data for model 1
+        - sim_data_m2[dict]: the simulation data for model 2
+        - condition[str]: the condition to plot, such as 'V1-V1'
+        - cluster[int]: the cluster to plot
+        - m1[str]: the name of model 1
+        - m2[str]: the name of model 2
+        - nblocks[int]: the number of blocks to plot
+        - save_vector[bool]: True to save the plot as a vector graphic and False to display it
+    '''
     trials_to_probe = 1
     error_types = ['Correct', 'Compression over stage 1 error', 'Compression over stage 2 error', 'Other error']
     colors = ['k', 'lightcoral', 'cornflowerblue']
@@ -139,10 +174,22 @@ def plot_validation_error_types(data, sim_data_m1, sim_data_m2, condition, clust
 
 
 def plot_validation_error_types_filled(data, sim_data_m1, sim_data_m2, condition, cluster, m1='Forward', m2='Backward', nblocks=12, save_vector=False):
+    '''
+    Plot the proportion of different types of errors for the human data and two models for each block as validation in a filled stacked line plot.
+
+    Args:
+        - data[dict]: the human data
+        - sim_data_m1[dict]: the simulation data for model 1
+        - sim_data_m2[dict]: the simulation data for model 2
+        - condition[str]: the condition to plot, such as 'V1-V1'
+        - cluster[int]: the cluster to plot
+        - m1[str]: the name of model 1
+        - m2[str]: the name of model 2
+        - nblocks[int]: the number of blocks to plot
+        - save_vector[bool]: True to save the plot as a vector graphic and False to display it
+    '''
     trials_to_probe = 1
-    error_types = ['Correct', 'Compression over stage 1 error', 'Compression over stage 2 error', 'Other error']
     colors = ['mistyrose', 'lightcoral', 'lightsteelblue', 'cornflowerblue']
-    models = ['Human', m1, m2]
     num_subject = data['tr'].shape[0]
 
     stage2_info = helpers.extract_stage2_info(data, condition)
@@ -157,7 +204,7 @@ def plot_validation_error_types_filled(data, sim_data_m1, sim_data_m2, condition
     block_trial_data_ca3_se = np.zeros_like(block_trial_data_ca3)
 
     plt.figure(figsize=(6,10))
-    fig, axes = plt.subplots(3,1, sharex=True, sharey=True)
+    _, axes = plt.subplots(3,1, sharex=True, sharey=True)
     for ind_to_plot in [0, 1, 2, 3]:
         # compute data
         pointer = 0
@@ -205,8 +252,21 @@ def plot_validation_error_types_filled(data, sim_data_m1, sim_data_m2, condition
 
 
 def plot_validation_error_types_bars(data, sim_data_m1, sim_data_m2, condition, cluster, m1='Forward', m2='Backward', nblocks=12, save_vector=False):
+    '''
+    Plot the proportion of different types of errors for the human data and two models for each block as validation in a bar plot.
+
+    Args:
+        - data[dict]: the human data
+        - sim_data_m1[dict]: the simulation data for model 1
+        - sim_data_m2[dict]: the simulation data for model 2
+        - condition[str]: the condition to plot, such as 'V1-V1'
+        - cluster[int]: the cluster to plot
+        - m1[str]: the name of model 1
+        - m2[str]: the name of model 2
+        - nblocks[int]: the number of blocks to plot
+        - save_vector[bool]: True to save the plot as a vector graphic and False to display it
+    '''
     trials_to_probe = 8
-    error_types = ['Correct', 'Compression over stage 1 error', 'Compression over stage 2 error', 'Other error']
     colors = [['k', '#666666', '#8F8F8F', '#C8C8C8'],
               ['k', '#5B7553', '#8EB897', '#C3E8BD'],
               ['k', '#735D78', '#B392AC', '#E8C2CA']]
@@ -271,7 +331,6 @@ def plot_validation_error_types_bars(data, sim_data_m1, sim_data_m2, condition, 
     axes[-1].set_xticks(blocks+0.5*1, np.arange(1, 1+nblocks))
     axes[-1].set_xlabel('Block')
 
-
     plt.suptitle(f'Choice types, Cluster {cluster}, stage 2,  (n={num_subject})')
     plt.tight_layout()
 
@@ -282,6 +341,17 @@ def plot_validation_error_types_bars(data, sim_data_m1, sim_data_m2, condition, 
 
 
 def plot_validation_PTS(data_sim, m, cond, ntrials=1, save_vector=False, pallette=None):
+    '''
+    Plot the probability of choosing each task set for the human data and two models for each block as validation.
+
+    Args:
+        - data_sim[dict]: the simulation data
+        - m[str]: the name of the model
+        - cond[str]: the condition to plot, such as 'V1-V1'
+        - ntrials[int]: the number of trials to plot at the end of each block
+        - save_vector[bool]: True to save the plot as a vector graphic and False to display it
+        - pallette[None or str]: the pallette to use for the heatmap
+    '''
     p_policies = data_sim['p_policies_history']
     last_trials = data_sim['TS_2_history'][:,:,32-ntrials:32]
     last_trials[:,:2,:] = data_sim['TS_2_history'][:,:2,-ntrials:]
@@ -315,7 +385,9 @@ def plot_validation_PTS(data_sim, m, cond, ntrials=1, save_vector=False, pallett
     gs = gridspec.GridSpec(3, 1, height_ratios=[1, 2, 2])
 
     plt.subplot(gs[0,0])
-    mean_policies = np.nanmean(p_policies.reshape(p_policies.shape[0],-1,p_policies.shape[-1]),axis=0)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning) # skip warnings for nanmean over all nan values
+        mean_policies = np.nanmean(p_policies.reshape(p_policies.shape[0],-1,p_policies.shape[-1]),axis=0)
     mean_policies = mean_policies[mean_policies[:,0]>0,:]
     plt.plot(mean_policies[:,0], color='cornflowerblue', label='Compressed over stage 1')
     plt.plot(mean_policies[:,1], color='lightcoral', label='Compressed over stage 2')
@@ -336,12 +408,6 @@ def plot_validation_PTS(data_sim, m, cond, ntrials=1, save_vector=False, pallett
         cmap = sns.diverging_palette(c, c+180, s=100, as_cmap=True)
     else:
         cmap = sns.color_palette('Greys', as_cmap=True)
-    # elif pallette == 'V1':
-    #     cmap = sns.light_palette("#5da845", as_cmap=True)
-    # elif pallette == 'V2':
-    #     cmap = sns.light_palette("#2f93c4", as_cmap=True)
-    # elif pallette == 'V3':
-    #     cmap = sns.light_palette("#f58223", as_cmap=True)
     sns.heatmap(average_probabilities,vmin=vmin,vmax=vmax,cmap=cmap,square=True)
     plt.xticks(np.arange(12)*2+1, np.arange(1,13), rotation=0)
     plt.yticks(np.arange(12)*2+0.5, np.arange(12)*2+1)
@@ -356,7 +422,22 @@ def plot_validation_PTS(data_sim, m, cond, ntrials=1, save_vector=False, pallett
         plt.show()
 
 
-def plot_transfer_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster, start_trial=0, trials_to_probe=10, m1='Top-down', m2='Bottom-up', first_press_accuracy=False):
+def plot_transfer_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster, start_trial=0, trials_to_probe=10, m1='Forward', m2='Backward', first_press_accuracy=False):
+    '''
+    Plot the amount of transfer between test blocks for the human data and two models.
+
+    Args:
+        - data[dict]: the human data
+        - sim_data_m1[dict]: the simulation data for model 1
+        - sim_data_m2[dict]: the simulation data for model 2
+        - condition[str]: the condition to plot, such as 'V1-V1'
+        - cluster[int]: the cluster to plot
+        - start_trial[int]: the starting trial to plot
+        - trials_to_probe[int]: the number of trials to plot since start_trial
+        - m1[str]: the name of model 1
+        - m2[str]: the name of model 2
+        - first_press_accuracy[bool]: True to plot first press accuracy and False to plot number of key presses
+    '''
     num_subjects = data['tr'].shape[0]
 
     _, n_presses_stage_2 = helpers.calc_mean(data, start_trial=start_trial, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
@@ -384,7 +465,24 @@ def plot_transfer_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster, 
     plt.title(f'Amount of transfer between test blocks, {condition}, Cluster {cluster} (n={num_subjects})')
     plt.show()
 
+
 def plot_transfer_learning_curves(data, meta_data, cond1, cond2, cond3, exp, cluster, start_trial=0, trials_to_probe=10, first_press_accuracy=False, save_vector=False):
+    '''
+    Plot the transfer learning curves for the human data and two models.
+    
+    Args:
+        - data[dict]: the human data
+        - meta_data[dict]: the meta data
+        - cond1[str]: the first condition to plot, such as 'V1-V1'
+        - cond2[str]: the second condition to plot, such as 'V1-V2'
+        - cond3[str]: the third condition to plot, such as 'V1-V3'
+        - exp[str]: the experiment to plot, such as 'Exp1'
+        - cluster[int]: the cluster to plot
+        - start_trial[int]: the starting trial to plot
+        - trials_to_probe[int]: the number of trials to plot since start_trial
+        - first_press_accuracy[bool]: True to plot first press accuracy and False to plot number of key presses
+        - save_vector[bool]: True to save the plot as a vector graphic and False to display it
+    '''
     data_1 = helpers.slice_data(data, meta_data, cond1, exp=exp, cluster=cluster)
     num_subjects_1 = data_1['tr'].shape[0]
     data_2 = helpers.slice_data(data, meta_data, cond2, exp=exp, cluster=cluster)
@@ -445,11 +543,17 @@ def plot_transfer_learning_curves(data, meta_data, cond1, cond2, cond3, exp, clu
         plt.show()
 
 
-def plot_validation_p_policies(data_sim, m, cond, ntrials=1, save_vector=False, pallette=None):
+def plot_validation_p_policies(data_sim, ntrials=1):
+    '''
+    Plot the probability of sampling each policy for a meta-learning model for each block as validation.
+
+    Args:
+        - data_sim[dict]: the simulation data
+        - ntrials[int]: the number of trials to plot at the end of each block
+    '''
     p_policies = data_sim['p_policies_history']
     last_trials = data_sim['TS_2_history'][:,:,32-ntrials:32]
     last_trials[:,:2,:] = data_sim['TS_2_history'][:,:2,-ntrials:]
-    max_value = int(np.nanmax(last_trials)) + 1
 
     plt.figure(figsize=(12,9))
 
@@ -461,9 +565,6 @@ def plot_validation_p_policies(data_sim, m, cond, ntrials=1, save_vector=False, 
             y = p_policies[i,:,:,s].reshape(-1)
             y = y[~np.isnan(y)]
             plt.plot(y, color='k', alpha=0.05)
-            # plt.plot(mean_policies[:,0], color='cornflowerblue', label='Compressed over stage 1')
-            # plt.plot(mean_policies[:,1], color='lightcoral', label='Compressed over stage 2')
-            # plt.plot(mean_policies[:,2], color='k', label='Hierarchical')
         plt.xticks([30, 90]+list(np.arange(10)*32+16+120), np.arange(1,13), rotation=0)
         plt.xlabel('Block')
         plt.ylim([-0.05,1.05])

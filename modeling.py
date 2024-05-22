@@ -1,71 +1,80 @@
 import numpy as np
 from scipy.special import softmax
 from scipy.optimize import differential_evolution
-import progressbar
-import matplotlib.pyplot as plt
 
-def option_model_nllh(params, D, structure, meta_learning=True):
+def abstraction_model_nllh(params, D, structure, meta_learning=True):
 	'''
-	Computes the negative log likelihood of the data D given the option model.
+	Computes the negative log likelihood of the data D given the abstraction model parameters.
+
+	Args:
+		- params[list]: the parameters of the model
+		- D[np.array]: the choice data
+		- structure[str]: the structure of the model, 'forward' or 'backward'
+		- meta_learning[bool]: whether to use the meta-learning mechanism
+
+	Returns:
+		- the negative log likelihood of the data given the model parameters
 	'''
+	# unpack the parameters
 	[alpha_2, beta, beta_meta, concentration_2, epsilon, prior] = params
 	beta_2 = beta
 	beta_policies = 5
-	# alpha_meta = 0.1
 	beta_meta = 10**beta_meta
 	concentration_2 = 10**concentration_2
 	
+	# initialize variables
 	llh = 0
 	num_block = 12
 	s_2 = a_2 = -1
 	block = -1
 
-	nTS_2 = 2 # initialize the number of task-set in the second stage
-	TS_2s = np.ones((nTS_2,2,4)) / 4
-	nC_2 = 2 * num_block
-	PTS_2 = np.zeros((nTS_2,nC_2)) 
-	# PTS_2[0] = 1
+	nTS_2 = 2 # number of task-sets in stage2
+	TS_2s = np.ones((nTS_2,2,4)) / 4 # Q-values for each TS in stage2
+	nC_2 = 2 * num_block # number of contexts in stage2
+	PTS_2 = np.zeros((nTS_2,nC_2)) # probability of choosing each TS in each context
 	PTS_2[0,0::2] = 1
 	PTS_2[1,1::2] = 1
-	encounter_matrix_2 = np.zeros(nC_2)
+	encounter_matrix_2 = np.zeros(nC_2) # whether a context has been encountered
 	encounter_matrix_2[:nTS_2] = 1
 	if meta_learning:
 		eps_meta = 1e-2
-		# beta_policies = beta_meta 
-		p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
-		p_policies_softmax = softmax(beta_policies * p_policies)
+		p_policies = np.array([1-eps_meta-prior, prior, eps_meta]) # probability of sampling each policy
+		p_policies_softmax = softmax(beta_policies * p_policies) # softmax transform of the policy probabilities
 
-	for t in range(D.shape[0]):	
+	for t in range(D.shape[0]):	# loop over all trials
 		stage = int(D[t,1])
 
 		if int(D[t,5]) == 1: # new block
 			block += 1
 
-		if stage == 1:
+		if stage == 1: # skip stage1
 			s_1 = int(D[t, 2])
 			actions_tried = set()
-		elif stage == 2:
+		elif stage == 2: # stage2
+			# get stim, action, reward info
 			s_2 = int(D[t, 2])
 			a_2 = int(D[t, 3]) - 4
 			r_2 = int(D[t, 4])
 
-			# (v) Second stage starts
+			# get the context and state, determined by model structure
 			if structure == 'backward':
 				cue = s_2
 				state = s_1
 			elif structure == 'forward':
 				cue = s_1
 				state = s_2
-			c_2 = block * 2 + cue # The context of the second stage
-			c_2_alt = block * 2 + (1 - cue)
+			c_2 = block * 2 + cue # The context of stage2
+			c_2_alt = block * 2 + (1 - cue) # The alternative context of stage2
+			# update the PTS matrix with newly encountered context, if any
 			for this_c_2 in sorted([c_2, c_2_alt]):
 				if encounter_matrix_2[this_c_2] == 0:
 					if this_c_2 > 0:
-						PTS_2 = new_SS_update_option(PTS_2, this_c_2, concentration_2)
+						PTS_2 = new_SS_update_TS(PTS_2, this_c_2, concentration_2)
 						TS_2s = np.vstack((TS_2s, [np.ones((2,4)) / 4])) # initialize Q-values for new TS creation
 						nTS_2 += 1
 					encounter_matrix_2[this_c_2] = 1
 
+			# update the biases matrix for context-pairing
 			biases = np.zeros((nTS_2, nTS_2))
 			for i in range(block):
 				this_TS_1 = np.argmax(PTS_2[:-2,i*2])
@@ -73,7 +82,7 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 				biases[this_TS_1, this_TS_2] += 1
 				biases[this_TS_2, this_TS_1] += 1
 
-			# Now we have picked the second stage TS, just pick an action based on the policy of this TS
+			# incorporate the biases into task-set probabilities
 			TS_2_alt = np.argmax(PTS_2[:,c_2_alt])
 			if block > 0:
 				bias = biases[TS_2_alt].copy()
@@ -82,98 +91,114 @@ def option_model_nllh(params, D, structure, meta_learning=True):
 					bias /= np.sum(bias)
 					PTS_2[:,c_2] = PTS_2[:,c_2] * (1 - b) + bias * b
 
+			# sample a task-set based on the TS probabilities given the context
 			Q_full = TS_2s[:, state].copy()
 			if len(actions_tried) > 0:
 				Q_full[:,list(actions_tried)] = -1e20
 			pchoice_2_full = softmax(beta_2 * Q_full, axis=-1)
 			pchoice_2_full = np.sum(pchoice_2_full[:,a_2-1] * PTS_2[:,c_2]) * (1-epsilon) + epsilon / 4
 
+			# compute the choice policy
 			if meta_learning:
 				if structure == 'backward':
-					Q_compress_1 = np.mean(TS_2s, axis=(1))
-					Q_compress_2 = (TS_2s + np.sum(TS_2s * PTS_2[:,c_2_alt].reshape(-1,1,1),axis=0))[:,state] / 2
-				elif structure == 'forward':
-					Q_compress_1 = (TS_2s + np.sum(TS_2s * PTS_2[:,c_2_alt].reshape(-1,1,1),axis=0))[:,state] / 2
-					Q_compress_2 = np.mean(TS_2s, axis=(1))
+					Q_compress_1 = np.mean(TS_2s, axis=(1)) # compressed policy over stage1
+					Q_compress_2 = (TS_2s + np.sum(TS_2s * PTS_2[:,c_2_alt].reshape(-1,1,1),axis=0))[:,state] / 2 # compressed policy over stage2
+				elif structure == 'forward': 
+					Q_compress_1 = (TS_2s + np.sum(TS_2s * PTS_2[:,c_2_alt].reshape(-1,1,1),axis=0))[:,state] / 2 # compressed policy over stage1
+					Q_compress_2 = np.mean(TS_2s, axis=(1)) # compressed policy over stage2
 				
+				# avoid choosing the same action in the same stage of the same trial
 				if len(actions_tried) > 0:
 					Q_compress_1[:,list(actions_tried)] = -1e20
 					Q_compress_2[:,list(actions_tried)] = -1e20
+				# compute the choice policies for compressed policies
 				pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1, axis=-1)
 				pchoice_2_compress_1 = np.sum(pchoice_2_compress_1[:,a_2-1] * PTS_2[:,c_2]) * (1-epsilon) + epsilon / 4
 				pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2, axis=-1) 
 				pchoice_2_compress_2 = np.sum(pchoice_2_compress_2[:,a_2-1] * PTS_2[:,c_2]) * (1-epsilon) + epsilon / 4
+				# take a weighted sum of the two compressed policies and the fully hierarchical policy
 				pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
 							+ p_policies_softmax[1] * pchoice_2_compress_2 \
 							+ p_policies_softmax[2] * pchoice_2_full
 			else:
+				# the choice policy is the fully hierarchical policy
 				pchoice_2 = pchoice_2_full 
 
+			# compute the negative log likelihood of the choice based on the choice policy
 			llh += np.log(pchoice_2)
 			correct_2 = r_2
 
+			# update the task-set probabilities based on the choice and the reward using Bayes Rule
 			PTS_2[:,c_2] *= (1 - correct_2 - (-1)**correct_2 * TS_2s[:, state, a_2-1])
 			PTS_2[:,c_2] += 1e-6
 			PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
+			# update the Q-values of the task-sets based on the reward prediction error
 			RPE = (r_2 - TS_2s[:,state,a_2-1]) * PTS_2[:,c_2]
 			TS_2s[:,state,a_2-1] += alpha_2 * RPE
-			# if meta_learning:
-			# 	beta_2 = beta + beta_scale * p_policies[-1]
-			
 
+			# update the policy probabilities using Bayes Rule
 			if meta_learning:
-				# p_policies = p_policies * (1 - eps_policies) + eps_policies / 3
 				likelihoods = np.array([pchoice_2_compress_1, pchoice_2_compress_2, pchoice_2_full])
 				likelihoods = softmax(beta_meta * likelihoods)
 				p_policies *= (1 - correct_2 - (-1)**correct_2 * likelihoods)
 				if np.min(p_policies) < 1e-6:
 					p_policies += 1e-6
 				p_policies /= np.sum(p_policies)
-				# p_policies = p_policies * (1 - epsilon_meta) + epsilon_meta / 3
 				p_policies_softmax = softmax(beta_policies * p_policies)
 
 			actions_tried.add(a_2-1)
 
-	# if meta_learning:
-	# 	llh -= np.sum((beta_policies - 5) ** 2 / (2 * 1 ** 2))
-
 	return -llh
 
 
-def option_model(num_subject, params, experiment, structure, meta_learning=True):
+def abstraction_model(num_subject, params, experiment, structure, meta_learning=True):
+	'''
+	Simulates behavior using the abstraction model.
+
+	Args:
+		- num_subject[int]: the number of subjects to simulate
+		- params[list]: the parameters of the model
+		- experiment[str]: the experimental condition, 'All' or something like 'V1-V1'
+		- structure[str]: the structure of the model, 'forward' or 'backward'
+		- meta_learning[bool]: whether to use the meta-learning mechanism
+
+	Returns:
+		- data[dict]: the data of the model
+	'''
+	# unpack the parameters
 	[alpha_2, beta, beta_meta, concentration_2, epsilon, prior] = params
-	# alpha_2 = 1
 	beta_2 = beta
 	beta_policies = 5
 	beta_meta = 10**beta_meta
 	concentration_2 = 10**concentration_2
 
+	# initialize variables
 	num_block = 6 if experiment == 'All' else 12
-	num_trial_12 = 60
-	num_trial_else = 32
+	num_trial_12 = 60 # number of trials in blocks 1 and 2
+	num_trial_else = 32 # number of trials in blocks 3 and forward
+	nC_2 = 2 * num_block # number of contexts in stage2
 
-	nC_2 = 2 * num_block
+	# initialize variables for data storage
+	population_counter1 = np.zeros((num_subject,num_block-2,num_trial_else)) # number of key presses for stage1
+	population_counter2 = np.zeros_like(population_counter1) # number of key presses for stage2
+	s_12_12 = np.zeros((num_subject,2,2,num_trial_12)) # stimuli for blocks 1 and 2, both stages
+	s1 = np.zeros_like(population_counter1) # stimuli for blocks 3 and forward, stage1
+	s2 = np.zeros_like(population_counter1) # stimuli for blocks 3 and forward, stage2
+	r_12_12 = np.empty((num_subject,2,num_trial_12), dtype='object') # rewards for blocks 1 and 2
+	r = np.empty_like(population_counter1,dtype='object') # rewards for blocks 3 and forward
+	a_12_12 = np.empty((num_subject,2,num_trial_12),dtype='object') # actions for blocks 1 and 2
+	a = np.empty_like(population_counter1,dtype='object') # actions for blocks 3 and forward
+	tr = np.zeros((num_subject,8)) # transition matrix
+	population_counter1_12 = np.zeros((num_subject,2,num_trial_12)) # number of key presses for stage1 in blocks 1 and 2
+	population_counter2_12 = np.zeros((num_subject,2,num_trial_12)) # number of key presses for stage2 in blocks 1 and 2
+	p_policies_history = np.full((num_subject,num_block,num_trial_12,3),np.nan) # history of policy probabilities
+	TS_2_history = np.full((num_subject,num_block*2,num_trial_12), np.nan) # history of task-set choices
 
-	population_counter1 = np.zeros((num_subject,num_block-2,num_trial_else))
-	population_counter2 = np.zeros_like(population_counter1)
-	s_12_12 = np.zeros((num_subject,2,2,num_trial_12))
-	s1 = np.zeros_like(population_counter1)
-	s2 = np.zeros_like(population_counter1)
-	r_12_12 = np.empty((num_subject,2,num_trial_12), dtype='object')
-	r = np.empty_like(population_counter1,dtype='object')
-	a_12_12 = np.empty((num_subject,2,num_trial_12),dtype='object')
-	a = np.empty_like(population_counter1,dtype='object')
-	tr = np.zeros((num_subject,8))
-	population_counter1_12 = np.zeros((num_subject,2,num_trial_12))
-	population_counter2_12 = np.zeros((num_subject,2,num_trial_12))
-	p_policies_history = np.full((num_subject,num_block,num_trial_12,3),np.nan)
-	TS_2_history = np.full((num_subject,num_block*2,num_trial_12), np.nan)
-
-	# run the model
+	# loop over all subjects
 	for sub in range(num_subject):
 
-		# 1. set transitions
+		# set transitions
 		transition_step1, transition_step2 = set_contingency()
 
 		transition_train1_step1 = transition_step1[:2]
@@ -181,13 +206,13 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		transition_train2_step1 = transition_step1[2:]
 		transition_train2_step2 = transition_step2[2:,:]
 
-		transition_ca1_step2 = np.array([[transition_step2[1][1], transition_step2[0][1]], [transition_step2[1][0], transition_step2[0][0]]])
-		transition_ca2_step2 = np.array([[transition_step2[0][1], transition_step2[1][1]], [transition_step2[0][0], transition_step2[1][0]]])
-		transition_ca3_step2 = np.array([[transition_step2[0][1], transition_step2[1][0]], [transition_step2[1][1], transition_step2[0][0]]])
+		transition_V1_step2 = np.array([[transition_step2[1][1], transition_step2[0][1]], [transition_step2[1][0], transition_step2[0][0]]]) # V1
+		transition_V2_step2 = np.array([[transition_step2[0][1], transition_step2[1][1]], [transition_step2[0][0], transition_step2[1][0]]]) # V2
+		transition_V3_step2 = np.array([[transition_step2[0][1], transition_step2[1][0]], [transition_step2[1][1], transition_step2[0][0]]]) # V3
 
 		tr[sub,:] = [1,2,3,4,8,6,5,7]
 
-		# 2. initialize other subject-specific task variables
+		# initialize other subject-specific task variables
 		s_1_all = np.zeros((num_block-2,num_trial_else))
 		s_2_all = np.zeros_like(s_1_all)
 		counter_1_all = np.zeros_like(s_1_all)
@@ -195,23 +220,21 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 		a_all = np.empty((num_block-2,num_trial_else),dtype='object')
 		r_all = np.empty_like(a_all,dtype='object')
 
-		nTS_2 = 2 # initialize the number of task-set in the second stage
-		TS_2s = np.ones((nTS_2,2,4)) / 4
-		PTS_2 = np.zeros((nTS_2,nC_2)) 
-		PTS_2[0,0::2] = 1
+		nTS_2 = 2 # initialize the number of task-set in stage2
+		TS_2s = np.ones((nTS_2,2,4)) / 4 # initialize Q-values for each TS in stage2
+		PTS_2 = np.zeros((nTS_2,nC_2)) # initialize the probability of choosing each TS in each context
+		PTS_2[0,0::2] = 1 
 		PTS_2[1,1::2] = 1
-		encounter_matrix_2 = np.zeros(nC_2)
+		encounter_matrix_2 = np.zeros(nC_2) # initialize the matrix of whether a context has been encountered
 		encounter_matrix_2[:nTS_2] = 1
 		if meta_learning:
 			eps_meta = 1e-2
-			# prior = 0.01
-			# beta_policies = beta_meta # hard max
-			p_policies = np.array([1-eps_meta-prior, prior, eps_meta])
-			p_policies_softmax = softmax(beta_policies * p_policies)
+			p_policies = np.array([1-eps_meta-prior, prior, eps_meta]) # initialize the probability of sampling each policy
+			p_policies_softmax = softmax(beta_policies * p_policies) # initialize the softmax transformation of the policy probabilities
 
-		# 3. start looping over all blocks
+		# loop over all blocks
 		for block in range(num_block):
-			num_trial = num_trial_12 if block < 2 else num_trial_else
+			num_trial = num_trial_12 if block < 2 else num_trial_else # number of trials in this block
 
 			# initialize stimuli sequence
 			stimulus_1, stimulus_2, _ = prepare_train_stim_sequence(num_trial / 2)
@@ -222,32 +245,33 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 				counter_1_temp = np.full(32, np.nan)
 				counter_2_temp = np.full(32, np.nan)
 
-			# 4. start looping over all trials
+			# loop over all trials
 			for trial in range(num_trial):	
 
-				# (i) present stimulus
+				# get stimuli for this trial
 				s_1 = int(stimulus_1[trial])
 				s_2 = int(stimulus_2[trial])
 				# s_2 = 0
 
-				# (ii) initialize trial-specific variables
-				correct_2 = 0 # keep track of whether correct or not in the second stage
-				a_1_temp = [] # action holder at trial level for the first stage
-				a_2_temp = [] # action holder at trial level for the second stage
-				counter_1 = 0 # counter holder at trial level for the first stage
-				counter_2 = 0 # counter holder at trial level for the second stage
-				# correct answer for both stages
-				correct_action_1 = find_correct_action(s_1, s_2, transition_train1_step1, transition_train1_step2, transition_train2_step1, transition_train2_step2, transition_ca1_step2, transition_ca2_step2, transition_ca3_step2, block, 1, experiment) 
-				correct_action_2 = find_correct_action(s_1, s_2, transition_train1_step1, transition_train1_step2, transition_train2_step1, transition_train2_step2, transition_ca1_step2, transition_ca2_step2, transition_ca3_step2, block, 2, experiment) 
+				# initialize variables for this trial
+				correct_2 = 0 # keep track of whether correct or not in stage2
+				a_1_temp = [] # action holder at trial level for stage1
+				a_2_temp = [] # action holder at trial level for stage2
+				counter_1 = 0 # counter holder at trial level for stage1
+				counter_2 = 0 # counter holder at trial level for stage2
+				# determine correct answers in both stages
+				correct_action_1 = find_correct_action(s_1, s_2, transition_train1_step1, transition_train1_step2, transition_train2_step1, transition_train2_step2, transition_V1_step2, transition_V2_step2, transition_V3_step2, block, 1, experiment) 
+				correct_action_2 = find_correct_action(s_1, s_2, transition_train1_step1, transition_train1_step2, transition_train2_step1, transition_train2_step2, transition_V1_step2, transition_V2_step2, transition_V3_step2, block, 2, experiment) 
 
-				# (iv) first stage starts
-				a_1 = correct_action_1
+				# first stage starts
+				a_1 = correct_action_1 # make the first stage trivial, since the current work is focused on the second stage
 				a_1_temp.append(a_1) # append the action taken to the list of actions in the first stage
 				counter_1 += 1
 
 				actions_tried = set()
 
-				# (v) Second stage starts
+				# second stage starts
+				# determine the context and state based on the temporal structure
 				if structure == 'backward':
 					cue = s_2 
 					state = s_1
@@ -255,17 +279,20 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					cue = s_1
 					state = s_2
 				c_2 = block * 2 + cue # The context of the second stage
-				c_2_alt = block * 2 + (1 - cue)
+				c_2_alt = block * 2 + (1 - cue) # The alternative context of the second stage
 
+				# update the PTS matrix with newly encountered context, if any
 				for this_c_2 in sorted([c_2, c_2_alt]):
 					if encounter_matrix_2[this_c_2] == 0:
 						if this_c_2 > 0:
-							PTS_2 = new_SS_update_option(PTS_2, this_c_2, concentration_2)
+							PTS_2 = new_SS_update_TS(PTS_2, this_c_2, concentration_2)
 							TS_2s = np.vstack((TS_2s, [np.ones((2,4)) / 4])) # initialize Q-values for new TS creation
 							nTS_2 += 1
 						encounter_matrix_2[this_c_2] = 1
 						
+				# keep choosing in the second stage until the correct action is taken
 				while correct_2 == 0 and counter_2 < 10:
+					# update the biases matrix for context-pairing
 					biases = np.zeros((nTS_2, nTS_2))
 					for i in range(block):
 						this_TS_1 = np.argmax(PTS_2[:-2,i*2])
@@ -273,7 +300,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 						biases[this_TS_1, this_TS_2] += 1
 						biases[this_TS_2, this_TS_1] += 1
 
-					# Now we have picked the second stage TS, just pick an action based on the policy of this TS
+					# incorporate the biases into task-set probabilities
 					TS_2_alt = np.argmax(PTS_2[:,c_2_alt])
 					if block > 0:
 						bias = biases[TS_2_alt].copy()
@@ -282,72 +309,67 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 							bias /= np.sum(bias)
 							PTS_2[:,c_2] = PTS_2[:,c_2] * (1 - b) + bias * b
 
+					# sample a task-set based on the TS probabilities given the context
 					TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0]
 					TS_2_history[sub,c_2,trial] = TS_2
+					# compute fully hierarchical policy
 					Q_full = TS_2s[TS_2, state].copy()
 					if len(actions_tried) > 0:
 						Q_full[list(actions_tried)] = -1e20
 					pchoice_2_full = softmax(beta_2 * Q_full) * (1-epsilon) + epsilon / 4
 					
+					# compute the choice policy
 					if meta_learning:
-						TS_2_alt = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2_alt])[0]
+						TS_2_alt = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2_alt])[0] # sample the alternative TS
 						if structure == 'backward':
-							Q_compress_1 = np.mean(TS_2s[TS_2], axis=(0))
-							Q_compress_2 = (TS_2s[TS_2]/2 + TS_2s[TS_2_alt]/2)[state]
+							Q_compress_1 = np.mean(TS_2s[TS_2], axis=(0)) # compressed policy over stage1
+							Q_compress_2 = (TS_2s[TS_2]/2 + TS_2s[TS_2_alt]/2)[state] # compressed policy over stage2
 						elif structure == 'forward':
-							Q_compress_1 = (TS_2s[TS_2]/2 + TS_2s[TS_2_alt]/2)[state]
-							Q_compress_2 = np.mean(TS_2s[TS_2], axis=(0))
+							Q_compress_1 = (TS_2s[TS_2]/2 + TS_2s[TS_2_alt]/2)[state] # compressed policy over stage1
+							Q_compress_2 = np.mean(TS_2s[TS_2], axis=(0)) # compressed policy over stage2
+						# avoid choosing the same action in the same stage of the same trial
 						if len(actions_tried) > 0:
 							Q_compress_1[list(actions_tried)] = -1e20
 							Q_compress_2[list(actions_tried)] = -1e20
+						# compute the choice policies for compressed policies
 						pchoice_2_compress_1 = softmax(beta_2 * Q_compress_1) * (1-epsilon) + epsilon / 4
 						pchoice_2_compress_2 = softmax(beta_2 * Q_compress_2) * (1-epsilon) + epsilon / 4
+						# take a weighted sum of the two compressed policies and the fully hierarchical policy
 						pchoice_2 = p_policies_softmax[0] * pchoice_2_compress_1 \
 									+ p_policies_softmax[1] * pchoice_2_compress_2 \
 									+ p_policies_softmax[2] * pchoice_2_full
 					else:
+						# the choice policy is the fully hierarchical policy
 						pchoice_2 = pchoice_2_full 
 
+					# sample an action based on the choice policy
 					a_2 = np.random.choice(np.arange(1,5), 1, p=pchoice_2)[0]
 					actions_tried.add(a_2-1)
 					a_2_temp.append(a_2+4) # append the action taken to the list of actions in the second stage
 					counter_2 += 1
 					correct_2 = int((a_2 + 4) == correct_action_2)
 
-					# Use the result to update PTS_2 with Bayes Rule
+					# Use the result to update task-set probabilities with Bayes Rule
 					PTS_2[:,c_2] *= (1 - correct_2 - (-1)**correct_2 * TS_2s[:, state, a_2-1])
 					PTS_2[:,c_2] += 1e-6
 					PTS_2[:,c_2] /= np.sum(PTS_2[:,c_2])
 
+					# Update the Q-values of the resampled task-set based on the reward prediction error
 					TS_2 = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2])[0]
-					TS_2_alt = np.random.choice(np.arange(PTS_2.shape[0]), 1, p=PTS_2[:,c_2_alt])[0]
 					RPE = correct_2 - TS_2s[TS_2, state, a_2-1]
 					TS_2s[TS_2, state, a_2-1] += alpha_2 * RPE
-					# if meta_learning:
-					# 	beta_2 = beta + beta_scale * p_policies[-1]
 
+					# Update the policy probabilities using Bayes Rule
 					if meta_learning:
 						if len(actions_tried) == 1:
 							p_policies_history[sub,block,trial] = p_policies
-						# p_policies = p_policies * (1 - eps_policies) + eps_policies / 3
 						likelihoods = np.array([pchoice_2_compress_1[a_2-1], pchoice_2_compress_2[a_2-1], pchoice_2_full[a_2-1]])
 						likelihoods = softmax(beta_meta * likelihoods)
 						p_policies *= (1 - correct_2 - (-1)**correct_2 * likelihoods)
 						if np.min(p_policies) < 1e-6:
 							p_policies += 1e-6
 						p_policies /= np.sum(p_policies)
-						# p_policies = p_policies * (1 - epsilon_meta) + epsilon_meta / 3
 						p_policies_softmax = softmax(beta_policies * p_policies)
-					# 	if block > 10 and trial > 20 and len(actions_tried) < 2:
-					# 		if p_policies_softmax[-1] > 0.9:
-					# 			p_policies_history = np.full((num_subject,num_block,num_trial_12,3), np.nan)
-					# 			TS_2_history = np.full((num_subject,num_block*2,num_trial_12), np.nan)
-					# 		else:
-					# 			print(f'\nTrial {trial}, Context {s_1}, TS {TS_2}, a {a_2-1}, Correct a {correct_action_2-5}, \np_choices: {pchoice_2}, \np_policies: {p_policies}, \ncompress_1: {pchoice_2_compress_1[a_2-1]}, compress_2: {pchoice_2_compress_2[a_2-1]}, full: {pchoice_2_full[a_2-1]}, \nPTS_2: {PTS_2[:4,c_2]}, \nTS_2s: {TS_2s[:4]}')
-					# if len(actions_tried) == 1:
-					# 	p_policies_history[sub,block,trial,0] = pchoice_2[a_2-1]
-					# 	p_policies_history[sub,block,trial,1] = pchoice_2[correct_action_2-5]
-					# 	p_policies_history[sub,block,trial,2] = pchoice_2_full[correct_action_2-5]
 
 				# Record variables per trial
 				counter_1_temp[trial] = counter_1
@@ -383,7 +405,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 					r_temp[1,-1] = 1 
 					r_all[block-2,trial] = r_temp # record reward for this trial
 
-				# skip to the next block if performance is good enough 
+				# skip to the next block if performance is good enough, like in the human experiment
 				if block < 2 and trial >= 32 and np.mean(counter_1_temp[trial-10:trial]) < 1.5 and np.mean(counter_2_temp[trial-10:trial]) < 1.5: 
 					trial = 59
 
@@ -397,6 +419,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 				counter_1_all[block-2,:] = counter_1_temp
 				counter_2_all[block-2,:] = counter_2_temp
 
+		# Record variables per subject
 		s1[sub,:,:] = s_1_all + 1
 		s2[sub,:,:] = s_2_all + 1
 		population_counter1[sub,:,:] = counter_1_all
@@ -408,7 +431,7 @@ def option_model(num_subject, params, experiment, structure, meta_learning=True)
 	counter12_12[:,:,0,:] = population_counter1_12
 	counter12_12[:,:,1,:] = population_counter2_12
 
-	# Package the output
+	# Package the output and return
 	data = {'tr': tr, 'a':a, 'r':r, 's1':s1, 's2':s2, 'counter1':population_counter1, 'counter2':population_counter2, \
 		 'counter12_12':counter12_12, 'a_12_12':a_12_12, 's_12_12':s_12_12, 'r_12_12':r_12_12, \
 			'p_policies_history': p_policies_history, 'TS_2_history': TS_2_history} 	
@@ -509,17 +532,17 @@ def check_seq(sequence):
 		return False
 
 
-def find_correct_action(s_1, s_2, transition_train1_step1, transition_train1_step2, transition_train2_step1, transition_train2_step2, transition_ca1_step2, transition_ca2_step2, transition_ca3_step2, block, stage, experiment):
+def find_correct_action(s_1, s_2, transition_train1_step1, transition_train1_step2, transition_train2_step1, transition_train2_step2, transition_V1_step2, transition_V2_step2, transition_V3_step2, block, stage, experiment):
 	'''
-	Finds the correct action given the experiment design.
+	Finds the correct action given the experimental design.
 
 	Args:
 		- s_1: stage 1 stimulus type index
 		- s_2: stage 2 stimulus type index
-		- transition_train1_step1, transition_train1_step2, transition_train2_step1, transition_train2_step2, transition_ca1_step2, transition_ca2_step2: transitions
+		- transition_train1_step1, transition_train1_step2, transition_train2_step1, transition_train2_step2, transition_V1_step2, transition_V2_step2, transition_V3_step2: transitions
 		- block: the block number
 		- stage: the stage number, 1 or 2
-		- experiment: the experiment name, 'CA1' (including CA1 and CA1-CA1) or 'CA2' (including CA2 and CA2-CA1)
+		- experiment: the experiment name, 'V1', 'V2' or 'V3'
 
 	Returns:
 		- correct_action: the correct action for this combination of stimuli in the block at the stage in the experiment
@@ -535,27 +558,27 @@ def find_correct_action(s_1, s_2, transition_train1_step1, transition_train1_ste
 			correct_action = transition_train2_step2[s_1,s_2]
 		elif block == 6:
 			if experiment[:2] == 'V1':
-				correct_action = transition_ca1_step2[s_1,s_2]
+				correct_action = transition_V1_step2[s_1,s_2]
 			elif experiment[:2] == 'V2':
-				correct_action = transition_ca2_step2[s_1,s_2]
+				correct_action = transition_V2_step2[s_1,s_2]
 			elif experiment[:2] == 'V3':
-				correct_action = transition_ca3_step2[s_1,s_2]
+				correct_action = transition_V3_step2[s_1,s_2]
 		elif block == 10:
 			if experiment[-2:] == 'V1':
-				correct_action = transition_ca1_step2[s_1,s_2]
+				correct_action = transition_V1_step2[s_1,s_2]
 			elif experiment[-2:] == 'V2':
-				correct_action = transition_ca2_step2[s_1,s_2]
+				correct_action = transition_V2_step2[s_1,s_2]
 			elif experiment[-2:] == 'V3':
-				correct_action = transition_ca3_step2[s_1,s_2]
+				correct_action = transition_V3_step2[s_1,s_2]
 		else:
 			correct_action = transition_train1_step2[s_1,s_2]
 
 	return correct_action
 
 
-def new_SS_update_option(PTS, c, alpha):
+def new_SS_update_TS(PTS, c, alpha):
 	'''
-	Updates the PTS matrix with new option in context c.
+	Updates the PTS matrix with new task-set in context c.
 
 	Args:
 		- PTS: the probability matrix for choosing TS (Q values).
@@ -626,21 +649,57 @@ def join_actions(a_1, a_2):
 
 
 def optimize(fname, bounds, D, structure, meta_learning):
-    result = differential_evolution(func=fname, bounds=bounds, args=(D, structure, meta_learning))
-    x = result.x
-    bestllh = -fname(x, D, structure, meta_learning)
-    bestparameters = list(x)
-    
-    return(bestparameters, bestllh)
+	'''
+	Optimizes the model using the global optimization algorithm differential evolution.
+
+	Args:
+		- fname: the function name to be optimized
+		- bounds: the list of bounds of the parameters
+		- D: the data
+		- structure: the structure of the model, 'forward' or 'backward'
+		- meta_learning: whether to use the meta-learning mechanism
+
+	Returns:
+		- bestparameters: the best parameters found
+		- bestllh: the best log-likelihood found
+	'''
+
+	result = differential_evolution(func=fname, bounds=bounds, args=(D, structure, meta_learning))
+	x = result.x
+	bestllh = -fname(x, D, structure, meta_learning)
+	bestparameters = list(x)
+
+	return bestparameters, bestllh
 
 
 def parallel_worker(args):
-    fit_model_name, data, structure, i, param_bounds, meta_learning = args
-    best_params, best_llh = optimize(globals()[fit_model_name+'_nllh'], param_bounds, data, structure, meta_learning)
-    return i, best_params, best_llh
+	'''
+	The parallel worker for optimization.
+
+	Args:
+		- args: the arguments for optimization
+
+	Returns:
+		- i: the index of the worker
+		- best_params: the best-fit parameters found
+		- best_llh: the best-fit log-likelihood found
+	'''
+	fit_model_name, data, structure, i, param_bounds, meta_learning = args
+	best_params, best_llh = optimize(globals()[fit_model_name+'_nllh'], param_bounds, data, structure, meta_learning)
+	return i, best_params, best_llh
 
 
 def parallel_simulator(args):
-    this_model, i, niters_sim, params, exp, structure, meta_learning = args
-    this_data = globals()[this_model](niters_sim, params, exp, structure, meta_learning)
-    return i, this_data
+	'''
+	The parallel worker for simulation.
+
+	Args:
+		- args: the arguments for simulation
+	
+	Returns:
+		- i: the index of the worker
+		- this_data: the data generated by the model
+	'''
+	this_model, i, niters_sim, params, exp, structure, meta_learning = args
+	this_data = globals()[this_model](niters_sim, params, exp, structure, meta_learning)
+	return i, this_data
