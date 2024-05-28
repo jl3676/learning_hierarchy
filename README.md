@@ -4,7 +4,7 @@ Public repository containing the code used in the hierarchical policy learning p
 
 ## Citation
  ```
-@article{LI2024102842,
+@article{LI2024algorithmic,
 title = {An algorithmic account for how humans efficiently learn, transfer, and compose hierarchically structured decision policies},
 journal = {PsyArXiv},
 year = {2024},
