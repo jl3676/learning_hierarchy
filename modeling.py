@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.special import softmax
-from scipy.optimize import differential_evolution
+from scipy.optimize import differential_evolution, LinearConstraint, Bounds
 
 def abstraction_model_nllh(params, D, structure, meta_learning=True):
 	'''
@@ -16,7 +16,7 @@ def abstraction_model_nllh(params, D, structure, meta_learning=True):
 		- the negative log likelihood of the data given the model parameters
 	'''
 	# unpack the parameters
-	[alpha_2, beta, beta_meta, concentration_2, epsilon, prior] = params
+	[alpha_2, beta, beta_meta, concentration_2, epsilon, prior_1, prior_2] = params
 	beta_2 = beta
 	beta_policies = 5
 	beta_meta = 10**beta_meta
@@ -37,8 +37,7 @@ def abstraction_model_nllh(params, D, structure, meta_learning=True):
 	encounter_matrix_2 = np.zeros(nC_2) # whether a context has been encountered
 	encounter_matrix_2[:nTS_2] = 1
 	if meta_learning:
-		eps_meta = 1e-2
-		p_policies = np.array([1-eps_meta-prior, prior, eps_meta]) # probability of sampling each policy
+		p_policies = np.array([prior_1, prior_2, 1-prior_1-prior_2]) # probability of sampling each policy
 		p_policies_softmax = softmax(beta_policies * p_policies) # softmax transform of the policy probabilities
 
 	for t in range(D.shape[0]):	# loop over all trials
@@ -167,7 +166,7 @@ def abstraction_model(num_subject, params, experiment, structure, meta_learning=
 		- data[dict]: the data of the model
 	'''
 	# unpack the parameters
-	[alpha_2, beta, beta_meta, concentration_2, epsilon, prior] = params
+	[alpha_2, beta, beta_meta, concentration_2, epsilon, prior_1, prior_2] = params
 	beta_2 = beta
 	beta_policies = 5
 	beta_meta = 10**beta_meta
@@ -228,8 +227,7 @@ def abstraction_model(num_subject, params, experiment, structure, meta_learning=
 		encounter_matrix_2 = np.zeros(nC_2) # initialize the matrix of whether a context has been encountered
 		encounter_matrix_2[:nTS_2] = 1
 		if meta_learning:
-			eps_meta = 1e-2
-			p_policies = np.array([1-eps_meta-prior, prior, eps_meta]) # initialize the probability of sampling each policy
+			p_policies = np.array([prior_1, prior_2, 1-prior_1-prior_2]) # initialize the probability of sampling each policy
 			p_policies_softmax = softmax(beta_policies * p_policies) # initialize the softmax transformation of the policy probabilities
 
 		# loop over all blocks
@@ -663,8 +661,10 @@ def optimize(fname, bounds, D, structure, meta_learning):
 		- bestparameters: the best parameters found
 		- bestllh: the best log-likelihood found
 	'''
-
-	result = differential_evolution(func=fname, bounds=bounds, args=(D, structure, meta_learning))
+	param_weights = np.zeros(len(bounds))
+	param_weights[-2:] = 1
+	constraints = LinearConstraint(param_weights, lb=0, ub=1)
+	result = differential_evolution(func=fname, bounds=bounds, constraints=constraints, args=(D, structure, meta_learning))
 	x = result.x
 	bestllh = -fname(x, D, structure, meta_learning)
 	bestparameters = list(x)
