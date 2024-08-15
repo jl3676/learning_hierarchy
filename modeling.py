@@ -17,7 +17,8 @@ def abstraction_model_nllh(params, D, structure, meta_learning=True):
 	'''
 	# unpack the parameters
 	[alpha_2, beta, beta_meta, concentration_2, epsilon, prior_1, prior_2] = params
-	print(f"alpha_2: {alpha_2}, beta: {beta}, beta_meta: {beta_meta}, concentration_2: {concentration_2}, epsilon: {epsilon}, prior_1: {prior_1}, prior_2: {prior_2}")
+	if alpha_2 < 0 or epsilon < 0 or prior_1 < 0 or prior_2 < 0:
+		print(f"alpha_2: {alpha_2}, beta: {beta}, beta_meta: {beta_meta}, concentration_2: {concentration_2}, epsilon: {epsilon}, prior_1: {prior_1}, prior_2: {prior_2}")
 	beta_2 = beta
 	beta_policies = 5
 	beta_meta = 10**beta_meta
