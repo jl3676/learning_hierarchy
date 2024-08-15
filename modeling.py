@@ -670,13 +670,11 @@ def optimize(fname, bounds, D, structure, meta_learning):
 		- bestparameters: the best parameters found
 		- bestllh: the best log-likelihood found
 	'''
-	def constraint_func(x):
-		return x[-1] + x[-2]
-	# param_weights = np.zeros(len(bounds))
-	# param_weights[-2:] = 1
-	constraints = NonlinearConstraint(constraint_func, lb=2e-6, ub=1-1e-6)
+	param_weights = np.zeros(len(bounds))
+	param_weights[-2:] = 1
+	constraints = NonlinearConstraint(param_weights, lb=2e-6, ub=1-1e-6)
 	bounds = Bounds(lb=[b[0] for b in bounds], ub=[b[1] for b in bounds])
-	result = differential_evolution(func=fname, bounds=bounds, constraints=constraints, args=(D, structure, meta_learning))
+	result = differential_evolution(func=fname, bounds=bounds, constraints=constraints, keep_feasible=True, args=(D, structure, meta_learning))
 	x = result.x
 	bestllh = -fname(x, D, structure, meta_learning)
 	bestparameters = list(x)
