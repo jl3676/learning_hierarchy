@@ -126,7 +126,7 @@ def abstraction_model_nllh(params, D, structure, meta_learning=True):
 			# compute the negative log likelihood of the choice based on the choice policy
 			if np.isnan(pchoice_2) or pchoice_2 <= 0:
 				print(f"pchoice_2: {pchoice_2}")
-				print(f"prior_1: {prior_1}, prior_2: {prior_2}")
+				print(f"prior_1: {prior_1}, prior_2: {prior_2}, epsilon: {epsilon}")
 				print(f"p_policies_softmax: {p_policies_softmax}")
 				print(f"pchoice_2_compress_1: {pchoice_2_compress_1}")
 				print(f"pchoice_2_compress_2: {pchoice_2_compress_2}")
