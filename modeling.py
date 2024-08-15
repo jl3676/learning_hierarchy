@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.special import softmax
-from scipy.optimize import differential_evolution, LinearConstraint, Bounds
+from scipy.optimize import differential_evolution, NonlinearConstraint, Bounds
 
 def abstraction_model_nllh(params, D, structure, meta_learning=True):
 	'''
@@ -670,9 +670,11 @@ def optimize(fname, bounds, D, structure, meta_learning):
 		- bestparameters: the best parameters found
 		- bestllh: the best log-likelihood found
 	'''
-	param_weights = np.zeros(len(bounds))
-	param_weights[-2:] = 1
-	constraints = LinearConstraint(param_weights, lb=0.02, ub=0.98)
+	def constraint_func(x):
+		return x[-1] + x[-2]
+	# param_weights = np.zeros(len(bounds))
+	# param_weights[-2:] = 1
+	constraints = NonlinearConstraint(constraint_func, lb=2e-6, ub=1-1e-6)
 	bounds = Bounds(lb=[b[0] for b in bounds], ub=[b[1] for b in bounds])
 	result = differential_evolution(func=fname, bounds=bounds, constraints=constraints, args=(D, structure, meta_learning))
 	x = result.x
