@@ -42,6 +42,7 @@ def abstraction_model_nllh(params, D, structure, meta_learning=True):
 	encounter_matrix_2[:nTS_2] = 1
 	if meta_learning:
 		p_policies = np.array([prior_1, prior_2, 1-prior_1-prior_2]) # probability of sampling each policy
+		assert prior_1 + prior_2 <= 1 and prior_1 >= 0 and prior_2 >= 0
 		p_policies_softmax = softmax(beta_policies * p_policies) # softmax transform of the policy probabilities
 
 	for t in range(D.shape[0]):	# loop over all trials
@@ -130,8 +131,8 @@ def abstraction_model_nllh(params, D, structure, meta_learning=True):
 			# compute the negative log likelihood of the choice based on the choice policy
 			if np.isnan(pchoice_2) or pchoice_2 <= 0:
 				print(f"pchoice_2: {pchoice_2}")
-				print(f"prior_1: {prior_1}, prior_2: {prior_2}, epsilon: {epsilon}")
-				print(f"p_policies_softmax: {p_policies_softmax}")
+				print(f"alpha_2: {alpha_2}, prior_1: {prior_1}, prior_2: {prior_2}, epsilon: {epsilon}")
+				print(f"PTS_2[:,c_2]: {PTS_2[:,c_2]}")
 				print(f"pchoice_2_compress_1: {pchoice_2_compress_1}")
 				print(f"pchoice_2_compress_2: {pchoice_2_compress_2}")
 				print(f"pchoice_2_full: {pchoice_2_full}")
