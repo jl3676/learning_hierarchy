@@ -671,7 +671,7 @@ def optimize(fname, bounds, D, structure, meta_learning):
 	param_weights = np.zeros(len(bounds))
 	param_weights[-2:] = 1
 	constraints = LinearConstraint(param_weights, lb=0, ub=1-1e-6)
-	print(bounds)
+	bounds = Bounds(lb=[b[0] for b in bounds], ub=[b[1] for b in bounds])
 	result = differential_evolution(func=fname, bounds=bounds, constraints=constraints, args=(D, structure, meta_learning))
 	x = result.x
 	bestllh = -fname(x, D, structure, meta_learning)
