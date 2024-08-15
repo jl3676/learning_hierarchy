@@ -20,6 +20,7 @@ def abstraction_model_nllh(params, D, structure, meta_learning=True):
 	if alpha_2 < 0 or epsilon < 0 or prior_1 < 0 or prior_2 < 0:
 		print(f'Subject: {D[0,0]}')
 		print(f"alpha_2: {alpha_2}, beta: {beta}, beta_meta: {beta_meta}, concentration_2: {concentration_2}, epsilon: {epsilon}, prior_1: {prior_1}, prior_2: {prior_2}")
+		return np.inf
 	beta_2 = beta
 	beta_policies = 5
 	beta_meta = 10**beta_meta
