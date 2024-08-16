@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.special import softmax
-from scipy.optimize import shgo, differential_evolution, LinearConstraint, Bounds
+from scipy.optimize import differential_evolution, Bounds
 
 def abstraction_model_nllh(params, D, structure, meta_learning=True):
 	'''
@@ -16,11 +16,7 @@ def abstraction_model_nllh(params, D, structure, meta_learning=True):
 		- the negative log likelihood of the data given the model parameters
 	'''
 	# unpack the parameters
-	[alpha_2, beta, beta_meta, concentration_2, epsilon, prior_1, prior_2] = params
-	if alpha_2 < 0 or alpha_2 > 1 or epsilon < 0 or epsilon > 1 or prior_1 < 0 or prior_1 > 1 or prior_2 < 0 or prior_2 > 1 or prior_1 + prior_2 > 1:
-		print(f'Subject: {D[0,0]}')
-		print(f"alpha_2: {alpha_2}, beta: {beta}, beta_meta: {beta_meta}, concentration_2: {concentration_2}, epsilon: {epsilon}, prior_1: {prior_1}, prior_2: {prior_2}")
-		return np.inf
+	[alpha_2, beta, beta_meta, concentration_2, epsilon, prior_h, prior_w] = params
 	beta_2 = beta
 	beta_policies = 5
 	beta_meta = 10**beta_meta
@@ -41,7 +37,7 @@ def abstraction_model_nllh(params, D, structure, meta_learning=True):
 	encounter_matrix_2 = np.zeros(nC_2) # whether a context has been encountered
 	encounter_matrix_2[:nTS_2] = 1
 	if meta_learning:
-		p_policies = np.array([prior_1, prior_2, 1-prior_1-prior_2]) # probability of sampling each policy
+		p_policies = np.array([(1 - prior_h) * (1 - prior_w), (1 - prior_h) * prior_w, prior_h]) # probability of sampling each policy
 		p_policies_softmax = softmax(beta_policies * p_policies) # softmax transform of the policy probabilities
 
 	for t in range(D.shape[0]):	# loop over all trials
@@ -672,16 +668,8 @@ def optimize(fname, bounds, D, structure, meta_learning):
 		- bestparameters: the best parameters found
 		- bestllh: the best log-likelihood found
 	'''
-	constraints = LinearConstraint([[0, 0, 0, 0, 0, 1, 1]], lb=2e-6, ub=1-1e-6)
 	bounds = Bounds(lb=[b[0] for b in bounds], ub=[b[1] for b in bounds])
-	# result = differential_evolution(func=fname, bounds=bounds, constraints=constraints, args=(D, structure, meta_learning))
-	def c1(x):
-		return x[-2] + x[-1]
-	def c2(x):
-		return 1 - x[-2] - x[-1]
-	cons = ({'type': 'ineq', 'fun': c1},
-			{'type': 'ineq', 'fun': c2})
-	result = shgo(func=fname, bounds=bounds, constraints=cons, args=(D, structure, meta_learning), options={"infty_constraints": False})
+	result = differential_evolution(func=fname, bounds=bounds, args=(D, structure, meta_learning))
 	x = result.x
 	bestllh = -fname(x, D, structure, meta_learning)
 	bestparameters = list(x)
