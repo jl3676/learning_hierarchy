@@ -42,7 +42,6 @@ def abstraction_model_nllh(params, D, structure, meta_learning=True):
 	encounter_matrix_2[:nTS_2] = 1
 	if meta_learning:
 		p_policies = np.array([prior_1, prior_2, 1-prior_1-prior_2]) # probability of sampling each policy
-		assert prior_1 + prior_2 <= 1 and prior_1 >= 0 and prior_2 >= 0
 		p_policies_softmax = softmax(beta_policies * p_policies) # softmax transform of the policy probabilities
 
 	for t in range(D.shape[0]):	# loop over all trials
