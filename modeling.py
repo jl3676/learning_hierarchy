@@ -682,7 +682,7 @@ def optimize(fname, bounds, D, structure, meta_learning):
 		return 1 - x[-2] - x[-1]
 	cons = ({'type': 'ineq', 'fun': c1},
 			{'type': 'ineq', 'fun': c2})
-	result = shgo(func=fname, bounds=bounds, constraints=cons, args=(D, structure, meta_learning))
+	result = shgo(func=fname, bounds=bounds, constraints=cons, args=(D, structure, meta_learning), infty_constraints=False)
 	x = result.x
 	bestllh = -fname(x, D, structure, meta_learning)
 	bestparameters = list(x)
