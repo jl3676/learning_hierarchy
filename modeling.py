@@ -676,7 +676,13 @@ def optimize(fname, bounds, D, structure, meta_learning):
 	constraints = LinearConstraint([[0, 0, 0, 0, 0, 1, 1]], lb=2e-6, ub=1-1e-6)
 	bounds = Bounds(lb=[b[0] for b in bounds], ub=[b[1] for b in bounds])
 	# result = differential_evolution(func=fname, bounds=bounds, constraints=constraints, args=(D, structure, meta_learning))
-	result = shgo(func=fname, bounds=bounds, constraints=constraints, args=(D, structure, meta_learning))
+	def c1(x):
+		return x[-2] + x[-1]
+	def c2(x):
+		return 1 - x[-2] - x[-1]
+	cons = ({'type': 'ineq', 'fun': c1},
+			{'type': 'ineq', 'fun': c2})
+	result = shgo(func=fname, bounds=bounds, constraints=cons, args=(D, structure, meta_learning))
 	x = result.x
 	bestllh = -fname(x, D, structure, meta_learning)
 	bestparameters = list(x)
