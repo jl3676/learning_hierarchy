@@ -124,13 +124,6 @@ def abstraction_model_nllh(params, D, structure, meta_learning=True):
 				pchoice_2 = pchoice_2_full 
 
 			# compute the negative log likelihood of the choice based on the choice policy
-			if np.isnan(pchoice_2) or pchoice_2 <= 0:
-				print(f"pchoice_2: {pchoice_2}")
-				print(f"alpha_2: {alpha_2}, prior_1: {prior_1}, prior_2: {prior_2}, epsilon: {epsilon}")
-				print(f"PTS_2[:,c_2]: {PTS_2[:,c_2]}")
-				print(f"pchoice_2_compress_1: {pchoice_2_compress_1}")
-				print(f"pchoice_2_compress_2: {pchoice_2_compress_2}")
-				print(f"pchoice_2_full: {pchoice_2_full}")
 			llh += np.log(pchoice_2)
 			correct_2 = r_2
 
@@ -173,7 +166,7 @@ def abstraction_model(num_subject, params, experiment, structure, meta_learning=
 		- data[dict]: the data of the model
 	'''
 	# unpack the parameters
-	[alpha_2, beta, beta_meta, concentration_2, epsilon, prior_1, prior_2] = params
+	[alpha_2, beta, beta_meta, concentration_2, epsilon, prior_h, prior_w] = params
 	beta_2 = beta
 	beta_policies = 5
 	beta_meta = 10**beta_meta
@@ -234,7 +227,7 @@ def abstraction_model(num_subject, params, experiment, structure, meta_learning=
 		encounter_matrix_2 = np.zeros(nC_2) # initialize the matrix of whether a context has been encountered
 		encounter_matrix_2[:nTS_2] = 1
 		if meta_learning:
-			p_policies = np.array([prior_1, prior_2, 1-prior_1-prior_2]) # initialize the probability of sampling each policy
+			p_policies = np.array([(1 - prior_h) * (1 - prior_w), (1 - prior_h) * prior_w, prior_h]) # initialize the probability of sampling each policy
 			p_policies_softmax = softmax(beta_policies * p_policies) # initialize the softmax transformation of the policy probabilities
 
 		# loop over all blocks
