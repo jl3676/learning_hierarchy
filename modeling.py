@@ -240,7 +240,10 @@ def abstraction_model(num_subject, params, experiment, structure, meta_learning=
 				prior_h = 0.0
 				prior_w = 1.0
 			p_policies = np.array([(1 - prior_h) * (1 - prior_w), (1 - prior_h) * prior_w, prior_h]) # initialize the probability of sampling each policy
-			p_policies_softmax = softmax(beta_policies * p_policies) # initialize the softmax transformation of the policy probabilities
+			if meta_learning == 1:
+				p_policies_softmax = softmax(beta_policies * p_policies) # initialize the softmax transformation of the policy probabilities
+			else:
+				p_policies_softmax = p_policies
 
 		# loop over all blocks
 		for block in range(num_block):
