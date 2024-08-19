@@ -2,7 +2,7 @@ import numpy as np
 from scipy.special import softmax
 from scipy.optimize import differential_evolution, Bounds
 
-def abstraction_model_nllh(params, D, structure, meta_learning=True):
+def abstraction_model_nllh(params, D, structure, meta_learning=1):
 	'''
 	Computes the negative log likelihood of the data D given the abstraction model parameters.
 
@@ -10,7 +10,7 @@ def abstraction_model_nllh(params, D, structure, meta_learning=True):
 		- params[list]: the parameters of the model
 		- D[np.array]: the choice data
 		- structure[str]: the structure of the model, 'forward' or 'backward'
-		- meta_learning[bool or float]: whether to use the meta-learning mechanism; 2=compressed over stage1, 3=compressed over stage2
+		- meta_learning[int]: 0=hierarchical; 1=meta-learning; 2=compressed over stage1; 3=compressed over stage2
 
 	Returns:
 		- the negative log likelihood of the data given the model parameters
@@ -143,7 +143,7 @@ def abstraction_model_nllh(params, D, structure, meta_learning=True):
 			TS_2s[:,state,a_2-1] += alpha_2 * RPE
 
 			# update the policy probabilities using Bayes Rule
-			if meta_learning:
+			if meta_learning == 1:
 				likelihoods = np.array([pchoice_2_compress_1, pchoice_2_compress_2, pchoice_2_full])
 				likelihoods = softmax(beta_meta * likelihoods)
 				p_policies *= (1 - correct_2 - (-1)**correct_2 * likelihoods)
@@ -157,7 +157,7 @@ def abstraction_model_nllh(params, D, structure, meta_learning=True):
 	return -llh
 
 
-def abstraction_model(num_subject, params, experiment, structure, meta_learning=True):
+def abstraction_model(num_subject, params, experiment, structure, meta_learning=1):
 	'''
 	Simulates behavior using the abstraction model.
 
@@ -166,7 +166,7 @@ def abstraction_model(num_subject, params, experiment, structure, meta_learning=
 		- params[list]: the parameters of the model
 		- experiment[str]: the experimental condition, 'All' or something like 'V1-V1'
 		- structure[str]: the structure of the model, 'forward' or 'backward'
-		- meta_learning[bool]: whether to use the meta-learning mechanism
+		- meta_learning[int]: 0=hierarchical; 1=meta-learning; 2=compressed over stage1; 3=compressed over stage2
 
 	Returns:
 		- data[dict]: the data of the model
@@ -233,6 +233,12 @@ def abstraction_model(num_subject, params, experiment, structure, meta_learning=
 		encounter_matrix_2 = np.zeros(nC_2) # initialize the matrix of whether a context has been encountered
 		encounter_matrix_2[:nTS_2] = 1
 		if meta_learning:
+			if meta_learning == 2:
+				prior_h = 0.0
+				prior_w = 0.0
+			elif meta_learning == 3:
+				prior_h = 0.0
+				prior_w = 1.0
 			p_policies = np.array([(1 - prior_h) * (1 - prior_w), (1 - prior_h) * prior_w, prior_h]) # initialize the probability of sampling each policy
 			p_policies_softmax = softmax(beta_policies * p_policies) # initialize the softmax transformation of the policy probabilities
 
@@ -255,7 +261,6 @@ def abstraction_model(num_subject, params, experiment, structure, meta_learning=
 				# get stimuli for this trial
 				s_1 = int(stimulus_1[trial])
 				s_2 = int(stimulus_2[trial])
-				# s_2 = 0
 
 				# initialize variables for this trial
 				correct_2 = 0 # keep track of whether correct or not in stage2
@@ -364,7 +369,7 @@ def abstraction_model(num_subject, params, experiment, structure, meta_learning=
 					TS_2s[TS_2, state, a_2-1] += alpha_2 * RPE
 
 					# Update the policy probabilities using Bayes Rule
-					if meta_learning:
+					if meta_learning == 1:
 						if len(actions_tried) == 1:
 							p_policies_history[sub,block,trial] = p_policies
 						likelihoods = np.array([pchoice_2_compress_1[a_2-1], pchoice_2_compress_2[a_2-1], pchoice_2_full[a_2-1]])
