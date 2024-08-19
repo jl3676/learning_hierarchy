@@ -10,7 +10,7 @@ def abstraction_model_nllh(params, D, structure, meta_learning=True):
 		- params[list]: the parameters of the model
 		- D[np.array]: the choice data
 		- structure[str]: the structure of the model, 'forward' or 'backward'
-		- meta_learning[bool]: whether to use the meta-learning mechanism
+		- meta_learning[bool or int]: whether to use the meta-learning mechanism; 2=compressed over stage1, 3=compressed over stage2
 
 	Returns:
 		- the negative log likelihood of the data given the model parameters
@@ -37,6 +37,12 @@ def abstraction_model_nllh(params, D, structure, meta_learning=True):
 	encounter_matrix_2 = np.zeros(nC_2) # whether a context has been encountered
 	encounter_matrix_2[:nTS_2] = 1
 	if meta_learning:
+		if meta_learning == 2:
+			prior_h = 0
+			prior_w = 0
+		elif meta_learning == 3:
+			prior_h = 0
+			prior_w = 1
 		p_policies = np.array([(1 - prior_h) * (1 - prior_w), (1 - prior_h) * prior_w, prior_h]) # probability of sampling each policy
 		p_policies_softmax = softmax(beta_policies * p_policies) # softmax transform of the policy probabilities
 
