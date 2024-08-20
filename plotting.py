@@ -476,8 +476,9 @@ def plot_transfer_learning_curves(data, meta_data, cond1, cond2, cond3, exp, clu
         - cond1[str]: the first condition to plot, such as 'V1-V1'
         - cond2[str]: the second condition to plot, such as 'V1-V2'
         - cond3[str]: the third condition to plot, such as 'V1-V3'
-        - exp[str]: the experiment to plot, such as 'Exp1'
+        - exp[str]: the experiment to plot, such as [1]
         - cluster[int]: the cluster to plot
+        - exp2[str]: the second experiment to plot, such as [2]
         - start_trial[int]: the starting trial to plot
         - trials_to_probe[int]: the number of trials to plot since start_trial
         - first_press_accuracy[bool]: True to plot first press accuracy and False to plot number of key presses
