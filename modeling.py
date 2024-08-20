@@ -44,7 +44,7 @@ def abstraction_model_nllh(params, D, structure, meta_learning=1):
 			prior_h = 0.0
 			prior_w = 1.0
 		p_policies = np.array([(1 - prior_h) * (1 - prior_w), (1 - prior_h) * prior_w, prior_h]) # probability of sampling each policy
-		p_policies_softmax = softmax(beta_policies * p_policies) # softmax transform of the policy probabilities
+		p_policies_softmax = softmax(beta_policies * p_policies) if meta_learning == 1 else p_policies # softmax transform of the policy probabilities
 
 	for t in range(D.shape[0]):	# loop over all trials
 		stage = int(D[t,1])
@@ -240,10 +240,7 @@ def abstraction_model(num_subject, params, experiment, structure, meta_learning=
 				prior_h = 0.0
 				prior_w = 1.0
 			p_policies = np.array([(1 - prior_h) * (1 - prior_w), (1 - prior_h) * prior_w, prior_h]) # initialize the probability of sampling each policy
-			if meta_learning == 1:
-				p_policies_softmax = softmax(beta_policies * p_policies) # initialize the softmax transformation of the policy probabilities
-			else:
-				p_policies_softmax = p_policies
+			p_policies_softmax = softmax(beta_policies * p_policies) if meta_learning == 1 else p_policies # initialize the softmax transformation of the policy probabilities
 
 		# loop over all blocks
 		for block in range(num_block):
