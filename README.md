@@ -17,6 +17,9 @@ author = {Jing-Jing Li and Anne G. E. Collins}
 
 ## File structure
 
+### Data
+- `data.pkl`: pickle file containing all behavioral data analyzed in the paper.
+
 ### Helper functions
 - `helpers.py`: file containing helper functions for data analysis. 
 - `plotting.py`: file containing plotting functions used to visualize results. 
