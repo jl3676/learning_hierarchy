@@ -1,3 +1,5 @@
+markdown: kramdown
+
 # learning_hierarchy
 Public repository containing the code used in the hierarchical policy learning project. All data will be made publiclly available upon the acceptance of the manuscript.
 
@@ -13,9 +15,9 @@ url = {osf.io/preprints/psyarxiv/b3xnv},
 author = {Jing-Jing Li and Anne G. E. Collins}
 }
  ```
-[Visit Anthropic Website](https://www.anthropic.com "target=_blank")
+
 ## Task
-A demo of the full online behavioral task used for data collection is available <a href="https://experiments-ccn.berkeley.edu/learning_hierarchy_task_demo/exp.html?id=demo" target="_blank">here</a>.
+A demo of the full online behavioral task used for data collection is available [here](https://experiments-ccn.berkeley.edu/learning_hierarchy_task_demo/exp.html?id=demo){:target="_blank"}.
 
 ## File structure
 
