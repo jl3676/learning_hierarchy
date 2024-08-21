@@ -14,6 +14,8 @@ author = {Jing-Jing Li and Anne G. E. Collins}
 }
  ```
 
+## Task
+A demo of the full online behavioral task used for data collection is available [here](https://experiments-ccn.berkeley.edu/learning_hierarchy_task_demo/exp.html?id=demo).
 
 ## File structure
 
