@@ -582,3 +582,44 @@ def plot_validation_p_policies(data_sim, ntrials=1):
         plt.title(f'p({policies[s]})')
     plt.tight_layout()
     plt.legend()
+
+def plot_transfer_effect_real_vs_sim(data, sim_data_m1, sim_data_m2, cluster, start_trial=0, trials_to_probe=10, m1='Forward', m2='Backward', save_vector=False, normalize=False, first_press_accuracy=False):
+    num_subjects = data['tr'].shape[0]
+    
+    _, n_presses_stage_2 = helpers.calc_mean(data, start_trial=start_trial, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
+    if normalize:
+        n_presses_stage_2 -= np.nanmean(n_presses_stage_2[:,4:6], axis=1).reshape(-1,1)
+    n_presses_stage_2_mean = np.nanmean(n_presses_stage_2,axis=0)
+    n_presses_stage_2_sem = stats.sem(n_presses_stage_2,axis=0,nan_policy='omit')
+
+    _, n_presses_stage_2_sim_m1 = helpers.calc_mean(sim_data_m1, start_trial=0, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
+    if normalize:
+        n_presses_stage_2_sim_m1 -= np.nanmean(n_presses_stage_2_sim_m1[:,4:6], axis=1).reshape(-1,1)
+    n_presses_stage_2_sim_m1_mean = np.mean(n_presses_stage_2_sim_m1,axis=0)
+
+    _, n_presses_stage_2_sim_m2 = helpers.calc_mean(sim_data_m2, start_trial=0, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
+    if normalize:
+        n_presses_stage_2_sim_m2 -= np.nanmean(n_presses_stage_2_sim_m2[:,4:6], axis=1).reshape(-1,1)
+    n_presses_stage_2_sim_m2_mean = np.mean(n_presses_stage_2_sim_m2,axis=0)
+
+    transfer_human = n_presses_stage_2_mean[6] - n_presses_stage_2_mean[10]
+    transfer_m1 = n_presses_stage_2_sim_m1_mean[6] - n_presses_stage_2_sim_m1_mean[10]
+    transfer_m2 = n_presses_stage_2_sim_m2_mean[6] - n_presses_stage_2_sim_m2_mean[10]
+
+    # in two subplots, plot dot plots of individual human transfer effects against model simulations, add dashed diagonal line
+    fig, axes = plt.subplots(2,1,figsize=(6,8), sharex=True, sharey=True)
+    for ax in axes:
+        ax.plot([-0.2,0.5],[-0.2,0.5],'--',color='gray')
+        ax.set_xlabel('Human')
+        ax.set_ylabel('Model')
+    axes[0].plot(transfer_human, transfer_m1, '.', alpha=0.5, color='lightcoral')
+    axes[1].plot(transfer_human, transfer_m2, '.', alpha=0.5, color='cornflowerblue')
+    axes[0].set_title(f'{m1} model')
+    axes[1].set_title(f'{m2} model')
+    plt.suptitle(f'Transfer effect, Human vs. Model, Cluster {cluster}, Trials {start_trial+1}-{start_trial+trials_to_probe}')
+    plt.tight_layout()
+
+    if save_vector:
+        plt.savefig(f'plots/transfer_effect_real_vs_sim_cluster{cluster}.svg', format='svg', dpi=1200)
+    else:
+        plt.show()
