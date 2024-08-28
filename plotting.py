@@ -612,8 +612,16 @@ def plot_transfer_effect_real_vs_sim(data, sim_data_m1, sim_data_m2, condition, 
     axes[1].plot(transfer_human, transfer_m2, '.', alpha=0.5, color='cornflowerblue')
     axes[0].set_title(f'{m1} model')
     axes[1].set_title(f'{m2} model')
+    axes[0].set_aspect('equal')
+    axes[1].set_aspect('equal')
     plt.suptitle(f'Transfer effect, Human vs. Model, {condition}, Cluster {cluster}, Trials {start_trial+1}-{start_trial+trials_to_probe}')
     plt.tight_layout()
+
+    # print correlation coefficients and p-values
+    print(f'{m1} model:')
+    print(stats.pearsonr(transfer_human, transfer_m1))
+    print(f'{m2} model:')
+    print(stats.pearsonr(transfer_human, transfer_m2))
 
     if save_vector:
         plt.savefig(f'plots/transfer_effect_real_vs_sim_{condition}_cluster{cluster}.svg', format='svg', dpi=1200)
