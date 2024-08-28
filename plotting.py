@@ -614,8 +614,9 @@ def plot_transfer_effect_real_vs_sim(data, sim_data_m1, sim_data_m2, condition, 
     axes[1].set_title(f'{m2} model')
     plt.suptitle(f'Transfer effect, Human vs. Model, {condition}, Cluster {cluster}, Trials {start_trial+1}-{start_trial+trials_to_probe}')
     plt.tight_layout()
-    axes[0].set_aspect('equal')
-    axes[1].set_aspect('equal')
+    # make each subplot square
+    axes[0].set_aspect('equal', 'box')
+    axes[1].set_aspect('equal', 'box')
 
     # print correlation coefficients and p-values
     print(f'{m1} model:')
