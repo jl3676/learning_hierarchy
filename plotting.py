@@ -598,6 +598,12 @@ def plot_transfer_effect_real_vs_sim(data, sim_data_m1, sim_data_m2, condition, 
         n_presses_stage_2_sim_m2 -= np.nanmean(n_presses_stage_2_sim_m2[:,4:6], axis=1).reshape(-1,1)
     n_presses_stage_2_sim_m2 = np.nanmean(n_presses_stage_2_sim_m2.reshape(-1,nsims,12), axis=1)
 
+    # remove row if nan
+    not_nan_idx = ~np.isnan(n_presses_stage_2[:,6])
+    n_presses_stage_2 = n_presses_stage_2[not_nan_idx]
+    n_presses_stage_2_sim_m1 = n_presses_stage_2_sim_m1[not_nan_idx]
+    n_presses_stage_2_sim_m2 = n_presses_stage_2_sim_m2[not_nan_idx]
+
     transfer_human = n_presses_stage_2[:,6] - n_presses_stage_2[:,10]
     transfer_m1 = n_presses_stage_2_sim_m1[:,6] - n_presses_stage_2_sim_m1[:,10]
     transfer_m2 = n_presses_stage_2_sim_m2[:,6] - n_presses_stage_2_sim_m2[:,10]
