@@ -584,8 +584,6 @@ def plot_validation_p_policies(data_sim, ntrials=1):
     plt.legend()
 
 def plot_transfer_effect_real_vs_sim(data, sim_data_m1, sim_data_m2, condition, cluster, start_trial=0, trials_to_probe=10, m1='Forward', m2='Backward', save_vector=False, normalize=False, first_press_accuracy=False):
-    num_subjects = data['tr'].shape[0]
-    
     _, n_presses_stage_2 = helpers.calc_mean(data, start_trial=start_trial, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
     if normalize:
         n_presses_stage_2 -= np.nanmean(n_presses_stage_2[:,4:6], axis=1).reshape(-1,1)
@@ -603,7 +601,7 @@ def plot_transfer_effect_real_vs_sim(data, sim_data_m1, sim_data_m2, condition, 
     transfer_m2 = n_presses_stage_2_sim_m2[:,6] - n_presses_stage_2_sim_m2[:,10]
 
     # in two subplots, plot dot plots of individual human transfer effects against model simulations, add dashed diagonal line
-    fig, axes = plt.subplots(2,1,figsize=(6,8), sharex=True, sharey=True)
+    fig, axes = plt.subplots(1,2,figsize=(6,3), sharex=True, sharey=True)
     for ax in axes:
         ax.plot([-0.2,0.5],[-0.2,0.5],'--',color='gray')
         ax.set_xlabel('Human')
