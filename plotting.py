@@ -583,7 +583,7 @@ def plot_validation_p_policies(data_sim, ntrials=1):
     plt.tight_layout()
     plt.legend()
 
-def plot_transfer_effect_real_vs_sim(data, sim_data_m1, sim_data_m2, condition, cluster, start_trial=0, trials_to_probe=10, m1='Forward', m2='Backward', save_vector=False, normalize=False, first_press_accuracy=False):
+def plot_transfer_effect_real_vs_sim(data, sim_data_m1, sim_data_m2, condition, cluster, nsims=10, start_trial=0, trials_to_probe=10, m1='Forward', m2='Backward', save_vector=False, normalize=False, first_press_accuracy=False):
     _, n_presses_stage_2 = helpers.calc_mean(data, start_trial=start_trial, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
     if normalize:
         n_presses_stage_2 -= np.nanmean(n_presses_stage_2[:,4:6], axis=1).reshape(-1,1)
@@ -591,10 +591,12 @@ def plot_transfer_effect_real_vs_sim(data, sim_data_m1, sim_data_m2, condition, 
     _, n_presses_stage_2_sim_m1 = helpers.calc_mean(sim_data_m1, start_trial=0, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
     if normalize:
         n_presses_stage_2_sim_m1 -= np.nanmean(n_presses_stage_2_sim_m1[:,4:6], axis=1).reshape(-1,1)
+    n_presses_stage_2_sim_m1 = np.mean(n_presses_stage_2_sim_m1.reshape(-1,10,12), axis=1)
 
     _, n_presses_stage_2_sim_m2 = helpers.calc_mean(sim_data_m2, start_trial=0, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
     if normalize:
         n_presses_stage_2_sim_m2 -= np.nanmean(n_presses_stage_2_sim_m2[:,4:6], axis=1).reshape(-1,1)
+    n_presses_stage_2_sim_m2 = np.mean(n_presses_stage_2_sim_m2.reshape(-1,10,12), axis=1)
 
     transfer_human = n_presses_stage_2[:,6] - n_presses_stage_2[:,10]
     transfer_m1 = n_presses_stage_2_sim_m1[:,6] - n_presses_stage_2_sim_m1[:,10]
