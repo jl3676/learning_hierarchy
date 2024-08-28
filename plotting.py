@@ -583,19 +583,13 @@ def plot_validation_p_policies(data_sim, ntrials=1):
     plt.tight_layout()
     plt.legend()
 
-def plot_transfer_effect_real_vs_sim(data, sim_data_m1, sim_data_m2, condition, cluster, nsims=10, start_trial=0, trials_to_probe=10, m1='Forward', m2='Backward', save_vector=False, normalize=False, first_press_accuracy=False):
+def plot_transfer_effect_real_vs_sim(data, sim_data_m1, sim_data_m2, condition, cluster, nsims=10, start_trial=0, trials_to_probe=10, m1='Forward', m2='Backward', save_vector=False, first_press_accuracy=False):
     _, n_presses_stage_2 = helpers.calc_mean(data, start_trial=start_trial, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
-    if normalize:
-        n_presses_stage_2 -= np.nanmean(n_presses_stage_2[:,4:6], axis=1).reshape(-1,1)
 
-    _, n_presses_stage_2_sim_m1 = helpers.calc_mean(sim_data_m1, start_trial=0, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
-    if normalize:
-        n_presses_stage_2_sim_m1 -= np.nanmean(n_presses_stage_2_sim_m1[:,4:6], axis=1).reshape(-1,1)
+    _, n_presses_stage_2_sim_m1 = helpers.calc_mean(sim_data_m1, start_trial=start_trial, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
     n_presses_stage_2_sim_m1 = np.nanmean(n_presses_stage_2_sim_m1.reshape(-1,nsims,12), axis=1)
 
-    _, n_presses_stage_2_sim_m2 = helpers.calc_mean(sim_data_m2, start_trial=0, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
-    if normalize:
-        n_presses_stage_2_sim_m2 -= np.nanmean(n_presses_stage_2_sim_m2[:,4:6], axis=1).reshape(-1,1)
+    _, n_presses_stage_2_sim_m2 = helpers.calc_mean(sim_data_m2, start_trial=start_trial, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
     n_presses_stage_2_sim_m2 = np.nanmean(n_presses_stage_2_sim_m2.reshape(-1,nsims,12), axis=1)
 
     # remove row if nan
@@ -609,16 +603,16 @@ def plot_transfer_effect_real_vs_sim(data, sim_data_m1, sim_data_m2, condition, 
     transfer_m2 = n_presses_stage_2_sim_m2[:,6] - n_presses_stage_2_sim_m2[:,10]
 
     # in two subplots, plot dot plots of individual human transfer effects against model simulations, add dashed diagonal line
-    fig, axes = plt.subplots(1,2,figsize=(6,3), sharex=True, sharey=True)
+    _, axes = plt.subplots(1,2,figsize=(6,3), sharex=True, sharey=True)
     for ax in axes:
         ax.plot([-2,2],[-2,2],'--',color='gray')
         ax.set_xlabel('Human')
         ax.set_ylabel('Model')
-    axes[0].plot(transfer_human, transfer_m1, '.', alpha=0.5, color='lightcoral')
-    axes[1].plot(transfer_human, transfer_m2, '.', alpha=0.5, color='cornflowerblue')
+    axes[0].plot(transfer_human, transfer_m1, '.', alpha=0.5, color='lightcoral', mew=0)
+    axes[1].plot(transfer_human, transfer_m2, '.', alpha=0.5, color='cornflowerblue', mew=0)
     # plot least squares fit line
-    slope1, intercept1, r_value1, p_value1, std_err1 = stats.linregress(transfer_human, transfer_m1)
-    slope2, intercept2, r_value2, p_value2, std_err2 = stats.linregress(transfer_human, transfer_m2)
+    slope1, intercept1, _, p_value1, _ = stats.linregress(transfer_human, transfer_m1)
+    slope2, intercept2, _, p_value2, _ = stats.linregress(transfer_human, transfer_m2)
     x = np.array([-2,2])
     axes[0].plot(x, slope1*x + intercept1, color='lightcoral', label=f'p={p_value1:.2f}')
     axes[1].plot(x, slope2*x + intercept2, color='cornflowerblue', label=f'p={p_value2:.2f}')
@@ -639,5 +633,66 @@ def plot_transfer_effect_real_vs_sim(data, sim_data_m1, sim_data_m2, condition, 
 
     if save_vector:
         plt.savefig(f'plots/transfer_effect_real_vs_sim_{condition}_cluster{cluster}.svg')
+    else:
+        plt.show()
+
+
+def plot_b1_error_rates(data, sim_data_m1, sim_data_m2, condition, cluster, block, err_idx=1, nsims=10, start_trial=0, trials_to_probe=32, m1='Hierarchical', m2='Meta', save_vector=False):
+    choice_types = ['Correct', 'Compression over stage 1 error', 'Compression over stage 2 error', 'Other error']
+    
+    stage2_info = helpers.extract_stage2_info(data, condition)
+    stage2_info_m1 = helpers.extract_stage2_info(sim_data_m1, condition)
+    stage2_info_m2 = helpers.extract_stage2_info(sim_data_m2, condition)
+
+    acc, acc_m1, acc_m2 = [], [], []
+    # compute data
+    if block % 2 == 0:
+        V2 = (condition[:2] == 'V2' and block == 6) or (condition[-2:] == 'V2' and block == 10)
+        V3 = (condition[:2] == 'V3' and block == 6) or (condition[-2:] == 'V3' and block == 10)
+        acc = helpers.aggregate_type_stage2_b9(stage2_info,trials_to_probe,start_trial=start_trial,block=block+1,V2=V2,V3=V3)
+        acc_m1 = helpers.aggregate_type_stage2_b9(stage2_info_m1,trials_to_probe,start_trial=start_trial,block=block+1,V2=V2,V3=V3)
+        acc_m2 = helpers.aggregate_type_stage2_b9(stage2_info_m2,trials_to_probe,start_trial=start_trial,block=block+1,V2=V2,V3=V3)
+    else:
+        acc = helpers.aggregate_type_stage2_b8(stage2_info,trials_to_probe,start_trial=start_trial,block=block+1)
+        acc_m1 = helpers.aggregate_type_stage2_b8(stage2_info_m1,trials_to_probe,start_trial=start_trial,block=block+1)
+        acc_m2 = helpers.aggregate_type_stage2_b8(stage2_info_m2,trials_to_probe,start_trial=start_trial,block=block+1)
+
+    acc = acc[:,err_idx]
+    acc_m1 = np.nanmean(acc_m1.reshape(-1,nsims,4), axis=1)[:,err_idx]
+    acc_m2 = np.nanmean(acc_m2.reshape(-1,nsims,4), axis=1)[:,err_idx]
+    _, axes = plt.subplots(1,2,figsize=(6,3), sharex=True, sharey=True)
+    for ax in axes:
+        ax.plot([0,1],[0,1],'--',color='gray')
+        ax.set_xlabel('Human')
+        ax.set_ylabel('Model')
+    axes[0].plot(acc, acc_m1, '.', alpha=0.2, color='lightcoral', mew=0)
+    axes[1].plot(acc, acc_m2, '.', alpha=0.2, color='cornflowerblue', mew=0)
+    # plot least squares fit line
+    slope1, intercept1, _, p_value1, _ = stats.linregress(acc, acc_m1)
+    slope2, intercept2, _, p_value2, _ = stats.linregress(acc, acc_m2)
+    x = np.array([0,1])
+    axes[0].plot(x, slope1*x + intercept1, color='lightcoral', label=f'p={p_value1:.2f}')
+    axes[1].plot(x, slope2*x + intercept2, color='cornflowerblue', label=f'p={p_value2:.2f}')
+    axes[0].set_xlim([0,1])
+    axes[0].set_ylim([0,1])
+    axes[0].set_aspect('equal')
+    axes[1].set_aspect('equal')
+    axes[0].set_title(f'{m1} model')
+    axes[1].set_title(f'{m2} model')
+    plt.suptitle(f'{choice_types[err_idx]}, Block {block+1}, {condition}, Cluster {cluster}, Trials {start_trial+1}-{start_trial+trials_to_probe}')
+    plt.tight_layout()
+
+    # print correlation coefficients and p-values
+    print(f'{m1} model:')
+    print(stats.pearsonr(acc, acc_m1))
+    print(f'{m2} model:')
+    print(stats.pearsonr(acc, acc_m2))
+
+    # print correlation coefficients and p-values on the upper half of each subplot
+    axes[0].text(0.5, 0.9, f'Pearson r={stats.pearsonr(acc, acc_m1)[0]:.2f}, p={stats.pearsonr(acc, acc_m1)[1]:.4f}', ha='center', va='center', transform=axes[0].transAxes)
+    axes[1].text(0.5, 0.9, f'Pearson r={stats.pearsonr(acc, acc_m2)[0]:.2f}, p={stats.pearsonr(acc, acc_m2)[1]:.4f}', ha='center', va='center', transform=axes[1].transAxes)
+
+    if save_vector:
+        plt.savefig(f'plots/error_rate_human_vs_model_block{block+1}_{err_idx}_{condition}_cluster{cluster}.svg')
     else:
         plt.show()
