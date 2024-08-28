@@ -589,22 +589,18 @@ def plot_transfer_effect_real_vs_sim(data, sim_data_m1, sim_data_m2, condition, 
     _, n_presses_stage_2 = helpers.calc_mean(data, start_trial=start_trial, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
     if normalize:
         n_presses_stage_2 -= np.nanmean(n_presses_stage_2[:,4:6], axis=1).reshape(-1,1)
-    n_presses_stage_2_mean = np.nanmean(n_presses_stage_2,axis=0)
-    n_presses_stage_2_sem = stats.sem(n_presses_stage_2,axis=0,nan_policy='omit')
 
     _, n_presses_stage_2_sim_m1 = helpers.calc_mean(sim_data_m1, start_trial=0, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
     if normalize:
         n_presses_stage_2_sim_m1 -= np.nanmean(n_presses_stage_2_sim_m1[:,4:6], axis=1).reshape(-1,1)
-    n_presses_stage_2_sim_m1_mean = np.mean(n_presses_stage_2_sim_m1,axis=0)
 
     _, n_presses_stage_2_sim_m2 = helpers.calc_mean(sim_data_m2, start_trial=0, trials_to_probe=trials_to_probe, first_press_accuracy=first_press_accuracy)
     if normalize:
         n_presses_stage_2_sim_m2 -= np.nanmean(n_presses_stage_2_sim_m2[:,4:6], axis=1).reshape(-1,1)
-    n_presses_stage_2_sim_m2_mean = np.mean(n_presses_stage_2_sim_m2,axis=0)
 
-    transfer_human = n_presses_stage_2_mean[6] - n_presses_stage_2_mean[10]
-    transfer_m1 = n_presses_stage_2_sim_m1_mean[6] - n_presses_stage_2_sim_m1_mean[10]
-    transfer_m2 = n_presses_stage_2_sim_m2_mean[6] - n_presses_stage_2_sim_m2_mean[10]
+    transfer_human = n_presses_stage_2[:,6] - n_presses_stage_2[:,10]
+    transfer_m1 = n_presses_stage_2_sim_m1[:,6] - n_presses_stage_2_sim_m1[:,10]
+    transfer_m2 = n_presses_stage_2_sim_m2[:,6] - n_presses_stage_2_sim_m2[:,10]
 
     # in two subplots, plot dot plots of individual human transfer effects against model simulations, add dashed diagonal line
     fig, axes = plt.subplots(2,1,figsize=(6,8), sharex=True, sharey=True)
