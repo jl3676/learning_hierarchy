@@ -371,7 +371,7 @@ def abstraction_model(num_subject, params, experiment, structure, meta_learning=
 					# Update the policy probabilities using Bayes Rule
 					if meta_learning == 1:
 						if len(actions_tried) == 1:
-							p_policies_history[sub,block,trial] = p_policies
+							p_policies_history[sub,block,trial] = p_policies_softmax # p_policies
 						likelihoods = np.array([pchoice_2_compress_1[a_2-1], pchoice_2_compress_2[a_2-1], pchoice_2_full[a_2-1]])
 						likelihoods = softmax(beta_meta * likelihoods)
 						p_policies *= (1 - correct_2 - (-1)**correct_2 * likelihoods)
