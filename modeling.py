@@ -18,7 +18,7 @@ def abstraction_model_nllh(params, D, structure, meta_learning=1):
 	# unpack the parameters
 	[alpha_2, beta, beta_meta, concentration_2, epsilon, prior_h, prior_w] = params
 	beta_2 = beta
-	beta_meta = 10**beta_meta
+	beta_meta = beta_meta
 	concentration_2 = 10**concentration_2
 	
 	# initialize variables
@@ -174,7 +174,7 @@ def abstraction_model(num_subject, params, experiment, structure, meta_learning=
 	[alpha_2, beta, beta_meta, concentration_2, epsilon, prior_h, prior_w] = params
 	beta_2 = beta
 	# beta_policies = 5
-	beta_meta = 10**beta_meta
+	beta_meta = beta_meta
 	concentration_2 = 10**concentration_2
 
 	# initialize variables
