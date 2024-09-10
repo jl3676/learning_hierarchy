@@ -422,6 +422,26 @@ def plot_validation_PTS(data_sim, m, cond, ntrials=1, save_vector=False, pallett
         plt.show()
 
 
+def plot_validation_PTS_individual(data_sim):
+    p_policies = data_sim['p_policies_history']
+    p_policies = p_policies.reshape(p_policies.shape[0],-1,p_policies.shape[-1])
+    p_policies = p_policies[:, p_policies[0,:,0]>0, :]
+
+    _, ax = plt.subplots(3,1,figsize=(7,9), sharex=True, sharey=True)
+
+    alpha = 0.05
+
+    for s in range(p_policies.shape[0]):
+        ax[0].plot(p_policies[s,:,0], alpha=alpha, color='cornflowerblue', label='Compressed over stage 1')
+        ax[1].plot(p_policies[s,:,1], alpha=alpha, color='lightcoral', label='Compressed over stage 2')
+        ax[2].plot(p_policies[s,:,2], alpha=alpha, color='k', label='Hierarchical')
+    plt.xticks([30, 90]+list(np.arange(10)*32+16+120), np.arange(1,13), rotation=0)
+    plt.xlabel('Block')
+    plt.ylim([0,1])
+    plt.ylabel('p(policy)')
+    plt.show()
+
+
 def plot_transfer_n_presses(data, sim_data_m1, sim_data_m2, condition, cluster, start_trial=0, trials_to_probe=10, m1='Forward', m2='Backward', first_press_accuracy=False):
     '''
     Plot the amount of transfer between test blocks for the human data and two models.
