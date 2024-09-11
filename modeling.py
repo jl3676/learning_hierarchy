@@ -16,10 +16,9 @@ def abstraction_model_nllh(params, D, structure, meta_learning=1):
 		- the negative log likelihood of the data given the model parameters
 	'''
 	# unpack the parameters
-	[alpha_2, beta, beta_meta, concentration_2, epsilon, prior_h, prior_w] = params
+	[alpha_2, beta, forget, concentration_2, epsilon, prior_h, prior_w] = params
 	beta_2 = beta
 	beta_policies = 5
-	# beta_meta = 10**beta_meta
 	concentration_2 = 10**concentration_2
 	
 	# initialize variables
@@ -147,9 +146,6 @@ def abstraction_model_nllh(params, D, structure, meta_learning=1):
 
 			# update the policy probabilities using Bayes Rule
 			if meta_learning == 1:
-				# likelihoods = np.array([pchoice_2_compress_1, pchoice_2_compress_2, pchoice_2_full])
-				# likelihoods = softmax(beta_meta * likelihoods)
-				# likelihoods = (1 - beta_meta) * likelihoods + beta_meta * np.mean(likelihoods)
 				likelihoods_compressed_1[s_1, a_2-1] += 1
 				likelihoods_compressed_2[s_2, a_2-1] += 1
 				likelihoods_full[s_1, s_2, a_2-1] += 1
@@ -162,9 +158,9 @@ def abstraction_model_nllh(params, D, structure, meta_learning=1):
 				p_policies /= np.sum(p_policies)
 				p_policies_softmax = softmax(beta_policies * p_policies)
 				# forget
-				likelihoods_compressed_1 = (1 - beta_meta) * likelihoods_compressed_1 + beta_meta
-				likelihoods_compressed_2 = (1 - beta_meta) * likelihoods_compressed_2 + beta_meta
-				likelihoods_full = (1 - beta_meta) * likelihoods_full + beta_meta
+				likelihoods_compressed_1 = (1 - forget) * likelihoods_compressed_1 + forget
+				likelihoods_compressed_2 = (1 - forget) * likelihoods_compressed_2 + forget
+				likelihoods_full = (1 - forget) * likelihoods_full + forget
 
 			actions_tried.add(a_2-1)
 
@@ -186,10 +182,9 @@ def abstraction_model(num_subject, params, experiment, structure, meta_learning=
 		- data[dict]: the data of the model
 	'''
 	# unpack the parameters
-	[alpha_2, beta, beta_meta, concentration_2, epsilon, prior_h, prior_w] = params
+	[alpha_2, beta, forget, concentration_2, epsilon, prior_h, prior_w] = params
 	beta_2 = beta
 	beta_policies = 5
-	# beta_meta = 10**beta_meta
 	concentration_2 = 10**concentration_2
 
 	# initialize variables
@@ -389,11 +384,6 @@ def abstraction_model(num_subject, params, experiment, structure, meta_learning=
 					if meta_learning == 1:
 						if len(actions_tried) == 1:
 							p_policies_history[sub,block,trial] = p_policies
-						# compute the likelihoods of the compressed and hierarchical policies on the choice
-						# likelihoods = np.array([pchoice_2_compress_1[a_2-1], pchoice_2_compress_2[a_2-1], pchoice_2_full[a_2-1]])
-						# softmax transform the likelihoods with free paramter beta_meta
-						# likelihoods = softmax(beta_meta * likelihoods)
-						# likelihoods = (1 - beta_meta) * likelihoods + beta_meta / 3
 						likelihoods_compressed_1[s_1, a_2-1] += 1
 						likelihoods_compressed_2[s_2, a_2-1] += 1
 						likelihoods_full[s_1, s_2, a_2-1] += 1
@@ -409,9 +399,9 @@ def abstraction_model(num_subject, params, experiment, structure, meta_learning=
 						# softmax transform the policy probabilities with fixed beta_policies=5
 						p_policies_softmax = softmax(beta_policies * p_policies)
 						# forget
-						likelihoods_compressed_1 = (1 - beta_meta) * likelihoods_compressed_1 + beta_meta
-						likelihoods_compressed_2 = (1 - beta_meta) * likelihoods_compressed_2 + beta_meta
-						likelihoods_full = (1 - beta_meta) * likelihoods_full + beta_meta
+						likelihoods_compressed_1 = (1 - forget) * likelihoods_compressed_1 + forget
+						likelihoods_compressed_2 = (1 - forget) * likelihoods_compressed_2 + forget
+						likelihoods_full = (1 - forget) * likelihoods_full + forget
 
 				# Record variables per trial
 				counter_1_temp[trial] = counter_1
