@@ -682,7 +682,7 @@ def join_actions(a_1, a_2):
 	return a_both
 
 
-def optimize(fname, bounds, D, structure, meta_learning):
+def optimize(fname, bounds, D, structure, meta_learning, fix_forget):
 	'''
 	Optimizes the model using the global optimization algorithm differential evolution.
 
@@ -698,9 +698,9 @@ def optimize(fname, bounds, D, structure, meta_learning):
 		- bestllh: the best log-likelihood found
 	'''
 	bounds = Bounds(lb=[b[0] for b in bounds], ub=[b[1] for b in bounds])
-	result = differential_evolution(func=fname, bounds=bounds, args=(D, structure, meta_learning))
+	result = differential_evolution(func=fname, bounds=bounds, args=(D, structure, meta_learning, fix_forget))
 	x = result.x
-	bestllh = -fname(x, D, structure, meta_learning)
+	bestllh = -fname(x, D, structure, meta_learning, fix_forget)
 	bestparameters = list(x)
 
 	return bestparameters, bestllh
