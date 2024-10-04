@@ -23,6 +23,19 @@ A demo of the full online behavioral task used for data collection is available 
 
 ### Data
 - `data.pkl`: pickle file containing all behavioral data analyzed in the paper.
+	- `meta_data` contains the meta-data of each participant, including the experiment they participated in, the task version they completed, and the cluster they were assigned to. 
+	- `data` contains the data variables, organized first by participants: 
+		- `s_12_12`: states (stimuli) in Blocks 1-2, Trials 1-60, Stages 1-2
+		- `a_12_12`: actions in Blocks 1-2, Trials 1-60, Stages 1-2
+		- `r_12_12`: rewards in Blocks 1-2, Trials 1-60, Stages 1-2
+		- `counter12_12`: the number of key presses until reaching the correct action in Blocks 1-2, Trials 1-60, Stage 1-2
+		- `s1`: states (stimuli) in Blocks 3-12, Trials 1-32, Stage 1
+		- `s2`: states (stimuli) in Blocks 3-12, Trials 1-32, Stage 2
+		- `a`: actions in Blocks 3-12, Trials 1-32, Stages 1-2
+		- `r`: rewards in Blocks 3-12, Trials 1-32, Stages 1-2
+		- `counter1`: the number of key presses until reaching the correct action in Blocks 3-12, Trials 1-32, Stage 1
+		- `counter2`: the number of key presses until reaching the correct action in Blocks 3-12, Trials 1-32, Stage 2
+		- `tr`: the randomized key mappings (K1-K4 to \[Q, W, E, R\] and K5-K8 to \[U, I, O, P\])
 
 ### Helper functions
 - `helpers.py`: file containing helper functions for data analysis. 
