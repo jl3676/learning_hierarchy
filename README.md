@@ -6,13 +6,14 @@ Public repository containing the code used in the hierarchical policy learning p
 
 ## Citation
  ```
-@article{li2024algorithmic,
-title = {An algorithmic account for how humans efficiently learn, transfer, and compose hierarchically structured decision policies},
-publisher = {PsyArXiv},
-year = {2024},
-doi = {https://doi.org/10.31234/osf.io/b3xnv},
-url = {osf.io/preprints/psyarxiv/b3xnv},
-author = {Jing-Jing Li and Anne G. E. Collins}
+@article{li2025algorithmic,
+  title={An algorithmic account for how humans efficiently learn, transfer, and compose hierarchically structured decision policies},
+  author={Li, Jing-Jing and Collins, Anne GE},
+  journal={Cognition},
+  volume={254},
+  pages={105967},
+  year={2025},
+  publisher={Elsevier}
 }
  ```
 
