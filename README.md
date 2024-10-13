@@ -6,7 +6,7 @@ Public repository containing the data and code used in the hierarchical policy l
 
 ## Citation
 
-Please cite our work if you find this repository helpful! 
+Please cite our work if you find this repository helpful! A PDF version of the paper is available [here](https://jl3676.github.io/assets/pdf/learning_hierarchy.pdf).
 
  ```
 @article{li2025algorithmic,
