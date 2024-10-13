@@ -5,6 +5,9 @@ Public repository containing the data and code used in the hierarchical policy l
 
 
 ## Citation
+
+Please cite our work if you find this repository helpful! 
+
  ```
 @article{li2025algorithmic,
   title={An algorithmic account for how humans efficiently learn, transfer, and compose hierarchically structured decision policies},
