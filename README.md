@@ -1,7 +1,7 @@
 markdown: kramdown
 
 # learning_hierarchy
-Public repository containing the code used in the hierarchical policy learning project. All data will be made publiclly available upon the acceptance of the manuscript.
+Public repository containing the data and code used in the hierarchical policy learning project. 
 
 
 ## Citation
