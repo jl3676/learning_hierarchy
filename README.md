@@ -11,9 +11,7 @@
 [Anne Collins](https://ccn.studentorg.berkeley.edu/)
 
 
-## File structure
-
-### Data
+## Data
 
 This repository contains two versions of the data: `data.pkl` is the raw data used in the analyses presented in the paper and compatible with the code in this repository; `data.csv` contains the fully preprocessed data, which is more suitable for further analyses that do not depend on the functions in this repo. Both data files contain trial-by-trial stimulus, action, and reward information for all participants. 
 
@@ -59,6 +57,8 @@ with open('data.pkl', 'rb') as file:
 
 Emply cell means no data (due to performance-based ). 
 
+
+## Code
 
 ### Helper functions
 - `helpers.py`: file containing helper functions for data analysis. 
