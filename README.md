@@ -76,7 +76,7 @@ Emply cell means no data (due to performance-based ).
 ### Saved fitting results
 - `fitting_results/`: folder containing saved model fitting results (likelihoods and parameter estimations), which can be loaded into `fit_models.ipynb` for analysis. 
 
-## Task demo
+## Task
 A demo of the full online behavioral task used for data collection is available [here](https://experiments-ccn.berkeley.edu/learning_hierarchy_task_demo/exp.html?id=demo). For a full description of the task, refer to our [paper](https://www.sciencedirect.com/science/article/pii/S0010027724002531). 
 
 ## Citation
