@@ -15,6 +15,8 @@
 
 This repository contains two versions of the data: `data.pkl` is the raw data used in the analyses presented in the paper and compatible with the code in this repository; `data.csv` contains the fully preprocessed data, which is more suitable for further analyses that do not depend on the functions in this repo. Both data files contain trial-by-trial stimulus, action, and reward information for all participants. 
 
+### Raw data
+
 `data.pkl`: raw pickled data file containing all behavioral data analyzed in the paper, compatible with the code in this repository (recommended for replications of analyses in the paper).
 
 - `meta_data` contains the meta-data of each participant, including the experiment they participated in, the task version they completed, and the cluster they were assigned to. 
@@ -40,6 +42,8 @@ with open('data.pkl', 'rb') as file:
     meta_data = all_data['meta_data']
     data = all_data['data']
 ```
+
+### Preprocessed data
 
 `data.csv`: contains fully preprocessed trial-by-trial behavioral data (recommended for further analyses that do not rely on the code in this repository). Each row represents a trial. The columns encode:
 
