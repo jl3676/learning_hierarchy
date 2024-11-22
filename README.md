@@ -47,7 +47,8 @@ with open('data.pkl', 'rb') as file:
 
 `data.csv`: contains fully preprocessed trial-by-trial behavioral data (recommended for further analyses that do not rely on the code in this repository). Each row represents a trial. The columns encode:
 
-- `participant`: participant identifier
+- `participant`: participant index
+- `id`: participant unique ID
 - `experiment`: experiment identifier (1=Experiment 1, 2=Experiment 2)
 - `condition`: taks condition (V1-V1, V1-V2, V1-V3, V2-V1, V2-V2, V3-V1, V3-V3)
 - `block`: block identifier (1-12)
@@ -55,11 +56,13 @@ with open('data.pkl', 'rb') as file:
 - `s1`: stimulus identifier in stage 1 (1=gold, 2=silver)
 - `a1`: list of actions selected in stage 1, separated by `;` (1=K1, 2=K2, 3=K3, 4=K4, 0=invalid key)
 - `r1`: list of rewards in stage 1 corresponding to the actions, separated by `;` (1=reward, 0=no reward)
+- `n_presses1`: list containing the number of presses made in stage 1 (nan if invalid key presses were made)
 - `s2`: stimulus identifier in stage 2 (1=red, 2=blue)
 - `a2`: list of actions selected in stage 2, separated by `;`  (5=K5, 6=K6, 7=K7, 8=K8, 0=invalid key)
 - `r2`: list of rewards in stage 2 corresponding to the actions, separated by `;` (1=reward, 0=no reward)
+- `n_presses2`: list containing the number of presses made in stage 2 (nan if invalid key presses were made)
 
-Emply cell means no data (due to performance-based ). 
+Emply cell means no data (due to performance-based block transition in Blocks 1 and 2). 
 
 
 ## Code
